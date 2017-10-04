@@ -89,7 +89,15 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'description': 'A toolbox for student associations',
+    'github_user': 'tozti',
+    'github_repo': 'docs',
+    'github_button': False,
+    'github_banner': True,
+    'show_powered_by': False,
+    'show_related': False,
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -105,9 +113,7 @@ html_sidebars = {
     '**': [
         'about.html',
         'navigation.html',
-        'relations.html',  # needs 'show_related': True theme option to display
         'searchbox.html',
-        'donate.html',
     ]
 }
 
@@ -167,6 +173,3 @@ texinfo_documents = [
      author, 'tozti', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-
