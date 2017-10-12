@@ -79,6 +79,79 @@ include the build result in your commits.
 Using git
 =========
 
+We will give a short list of usefull git commands in this section.
+For a more complete introduction/tutorial, please refer to the following links:
+
+- `gittutorial <https://git-scm.com/docs/gittutorial>`_
+- `interactive tutorial <https://try.github.io/levels/1/challenges/1>`_
+
+
+
+Always follow this rule: 
+
+**The branch master is here only for working and tested stuff. Never commit to it directly.**
+
+
+Basics
+------------------
+
+``git clone repos``: create a local copy of the distant repository ``repo`` 
+
+``git add file``: add the file ``file`` to the git repositeroy. This file will be tracked by git
+
+``git commit -am "commit message"``: it will commit on the current branch all the modifications made on tracked files under the commit message ``commit message``
+
+``git push``: push the state of your local repository to the remote repository (your machine -> github)
+
+``git pull``: pull the state of the remote repository to your current repository (github -> your machine)
+
+``git checkout file``: revert the state of the file ``file`` to its previously commited state (restores the file)
+
+Branches
+------------------
+`better tutorial <www.atlassian.com/git/tutorials/using-branches>`
+
+Branches are a very important notion in git. 
+Without branches, your history looks like this:
+
+::
+
+    <A>---<B>---<C>---<D>
+
+If several persons are working at the same time (the first is the branch a, the second the branch b), when they will merge together their is a high probability of interference. To avoid that, branches allows several people to work independently from each other.
+
+Assume we have two persons working on two different features. They will each create a branch and merge them when their feature is completed (and tested). 
+
+::
+
+    a                    /---<D>---\
+    master <A>---<B>---<C>---<F>---<G>
+    b              \----<E>---/
+
+
+The rule is:
+
+**New feature or bug fix = new branch**
+
+Branching is at the core of git, so do not hesitate to create a new branch ;)
+
+
+``git branch branch``: creates a new branch called ``branch``
+
+``git branch -d branch``: delete the branch
+
+``git checkout branch``: change of branch. Beware, your current changes must have been commited or stashed!
+
+``git checkout branchtobemerged``: merge the branch ``branchtobemerged`` onto the current branch.
+Sometimes merge conflicts can occured after a branch. That is normal, just solve them peacefully.
+
+Note that everything here is done locally.
+
+
+
+
+ 
+
 TODO (basics, feature branch workflow, magic commit messages)
 
 
