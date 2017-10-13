@@ -15,7 +15,7 @@ association members which want to use this project.
 .. toctree::
    :maxdepth: 2
 
-   user/intro
+   user/index
 
 
 Developer Documentation
