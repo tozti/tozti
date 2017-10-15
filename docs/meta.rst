@@ -109,7 +109,7 @@ Basics
 
 Branches
 ------------------
-`better tutorial <www.atlassian.com/git/tutorials/using-branches>`
+`better tutorial <www.atlassian.com/git/tutorials/using-branches>`_
 
 Branches are a very important notion in git. 
 Without branches, your history looks like this:
@@ -142,7 +142,7 @@ Branching is at the core of git, so do not hesitate to create a new branch ;)
 
 ``git checkout branch``: change of branch. Beware, your current changes must have been commited or stashed!
 
-``git checkout branchtobemerged``: merge the branch ``branchtobemerged`` onto the current branch.
+``git merge branchtobemerged``: merge the branch ``branchtobemerged`` onto the current branch.
 Sometimes merge conflicts can occured after a branch. That is normal, just solve them peacefully.
 
 Note that everything here is done locally.
