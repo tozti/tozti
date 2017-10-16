@@ -27,12 +27,13 @@ the inner workings of the project.
 .. toctree::
    :maxdepth: 2
 
-   dev/intro
+   dev/index
 
 Project internals
 -----------------
 
-For the internal organisation and workflows of this project see :ref:`meta`.
+For the internal organisation, workflows and anything related to the *software
+project* course, see :doc:`meta/index`.
 
 
 .. _ENS de Lyon: https://ens-lyon.fr
