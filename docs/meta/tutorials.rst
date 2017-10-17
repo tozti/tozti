@@ -74,18 +74,27 @@ into the master. A branch is just a named reference to a commit (which is the
 ``HEAD`` of the branch) so it's really lightweight and should be abused.
 
 Say you want to work on something new called ``feature1``. First you have to
-create the branch with ``git branch feature1``. You can also use ``git checkout
--b feature1`` which will additionnaly checkout the branch (as you probably want
-to work on it right away).
+check out the branch you want to fork from (probably master) with ``git
+checkout master``, then create the branch with ``git branch feature1``. You
+could also use ``git checkout -b feature1`` instead which will additionnaly
+checkout the branch (as you probably want to work on it right away).
 
 Now the branch is local, you might want to push it upstream. To do it, use
 ``git push -u origin feature1``. If you want to change the upstream name of the
 branch, use ``git push -u origin feature1:better-name``.
 
-Now the work is done, you want to merge back the ``feature1`` branch onto
-master. To do that, checkout master with ``git checkout master``, merge the
+If you want to work on a branch that already exists remotely but not locally,
+you want to create a local branch that *tracks* the remote branch with ``git
+branch -t local_feature1 origin/feature1``. But most of the time you want the
+branch to have the same name and there is a shortcut for that: ``git checkout
+feature1`` will do exactely what you want (create a local *tracking* branch)
+and check it out.
+
+Now that some work is done, you want to merge back the ``feature1`` branch onto
+``master``. To do that, checkout master with ``git checkout master``, merge the
 branch with ``git merge --no-ff feature1``, resolve the conflicts if there are
-any and then push your changes with ``git push origin master``.
+any, then ``git commit`` and finally push your changes with ``git push origin
+master``.
 
 If you are sure that the branch is not going to be used anymore you can delete
 it (it just deletes the reference). To delete the local branch type ``git
