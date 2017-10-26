@@ -24,10 +24,11 @@ that makes syntax orders of magnitude more convenient.
   | While not all of it is relevant, you should pay close attention to new features that
     make writing js - dare I say - beautiful.
   | Most notably:
-    - Arrow functions.
-    - Destructuring and Spread operator.
-    - Classes.
-    - Let & Const declaration, that should be preferred to :code:`var`.
+
+  - Arrow functions.
+  - Destructuring and Spread operator.
+  - Classes.
+  - Let & Const declaration, that should be preferred to :code:`var`.
 
 Style conventions
 -----------------
