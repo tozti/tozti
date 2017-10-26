@@ -2,6 +2,42 @@
 Tutorials
 *********
 
+Using Javascript
+================
+
+Since we are going to develop a single-page app, a considerable part of the code
+will be targetted to web browser, meaning: *Javascript*.
+
+For ease of learning and to agree on something to get started, we agreed on using
+plain javascript ES6 rather than languages such as Elm.
+
+Here are some links to learn Javascript, particularly the more recent ES6 specification,
+that makes syntax orders of magnitude more convenient.
+
+- | https://javascript.info/
+  | It seems to cover the essentials. You really can really skim through the entire guide,
+    since you will a find a lot of similarities with any non restrictive scripting language,
+    much like python.
+
+- | https://babeljs.io/learn-es2015/
+  | This guide puts the emphasis on what is new with the ES6 (previously known as ES2015).
+  | While not all of it is relevant, you should pay close attention to new features that
+    make writing js - dare I say - beautiful.
+  | Most notably:
+    - Arrow functions.
+    - Destructuring and Spread operator.
+    - Classes.
+    - Let & Const declaration, that should be preferred to :code:`var`.
+
+Style conventions
+-----------------
+
+TODO:
+- describe the code style we aim at.
+- one part dedicated to syntax.
+- the other dedicated to how we organize code, structural choices.
+
+
 Using git
 =========
 
