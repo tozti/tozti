@@ -6,21 +6,21 @@ Using Javascript
 ================
 
 Since we are going to develop a single-page app, a considerable part of the code
-will be targetted to web browser, meaning: *Javascript*.
+will be targeted to and executed by web browsers, meaning: *Javascript*.
 
-For ease of learning and to agree on something to get started, we agreed on using
+For ease of learning and to agree on something to get started, we settled on using
 plain javascript ES6 rather than languages such as Elm.
 
 Here are some links to learn Javascript, particularly the more recent ES6 specification,
 that makes syntax orders of magnitude more convenient.
 
 - | https://javascript.info/
-  | It seems to cover the essentials. You really can really skim through the entire guide,
+  | It seems to cover the essentials. You can really skim through the entire guide,
     since you will a find a lot of similarities with any non restrictive scripting language,
     much like python.
 
 - | https://babeljs.io/learn-es2015/
-  | This guide puts the emphasis on what is new with the ES6 (previously known as ES2015).
+  | This guide puts the emphasis on what is new with the ES6 specification (previously known as ES2015).
   | While not all of it is relevant, you should pay close attention to new features that
     make writing js - dare I say - beautiful.
   | Most notably:
