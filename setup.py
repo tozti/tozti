@@ -26,8 +26,8 @@ from setuptools import setup
 setup(
     name='tozti',
     version=re.search(r"__version__\W*=\W*'([^']+)'",
-                      open('server/__init__.py').read()).group(0),
-    packages=['server'],
+                      open('server.py').read()).group(1),
+    py_modules=['server'],
     author='Tozti',
     url='https://tozti.readthedocs.org',
     description='Storage engine for Tozti',
