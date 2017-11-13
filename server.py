@@ -64,5 +64,3 @@ def main():
     web.run_app(app, host=config['http']['host'], port=config['http']['port'])
 
 
-if __name__ == "__main__":
-    main()
