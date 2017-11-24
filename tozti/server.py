@@ -19,9 +19,9 @@
 
 import argparse
 import asyncio
+import os.path
 from pkg_resources import iter_entry_points
 import sys
-import os.path
 
 from aiohttp import web
 import logbook
@@ -30,9 +30,10 @@ import yaml
 from tozti import logger
 
 
+# FIXME: maybe put that in a file somewhere
 INDEX_TEMPLATE = """<!DOCTYPE html>
 <html>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta charset="utf-8">
   <head>{}</head>
   <body><div id="app"/></body>
 </html>
@@ -58,29 +59,33 @@ def create_app(config, mode):
 
     # load extensions
     for ept in iter_entry_points(group='tozti', name='manifest'):
-        logger.info('loading extension ')
+        logger.info('loading extension {0.project_name} ({0.location})'
+                    .format(ept.dist))
         try:
             manifest = ept.load()
-            name = manifest['name']
+            prefix = ept.dist.project_name
             if 'routes' in manifest:
-                self.router.add_routes(manifest['routes'])
+                manifest['routes'].add_prefix('/api/{}'.format(prefix))
+                app.router.add_routes(manifest['routes'])
             if mode == 'dev' and 'static_dir' in manifest:
                 route = app.router.add_static(
-                    '/static/{}'.format(name), manifest['static_dir'])
+                    '/static/{}'.format(prefix), manifest['static_dir'])
             if 'includes' in manifest:
-                includes.append('/static/{}/{}'.format(name, manifest['include']))
+                includes.extend('/static/{}/{}'.format(prefix, path)
+                                for path in manifest['includes'])
             if '_god_mode' in manifest:
                 manifest['_god_mode'](app)
         except Exception as err:
-            raise ValueError('error while loading extension {0.project_name} '
-                             '({0.location}): {1}'.format(ept.dist, err))
+            raise ValueError('error while loading extension {0.project_name}: {1}'
+                             .format(ept.dist, err))
 
     # setup the handler for index.html
     index = render_index(includes)
     if mode == 'dev':
         async def handler(req):
-            return web.Response(text=index, content_type="text/html", charset="utf-8")
-        app.router.add_get('/{_:(?!api).*}', handler)
+            return web.Response(text=index, content_type="text/html",
+                                charset="utf-8")
+        app.router.add_get('/{_:(?!api|static).*}', handler)
     
     return app
 
@@ -88,11 +93,11 @@ def create_app(config, mode):
 def render_index(includes):
     """Create the index.html file with the right things included."""
 
-    fmts = {'js': '<script type="text/javascript" src="{}"/>',
-            'css': '<link rel="stylesheet" type="text/css" href="{}">'}
+    fmts = {'js': '<script type="text/javascript" src="{}"></script>',
+            'css': '<link rel="stylesheet" type="text/css" href="{}"/>'}
 
     return INDEX_TEMPLATE.format(
-        '\n'.join(fmts[url.split('.')[-1]](url) for url in includes))
+        '\n'.join(fmts[url.split('.')[-1]].format(url) for url in includes))
 
 
 def main():
