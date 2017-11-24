@@ -23,25 +23,33 @@ import re
 from setuptools import setup
 
 
+with open('tozti/__init__.py') as s:
+    VERSION = re.search(r"__version__\W*=\W*'([^']+)'", s.read()).group(1)
+
+
+with open('README.md') as s:
+    LONG_DESCRIPTION = s.read()
+
+
 setup(
-    name='tozti',
-    version=re.search(r"__version__\W*=\W*'([^']+)'",
-                      open('server.py').read()).group(1),
-    py_modules=['server'],
+    name='tozti-core',
+    version=VERSION,
     author='Tozti',
     url='https://tozti.readthedocs.org',
     description='Storage engine for Tozti',
+    long_description=LONG_DESCRIPTION,
     license='AGPLv3',
     classifiers = [
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: GNU Affero General Public License v3',
     ],
+    packages=['tozti'],
     install_requires=[
         'aiohttp~=2.3',
         'pyyaml~=3.12',
         'logbook~=1.1',
     ],
     entry_points={
-        'console_scripts': ['run_tozti=server:main'],
+        'console_scripts': ['tozti_run=tozti.server:main'],
     },
 )
