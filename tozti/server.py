@@ -63,9 +63,9 @@ def create_app(config, mode):
         try:
             manifest = ept.load()
             prefix = ept.dist.project_name
-            if 'routes' in manifest:
-                manifest['routes'].add_prefix('/api/{}'.format(prefix))
-                app.router.add_routes(manifest['routes'])
+            if 'router' in manifest:
+                manifest['router'].add_prefix('/api/{}'.format(prefix))
+                app.router.add_routes(manifest['router'])
             if 'includes' in manifest:
                 includes.extend('/static/{}/{}'.format(prefix, path)
                                 for path in manifest['includes'])
