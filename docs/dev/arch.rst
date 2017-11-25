@@ -21,7 +21,7 @@ following keys:
 
 ``routes``
    This is used to declare new API endpoints. It should be an instance of
-   :py:class:`tozti.utils.Router`. More precisely it must have an
+   :py:class:`tozti.utils.RouterDef`. More precisely it must have an
    :py:meth:`add_prefix` method and it will be passed to
    :py:meth:`aiohttp.web.UrlDispatcher.add_routes`. Every route declared will
    be prefixed by ``/api/<extension-name>``.
