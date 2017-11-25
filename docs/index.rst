@@ -28,6 +28,7 @@ the inner workings of the project.
    :numbered:
 
    dev/quickstart
+   dev/arch
 
 
 Project internals
