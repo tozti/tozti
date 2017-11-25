@@ -31,7 +31,7 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.mathjax']
+extensions = ['sphinx.ext.mathjax', 'sphinx.ext.intersphinx']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -77,6 +77,11 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+intersphinx_mapping = {
+    'aiohttp': ('https://aiohttp.readthedocs.io/en/stable/', None),
+    'python': ('https://docs.python.org/3.6', None),
+}
+
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -97,6 +102,8 @@ html_theme_options = {
     'github_banner': True,
     'show_powered_by': False,
     'show_related': False,
+    'font_family': '"Lucida Grande", Arial, sans-serif',
+    'head_font_family': 'Georgia, serif',
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -112,7 +119,6 @@ html_static_path = ['_static']
 html_sidebars = {
     '**': [
         'about.html',
-        'navigation.html',
         'searchbox.html',
     ]
 }
