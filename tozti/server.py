@@ -66,25 +66,36 @@ def create_app(config, mode):
             if 'routes' in manifest:
                 manifest['routes'].add_prefix('/api/{}'.format(prefix))
                 app.router.add_routes(manifest['routes'])
-            if mode == 'dev' and 'static_dir' in manifest:
-                route = app.router.add_static(
-                    '/static/{}'.format(prefix), manifest['static_dir'])
             if 'includes' in manifest:
                 includes.extend('/static/{}/{}'.format(prefix, path)
                                 for path in manifest['includes'])
             if '_god_mode' in manifest:
                 manifest['_god_mode'](app)
+            if mode == 'dev' and 'static_dir' in manifest:
+                static_dir = os.path.join(ept.dist.location,
+                                          manifest['static_dir'])
+                if os.path.isdir(static_dir):
+                    app.router.add_static('/static/{}'.format(prefix),
+                                          static_dir)
         except Exception as err:
             raise ValueError('error while loading extension {0.project_name}: {1}'
                              .format(ept.dist, err))
 
     # setup the handler for index.html
-    index = render_index(includes)
+    index_html = render_index(includes)
     if mode == 'dev':
         async def handler(req):
-            return web.Response(text=index, content_type="text/html",
+            return web.Response(text=index_html, content_type="text/html",
                                 charset="utf-8")
         app.router.add_get('/{_:(?!api|static).*}', handler)
+        # look at the real location in case some extensions are installed in
+        # production mode
+        static_dir = os.path.join(sys.prefix, 'share', 'tozti')
+        if os.path.isdir(static_dir):
+            app.router.add_static('/static', static_dir)
+    else:
+        with open(os.path.join(sys.prefix, 'share', 'tozti', 'index.html'), 'w') as s:
+            s.write(index_html)
     
     return app
 
