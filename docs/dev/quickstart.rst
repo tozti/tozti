@@ -17,8 +17,9 @@ A good practice when working on python projects is to setup a virtual
 environnement (venv). A venv behaves much like a separated python installation:
 it has it's own separated list of installed packages so that when you are
 working on two projects that need different version of a specific package you
-just put them in different venvs and install different versions on each. You
-may create a venv named ``venv`` inside the ``tozti`` folder with::
+just put them in different venvs and install different versions on each. For
+more informations see the :py:mod:`venv` module and :pep:`405`. You may
+create a venv named ``venv`` inside the ``tozti`` folder with::
 
     python3 -m venv venv      # create it
     source venv/bin/activate  # activate it
@@ -42,3 +43,6 @@ There are a few variations on the above:
   working on it) by passing the git url::
 
      pip install git+ssh://git@github.com/tozti/tozti.git
+
+
+.. _python documentation: https://docs.python.org/3.6/library/venv.html
