@@ -6,28 +6,29 @@ This project is part of our scholarship at the `ENS de Lyon`_, specifically the
 supervised by Eddy Caron with the help of Damien Reimert.
 
 
-User Documentation
-------------------
+User's Guide
+------------
 
 This part of the documentation is directed towards associations and
 association members which want to use this project.
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
-   user/index
 
-
-Developer Documentation
------------------------
+Developer's Guide
+-----------------
 
 This part of the documentation contains specifications and explainations about
 the inner workings of the project.
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
-   dev/index
+   dev/quickstart
+
 
 Project internals
 -----------------

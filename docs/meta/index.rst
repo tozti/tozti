@@ -12,6 +12,7 @@ the *software project* course than the content of the project itself.
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
    orga
    tutorials
