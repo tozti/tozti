@@ -19,13 +19,13 @@
 import argparse
 import asyncio
 import os.path
-from pkg_resources import iter_entry_points, resource_string
 import sys
 
 from aiohttp import web
 import logbook
-import yaml
 import pystache
+from pkg_resources import iter_entry_points, resource_string
+import toml
 
 from tozti import logger
 
@@ -33,7 +33,7 @@ from tozti import logger
 def create_app(config, mode):
     """Create the main `aiohttp.web.Application` object.
 
-    :param config: path to the yaml config file
+    :param config: the config dictionary
     :param mode: string that is either ``dev`` or ``prod``
 
     It will iterate on every setuptools entrypoint in group ``tozti``
@@ -112,16 +112,16 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-c', '--config', default='./config.yml',
-        help='configuration file (default: `./config.yml`)')
-    parser.add_argument('mode', choices=('dev',))  # FIXME: handle `prod` mode
+        '-c', '--config', default='./config.toml',
+        help='configuration file (default: `./config.toml`)')
+    parser.add_argument('command', choices=('dev',))  # FIXME: handle `prod` mode
     args = parser.parse_args()
 
     # FIXME: do config file validation
     logger.debug('Loading configuration'.format(args.config))
     try:
         with open(args.config) as s:
-            config = yaml.load(s)
+            config = toml.load(s)
     except Exception as err:
         logger.critical('Error while loading configuration: {}'.format(err))
         sys.exit(1)

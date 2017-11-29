@@ -46,12 +46,14 @@ setup(
     packages=['tozti'],
     install_requires=[
         'aiohttp~=2.3',
-        'pyyaml~=3.12',
+        'toml~=0.9',
         'logbook~=1.1',
         'pystache~=0.5',
     ],
     entry_points={
-        'console_scripts': ['tozti_run=tozti.server:main'],
+        'console_scripts': [
+            'tozti_run = tozti.server:main'
+        ],
     },
     package_data={
         '': ['templates/*.html'],
