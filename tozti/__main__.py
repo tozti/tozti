@@ -152,3 +152,6 @@ def main():
         loop.run_until_complete(app.cleanup())
         logger.info('Shutdown complete, goodbye')
     loop.close()
+
+
+main()
