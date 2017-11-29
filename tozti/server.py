@@ -30,81 +30,54 @@ import toml
 from tozti import logger
 
 
-def create_app(config, mode):
-    """Create the main `aiohttp.web.Application` object.
+def load_exts(app):
+    """Search and register the extensions.
 
-    :param config: the config dictionary
-    :param mode: string that is either ``dev`` or ``prod``
+    Returns the list of paths to include and the list of static directories.
 
-    It will iterate on every setuptools entrypoint in group ``tozti``
-    with name ``manifest`` and add it to the application. See `docs`_.
+    Iterate on every setuptools entrypoint in group ``tozti`` with name
+    ``manifest`` and add it to the application. See the `docs`_ for the
+    manifest format.
 
-    .. docs: #FIXME write about creating extensions in the doc.
+    .. docs: https://tozti.readthedocs.io/en/latest/dev/arch.html#extensions
     """
 
-    app = web.Application()
-    app['config'] = config
-
-    # list of things to include to the main index.html
     includes = []
+    static_dirs = []
 
-    # load extensions
     for ept in iter_entry_points(group='tozti', name='manifest'):
         logger.info('Loading extension {0.project_name} ({0.location})'
                     .format(ept.dist))
         try:
             manifest = ept.load()
-            prefix = ept.dist.project_name
+            prefix = manifest['name']
             if 'router' in manifest:
                 manifest['router'].add_prefix('/api/{}'.format(prefix))
                 app.router.add_routes(manifest['router'])
-            if 'includes' in manifest:
-                includes.extend('/static/{}/{}'.format(prefix, path)
-                                for path in manifest['includes'])
             if '_god_mode' in manifest:
                 manifest['_god_mode'](app)
-            if mode == 'dev' and 'static_dir' in manifest:
-                static_dir = os.path.join(ept.dist.location,
-                                          manifest['static_dir'])
-                if os.path.isdir(static_dir):
-                    app.router.add_static('/static/{}'.format(prefix),
-                                          static_dir)
+            if 'includes' in manifest:
+                includes.extend('/static/{}/{}'.format(prefix, inc)
+                                for inc in manifest['includes'])
+            static_dirs.append((prefix, os.path.join(ept.dist.location, 'dist')))
         except Exception as err:
             raise ValueError(
                 'Error while loading extension {0.project_name}: {1}'
                 .format(ept.dist, err))
 
-    # setup the handler for index.html
-    index_html = render_index(includes)
-    if mode == 'dev':
-        async def handler(req):
-            return web.Response(text=index_html, content_type="text/html",
-                                charset="utf-8")
-        app.router.add_get('/{_:(?!api|static).*}', handler)
-
-        # look at the real location in case some extensions are installed in
-        # production mode
-        static_dir = os.path.join(sys.prefix, 'share', 'tozti')
-        if os.path.isdir(static_dir):
-            app.router.add_static('/static', static_dir)
-    else:
-        path = [sys.prefix, 'share', 'tozti', 'index.html']
-
-        with open(os.path.join(*path), 'w') as s:
-            s.write(index_html)
-
-    return app
+    return (includes, static_dirs)
 
 
 def render_index(includes):
     """Create the index.html file with the right things included."""
 
     context = {
-        'styles': [{src: u} for u in includes if u.split('.')[-1] == 'css'],
-        'scripts': [{src: u} for u in includes if u.split('.')[-1] == 'js']}
+        'styles': [{'src': u} for u in includes if u.split('.')[-1] == 'css'],
+        'scripts': [{'src': u} for u in includes if u.split('.')[-1] == 'js']
+    }
 
-    return pystache.render(
-        resource_string(__name__, 'templates/index.html'), context)
+    return pystache.render(resource_string(__name__, 'templates/index.html'),
+                           context)
 
 
 def main():
@@ -117,6 +90,13 @@ def main():
     parser.add_argument('command', choices=('dev',))  # FIXME: handle `prod` mode
     args = parser.parse_args()
 
+    # logging handlers
+    # FIXME: make things fancier and configurable (logrotate, etc)
+    if args.command == 'dev':
+        handler = logbook.StreamHandler(sys.stdout)
+        handler.push_application()
+
+    # config file
     # FIXME: do config file validation
     logger.debug('Loading configuration'.format(args.config))
     try:
@@ -126,18 +106,29 @@ def main():
         logger.critical('Error while loading configuration: {}'.format(err))
         sys.exit(1)
 
-    # logging handlers
-    # FIXME: make things fancier and configurable (logrotate, etc)
-    if args.mode == 'dev':
-        handler = logbook.StreamHandler(sys.stdout)
-        handler.push_application()
-
+    # initialize app
     logger.debug('Initializing app')
+    app = web.Application()
+    app['config'] = config
     try:
-        app = create_app(config, args.mode)
+        includes, statics = load_exts(app)
     except Exception as err:
         logger.critical('Error during initialization: {}'.format(err))
         sys.exit(1)
+
+    # deploy static files
+    if args.command == 'dev':
+        for (name, dir) in statics:
+            app.router.add_static('/static/{}'.format(name), dir)
+
+    # render index.html
+    logger.debug('Rendering index.html')
+    index_html = render_index(includes)
+    if args.command == 'dev':
+        async def index_handler(req):
+            return web.Response(text=index_html, content_type="text/html",
+                                charset="utf-8")
+        app.router.add_get('/{_:(?!api|static).*}', index_handler)
 
     logger.debug('Setting up asyncio')
     loop = asyncio.get_event_loop()
@@ -149,6 +140,7 @@ def main():
     logger.info('Listening on {host}:{port}'.format(**config['http']))
 
     try:
+        loop.run_until_complete(app.startup())
         loop.run_forever()
     except KeyboardInterrupt:
         logger.info('Received SIGINT, initiating shutdown')
