@@ -39,7 +39,7 @@ setup(
     description='Storage engine for Tozti',
     long_description=LONG_DESCRIPTION,
     license='AGPLv3',
-    classifiers = [
+    classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: GNU Affero General Public License v3',
     ],
@@ -48,8 +48,12 @@ setup(
         'aiohttp~=2.3',
         'pyyaml~=3.12',
         'logbook~=1.1',
+        'pystache~=0.5',
     ],
     entry_points={
         'console_scripts': ['tozti_run=tozti.server:main'],
+    },
+    package_data={
+        '': ['templates/*.html'],
     },
 )
