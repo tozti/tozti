@@ -1,24 +1,15 @@
-## tozti core
+# Tozti
 
-This repository contains the core of the tozti software project.
-It is licensed under the AGPLv3.
+This repository contains the core of the tozti software project. It is licensed
+under the AGPLv3. See [documentation](https://tozti.readthedocs.io/en/latest/)
+for more informations.
 
-- [Documentation](https://tozti.readthedocs.io/en/latest/)
 
-
-### Build & execute:
-
-Create a virtualenv you fool !
-
-Setup the project:
+## Quickstart
 
 ```
-python setup.py install
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 -m tozti dev
 ```
-
-Then, to launch the server just do:
-
-```
-tozti_run
-```
-
