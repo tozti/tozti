@@ -19,6 +19,6 @@ python setup.py install
 Then, to launch the server just do:
 
 ```
-run_tozti
+tozti_run
 ```
 
