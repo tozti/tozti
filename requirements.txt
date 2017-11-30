@@ -1,4 +1,4 @@
 aiohttp==2.3
 toml==0.9
 logbook==1.1
-pystache==0.5
+pystache==0.5.4
