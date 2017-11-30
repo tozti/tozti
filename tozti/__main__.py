@@ -18,26 +18,27 @@
 
 import argparse
 import asyncio
-import os.path
+from importlib.util import spec_from_file_location, module_from_spec
+import os
 import sys
 
 from aiohttp import web
 import logbook
 import pystache
-from pkg_resources import iter_entry_points, resource_string
 import toml
 
 from tozti import logger
 
 
+# base path to the tozti distribution
+TOZTI_BASE = os.path.join(os.path.dirname(__file__), '..')
+
+
 def load_exts(app):
-    """Search and register the extensions.
+    """Register the extensions found.
 
-    Returns the list of paths to include and the list of static directories.
-
-    Iterate on every setuptools entrypoint in group ``tozti`` with name
-    ``manifest`` and add it to the application. See the `docs`_ for the
-    manifest format.
+    Returns the list of includes and the list of static directories. See
+    the `docs`_ for the manifest format.
 
     .. docs: https://tozti.readthedocs.io/en/latest/dev/arch.html#extensions
     """
@@ -45,25 +46,43 @@ def load_exts(app):
     includes = []
     static_dirs = []
 
-    for ept in iter_entry_points(group='tozti', name='manifest'):
-        logger.info('Loading extension {0.project_name} ({0.location})'
-                    .format(ept.dist))
+    for ext in os.listdir(os.path.join(TOZTI_BASE, 'extensions')):
+        extpath = os.path.join(TOZTI_BASE, 'extensions', ext)
+        if not os.path.isdir(extpath):
+            continue
+
+        logger.info('Loading extension {}'.format(ext))
+
+        mod_path = os.path.join(extpath, 'server.py')
+        pkg_path = os.path.join(extpath, 'server', '__init__.py')
+        if os.path.isfile(mod_path):
+            spec = spec_from_file_location(ext, mod_path)
+        elif os.path.isfile(pkg_path):
+            spec = spec_from_file_location(ext, pkg_path)
+        else:
+            msg = 'Could not find python file for extension {}'
+            raise ValueError(msg.format(ext))
+
+        mod = module_from_spec(spec)
         try:
-            manifest = ept.load()
-            prefix = manifest['name']
-            if 'router' in manifest:
-                manifest['router'].add_prefix('/api/{}'.format(prefix))
-                app.router.add_routes(manifest['router'])
-            if '_god_mode' in manifest:
-                manifest['_god_mode'](app)
-            if 'includes' in manifest:
-                includes.extend('/static/{}/{}'.format(prefix, inc)
-                                for inc in manifest['includes'])
-            static_dirs.append((prefix, os.path.join(ept.dist.location, 'dist')))
+            spec.loader.exec_module(mod)
         except Exception as err:
-            raise ValueError(
-                'Error while loading extension {0.project_name}: {1}'
-                .format(ept.dist, err))
+            msg = 'Error while loading extension {}, skipping: {}'
+            logger.exception(msg.format(ext, err))
+            continue
+
+        manifest = mod.MANIFEST
+        if 'router' in manifest:
+            manifest['router'].add_prefix('/api/{}'.format(ext))
+            app.router.add_routes(manifest['router'])
+        if '_god_mode' in manifest:
+            manifest['_god_mode'](app)
+        if 'includes' in manifest:
+            includes.extend('/static/{}/{}'.format(ext, inc)
+                            for inc in manifest['includes'])
+        static_dir = os.path.join(extpath, 'dist')
+        if os.path.isdir(static_dir):
+            static_dirs.append((ext, static_dir))
 
     return (includes, static_dirs)
 
@@ -76,17 +95,18 @@ def render_index(includes):
         'scripts': [{'src': u} for u in includes if u.split('.')[-1] == 'js']
     }
 
-    return pystache.render(resource_string(__name__, 'templates/index.html'),
-                           context)
+    template = os.path.join(TOZTI_BASE, 'tozti', 'templates', 'index.html')
+    with open(template) as t:
+        return pystache.render(t.read(), context)
 
 
 def main():
     """Entry point for server startup."""
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser('tozti')
     parser.add_argument(
-        '-c', '--config', default='./config.toml',
-        help='configuration file (default: `./config.toml`)')
+        '-c', '--config', default=os.path.join(TOZTI_BASE, 'config.toml'),
+        help='configuration file (default: `TOZTI/config.toml`)')
     parser.add_argument('command', choices=('dev',))  # FIXME: handle `prod` mode
     args = parser.parse_args()
 
@@ -130,6 +150,7 @@ def main():
                                 charset="utf-8")
         app.router.add_get('/{_:(?!api|static).*}', index_handler)
 
+    # start up
     logger.debug('Setting up asyncio')
     loop = asyncio.get_event_loop()
     handler = app.make_handler()
