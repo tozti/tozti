@@ -1,13 +1,15 @@
 <template>
   <div>
     <div uk-sticky class="uk-navbar-container">
-        <div class="uk-container uk-container-expand">
+        <div class="uk-container">
           <nav uk-navbar>
             <div class="uk-navbar-left">
-              <a class="uk-navbar-toggle" uk-navbar-toggle-icon></a>
               <a href="/" class="uk-navbar-item uk-logo">
                 tozti
               </a>
+            </div>
+            <div class="uk-navbar-right" style="margin-right: 0;">
+              <notification-center></notification-center>
             </div>
           </nav>
         </div>
@@ -15,3 +17,13 @@
     <router-view></router-view>
   </div>
 </template>
+
+<script>
+  import NotificationCenter from './NotificationCenter.vue'
+
+  export default {
+    components: {
+      NotificationCenter
+    }
+  }
+</script>

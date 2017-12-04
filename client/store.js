@@ -1,5 +1,15 @@
 export default new Vuex.Store({
-  state: {},
-  mutations: {},
+  state: {
+    notifications: [],
+  },
+  mutations: {
+    addNotification (state, title, content) {
+      state.notifications.push({
+        seen: false,
+        title,
+        content
+      })
+    }
+  },
   modules: {}
 })

@@ -3,7 +3,7 @@ import Dashboard from './components/Dashboard.vue'
 
 import store from './store'
 
-new Vue({
+window.tozti = new Vue({
   el: '#app',
 
   router: new VueRouter({
