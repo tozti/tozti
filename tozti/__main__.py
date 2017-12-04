@@ -136,6 +136,10 @@ def main():
         logger.critical('Error during initialization: {}'.format(err))
         sys.exit(1)
 
+    # adding core js dependency
+    statics.append(('core', os.path.join(TOZTI_BASE, 'dist')))
+    includes.insert(0, '/static/core/core.js')
+
     # deploy static files
     if args.command == 'dev':
         for (name, dir) in statics:

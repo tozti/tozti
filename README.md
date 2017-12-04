@@ -11,5 +11,13 @@ for more informations.
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+```
+npm install
+npm run-script build
+```
+
+```
 python3 -m tozti dev
 ```
