@@ -44,6 +44,7 @@ def load_exts(app):
     """
 
     includes = {}
+    deps = {}
     static_dirs = []
 
     for ext in os.listdir(os.path.join(TOZTI_BASE, 'extensions')):
@@ -71,57 +72,51 @@ def load_exts(app):
             logger.exception(msg.format(ext, err))
             continue
 
-        manifest = mod.MANIFEST
-        if 'router' in manifest:
-            manifest['router'].add_prefix('/api/{}'.format(ext))
-            app.router.add_routes(manifest['router'])
-        if '_god_mode' in manifest:
-            manifest['_god_mode'](app)
+        new_incs, new_deps = register(app, ext, **mod.MANIFEST)
+        includes[ext] = new_incs
+        deps[ext] = new_deps
 
-        if not ext in includes:
-            includes[ext] = {'required_by': [],
-                             'includes' : []}
-        if 'dependencies' in manifest:
-            for dep in manifest['dependencies']:
-                if not dep in includes:
-                    includes[dep] = {'required_by': [],
-                                     'includes': []}
-                includes[dep]['required_by'].append(ext)
-        if 'includes' in manifest:
-            includes[ext]['includes'] = ['static/{}/{}'.format(ext, inc)
-                                         for inc in manifest['includes']]
         static_dir = os.path.join(extpath, 'dist')
         if os.path.isdir(static_dir):
             static_dirs.append((ext, static_dir))
 
     logger.info("{}".format(static_dirs))
-    return (includes, static_dirs)
+    return (includes, static_dirs, deps)
 
 
-def topo_sort_includes(includes):
+def topo_sort_includes(includes, deps):
     """Given includes, a dictionnary of dependencies & includes for each extensions,
     will construct a list of includes file sorted so that dependencies are respected"""
    
     visited = set()
-    order = []
-    def topo_sort(node):
+    def visit(node):
         visited.add(node)
-        for dep in includes[node]['required_by']:
+        for dep in deps[node]:
             if not dep in visited:
-                topo_sort(dep)
-        order.extend(includes[node]['includes'])
+                yield from visit(dep)
+        yield from includes[node]
 
-    for dep in includes:
+    for dep in deps:
         if not dep in visited:
-            topo_sort(dep)
-    order.reverse()
-    return order
-    
+            yield from visit(dep)
 
-def render_index(includes):
+
+def register(app, prefix, router=None, includes=(), _god_mode=None, dependencies=[]):
+    """Register routes and run `_god_mode` hook, returns files to include and dependencies."""
+
+    if router is not None:
+        logger.debug('Registering routes `/api/{}/...`'.format(prefix))
+        router.add_prefix('/api/{}'.format(prefix))
+        app.router.add_routes(router)
+    if _god_mode is not None:
+        _god_mode(app)
+    return ['/static/{}/{}'.format(prefix, incl) for incl in includes], dependencies
+
+
+def render_index(includes, deps):
     """Create the index.html file with the right things included."""
 
-    includes = topo_sort_includes(includes)
+    includes = list(topo_sort_includes(includes, deps))
     context = {
         'styles': [{'src': u} for u in includes if u.split('.')[-1] == 'css'],
         'scripts': [{'src': u} for u in includes if u.split('.')[-1] == 'js']
@@ -163,7 +158,7 @@ def main():
     app = web.Application()
     app['config'] = config
     try:
-        includes, statics = load_exts(app)
+        includes, statics, deps = load_exts(app)
     except Exception as err:
         logger.critical('Error during initialization: {}'.format(err))
         sys.exit(1)
@@ -178,7 +173,7 @@ def main():
         logger.info("ROUTE {}".format(resource))
     # render index.html
     logger.debug('Rendering index.html')
-    index_html = render_index(includes)
+    index_html = render_index(includes, deps)
     if args.command == 'dev':
         async def index_handler(req):
             return web.Response(text=index_html, content_type="text/html",
