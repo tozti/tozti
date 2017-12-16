@@ -71,20 +71,24 @@ def load_exts(app):
             logger.exception(msg.format(ext, err))
             continue
 
-        manifest = mod.MANIFEST
-        if 'router' in manifest:
-            manifest['router'].add_prefix('/api/{}'.format(ext))
-            app.router.add_routes(manifest['router'])
-        if '_god_mode' in manifest:
-            manifest['_god_mode'](app)
-        if 'includes' in manifest:
-            includes.extend('/static/{}/{}'.format(ext, inc)
-                            for inc in manifest['includes'])
+        includes.extend(register(app, ext, **mod.MANIFEST))
         static_dir = os.path.join(extpath, 'dist')
         if os.path.isdir(static_dir):
             static_dirs.append((ext, static_dir))
 
     return (includes, static_dirs)
+
+
+def register(app, prefix, router=None, includes=(), _god_mode=None):
+    """Register routes and run `_god_mode` hook, returns files to include."""
+
+    if router is not None:
+        logger.debug('Registering routes `/api/{}/...`'.format(prefix))
+        router.add_prefix('/api/{}'.format(prefix))
+        app.router.add_routes(router)
+    if _god_mode is not None:
+        _god_mode(app)
+    return ['/static/{}/{}'.format(prefix, incl) for incl in includes]
 
 
 def render_index(includes):
