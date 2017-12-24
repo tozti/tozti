@@ -30,19 +30,14 @@ from the venv. To deactivate it just issue ``deactivate``. Now you can clone
 the repos, install them inside your venv and start tozti::
 
    git clone git@github.com:tozti/tozti && cd tozti
-   pip install --editable .
-   tozti_run --config config.yml dev
+   pip install -r requirements.txt
+   python3 -m tozti dev  # from the root of the repo
 
-There are a few variations on the above:
+Extensions are located inside the ``extensions`` folder. To build one, make
+sure you have the ``npm`` package, then type::
 
-- you may want not to use the ``--editable`` (or ``-e``) switch: it is only
-  useful in a development environnement as it doesn't copy the package to
-  ``VENV/lib/python3.6/site-packages`` but symlinks it to your local directory:
-  that way you can work on it and restart it without needing to reinstall it
-- you may install a package without even cloning it (if you really don't plan
-  working on it) by passing the git url::
-
-     pip install git+ssh://git@github.com/tozti/tozti.git
+   npm install    # only needed when you change package.json
+   npm run build  # build the *.vue files to browser-compatible javascript
 
 
 .. _python documentation: https://docs.python.org/3.6/library/venv.html
