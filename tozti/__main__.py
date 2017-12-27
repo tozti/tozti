@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 
-# You should have received a copy of the GNU Affero General Public License
+# You should have received a copy of the GNU Affero General Public Licensefoo/blo/baz
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
@@ -43,7 +43,7 @@ def load_exts(app):
     .. docs: https://tozti.readthedocs.io/en/latest/dev/arch.html#extensions
     """
 
-    includes = []
+    includes = {}
     static_dirs = []
 
     for ext in os.listdir(os.path.join(TOZTI_BASE, 'extensions')):
@@ -77,19 +77,51 @@ def load_exts(app):
             app.router.add_routes(manifest['router'])
         if '_god_mode' in manifest:
             manifest['_god_mode'](app)
+
+        if not ext in includes:
+            includes[ext] = {'required_by': [],
+                             'includes' : []}
+        if 'dependencies' in manifest:
+            for dep in manifest['dependencies']:
+                if not dep in includes:
+                    includes[dep] = {'required_by': [],
+                                     'includes': []}
+                includes[dep]['required_by'].append(ext)
         if 'includes' in manifest:
-            includes.extend('/static/{}/{}'.format(ext, inc)
-                            for inc in manifest['includes'])
+            includes[ext]['includes'] = ['static/{}/{}'.format(ext, inc)
+                                         for inc in manifest['includes']]
         static_dir = os.path.join(extpath, 'dist')
         if os.path.isdir(static_dir):
             static_dirs.append((ext, static_dir))
 
+    logger.info("{}".format(static_dirs))
     return (includes, static_dirs)
 
+
+def topo_sort_includes(includes):
+    """Given includes, a dictionnary of dependencies & includes for each extensions,
+    will construct a list of includes file sorted so that dependencies are respected"""
+   
+    visited = set()
+    order = []
+    def topo_sort(node):
+        visited.add(node)
+        for dep in includes[node]['required_by']:
+            if not dep in visited:
+                topo_sort(dep)
+        order.extend(includes[node]['includes'])
+
+    for dep in includes:
+        if not dep in visited:
+            topo_sort(dep)
+    order.reverse()
+    return order
+    
 
 def render_index(includes):
     """Create the index.html file with the right things included."""
 
+    includes = topo_sort_includes(includes)
     context = {
         'styles': [{'src': u} for u in includes if u.split('.')[-1] == 'css'],
         'scripts': [{'src': u} for u in includes if u.split('.')[-1] == 'js']
@@ -139,8 +171,11 @@ def main():
     # deploy static files
     if args.command == 'dev':
         for (name, dir) in statics:
+            logger.info("STATIC {} {}".format(name, dir))
             app.router.add_static('/static/{}'.format(name), dir)
 
+    for resource in app.router.resources():
+        logger.info("ROUTE {}".format(resource))
     # render index.html
     logger.debug('Rendering index.html')
     index_html = render_index(includes)
