@@ -27,7 +27,7 @@ import logbook
 import pystache
 import toml
 
-from tozti import logger
+from tozti import logger, store
 
 
 # base path to the tozti distribution
@@ -79,16 +79,25 @@ def load_exts(app):
     return (includes, static_dirs)
 
 
-def register(app, prefix, router=None, includes=(), _god_mode=None):
+def register(app, prefix, **kwargs):
     """Register routes and run `_god_mode` hook, returns files to include."""
 
-    if router is not None:
+    if 'router' in kwargs:
         logger.debug('Registering routes `/api/{}/...`'.format(prefix))
-        router.add_prefix('/api/{}'.format(prefix))
-        app.router.add_routes(router)
-    if _god_mode is not None:
-        _god_mode(app)
-    return ['/static/{}/{}'.format(prefix, incl) for incl in includes]
+        kwargs['router'].add_prefix('/api/{}'.format(prefix))
+        app.router.add_routes(kwargs['router'])
+
+    # register handlers
+    for sig in ('on_response_prepare', 'on_startup', 'on_cleanup',
+                'on_shutdown'):
+        if sig in kwargs:
+            getattr(app, sig).append(kwargs[sig])
+
+    # mega hook
+    kwargs.get('_god_mode', lambda _: None)(app)
+
+    return ['/static/{}/{}'.format(prefix, i)
+            for i in kwargs.get('includes', [])]
 
 
 def render_index(includes):
@@ -133,7 +142,13 @@ def main():
     # initialize app
     logger.debug('Initializing app')
     app = web.Application()
-    app['config'] = config
+    app['tozti-config'] = config
+
+    # initialize core api
+    register(app, 'store', router=store.router, on_startup=store.open_db,
+             on_cleanup=store.close_db)
+
+    # load extensions
     try:
         includes, statics = load_exts(app)
     except Exception as err:
@@ -150,8 +165,8 @@ def main():
     index_html = render_index(includes)
     if args.command == 'dev':
         async def index_handler(req):
-            return web.Response(text=index_html, content_type="text/html",
-                                charset="utf-8")
+            return web.Response(text=index_html, content_type='text/html',
+                                charset='utf-8')
         app.router.add_get('/{_:(?!api|static).*}', index_handler)
 
     # start up
@@ -159,9 +174,7 @@ def main():
     loop = asyncio.get_event_loop()
     handler = app.make_handler()
     srv = loop.run_until_complete(loop.create_server(
-        handler,
-        config['http']['host'],
-        config['http']['port']))
+        handler, **config['http']))
     logger.info('Listening on {host}:{port}'.format(**config['http']))
 
     try:
