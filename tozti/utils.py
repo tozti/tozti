@@ -16,6 +16,9 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from aiohttp.web import json_response
+
+
 class ResourceDef:
     """Definition of a resource.
 
@@ -133,3 +136,16 @@ class RouterDef:
 
     def __iter__(self):
         return iter(self._resources)
+
+
+API_ERRORS = {}
+
+def register_error(name, fmt, status):
+    if name in API_ERRORS:
+        raise ValueError('error %s already defined' % name)
+    API_ERRORS[name] = (len(API_ERRORS), fmt, status)
+
+def api_error(name, **vars):
+    code, fmt, status = API_ERRORS[name]
+    return json_response({'error': code, 'msg': fmt.format(**vars)},
+                         status=status)
