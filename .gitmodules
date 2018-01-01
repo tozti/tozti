@@ -1,0 +1,3 @@
+[submodule "extensions/multimedia"]
+	path = extensions/multimedia
+	url = git@github.com:tozti/multimedia.git
