@@ -103,6 +103,8 @@ class EntityStore:
         if resp is None:
             raise KeyError
         del resp['_id']
+        resp['creation'] = resp['creation'].isoformat()
+        resp['last-edit'] = resp['last-edit'].isoformat()
         return resp
 
     async def close(self):
@@ -116,8 +118,8 @@ class EntityStore:
         # complete the metadata
         eid = str(uuid4())
         now = datetime.now(timezone.utc).replace(microsecond=0)
-        data['creation'] = now.isoformat()
-        data['last-edit'] = now.isoformat()
+        data['creation'] = now
+        data['last-edit'] = now
         data['eid'] = eid
 
         await self._entities.insert_one(data)
