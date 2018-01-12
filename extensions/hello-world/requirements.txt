@@ -1,3 +1,0 @@
-# See https://pip.readthedocs.io/en/latest/reference/pip_install/#requirements-file-format
-# for requirements file format. Most importantly, lines should look like
-# `package-name==version`.
