@@ -1,6 +1,6 @@
-# Tozti
+# tozti
 
-This repository contains the core of the tozti software project. It is licensed
+This repository contains the core of the **tozti** software project. It is licensed
 under the AGPLv3. See [documentation](https://tozti.readthedocs.io/en/latest/)
 for more informations.
 
@@ -10,50 +10,40 @@ for more informations.
 ### Dependencies
 
 For this project to work you will need:
-- nodejs (for npm)
+- nodejs
 - python3
 
-### Install Tozti
+### Installation
 
-First, start by creating a virtualenv and activate it:
+Start by creating a virtualenv and activate it:
 ```
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-The next step is to install tozti's dependencies. This can be done like that:
+The next step is to install tozti's python dependencies:
 ```
 pip install -r requirements.txt
 ```
 
+Finally, install the client-side dependencies and build the client code:
 ```
 npm install
-npm run-script build
+npm run build
 ```
+
+### Lauching tozti
 
 ```
 python3 -m tozti dev
 ```
 
-### Install an extension
+### Installing extensions
 
-To install an extension, copy the extension inside `extensions/`.
-Then, inside `extensions/<extension-name>/`, run `npm run build`
+To install an extension, simply copy the extension folder inside `extensions/`.
+*Some extensions require an additional step to compile their client code, but it is their responsability to explain the build process*.
 
-### Start Tozti
+## Documentation
 
-Once every extensions is installed, launch tozti with:
-```
-python -m tozti dev
-```
-
-## Further documentations:
-
-See [documentation](https://tozti.readthedocs.io/en/latest/) for more documentations.
-
-## Troubleshooting:
-
-> I've installed a new extension but it is not launching with the server 
-
-Make sure you have executed `npm run build` in this extension folder. Then, restart 
-Tozti if needed.
+The documentation for **tozti** is available online on [tozti.readthedocs.io](https://tozti.readthedocs.io).
+The repository for this documentation is https://github.com/tozti/docs.
