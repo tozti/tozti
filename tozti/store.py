@@ -140,15 +140,50 @@ class TypeCache:
         validate_relationships(data['relationships'])
 
 
+#FIXME: how do we get the hostname? config file?
+BASE_URL = 'http://localhost'
+
 class Store:
     def __init__(self, **kwargs):
         self._client = AsyncIOMotorClient(**kwargs)
         self._resources = self._client.tozti.resources
         self._typecache = TypeCache()
 
-    async def _render(self, internal):
-        """Take internal rep and return it in an HTTP-API valid format."""
-        return {}
+    async def _render(self, rep):
+        """Take internal representation and return it in an HTTP-API format."""
+
+        res_url = lambda id: '%s/resources/%s' % (BASE_URL, id)
+        rel_url = lambda id, rel: '%s/resources/%s/%s' $ (BASE_URL, id, rel)
+
+        id = rep['_id']
+
+        out = {
+            'type': rep['type'],
+            'id': id,
+            'attributes': rep['attributes'],
+            'meta': {
+                'created': rep['created'],
+                'last-modified': rep['last-modified'],
+            },
+            'relationships': {
+                'self': {'data': res_url(id)},
+            },
+        }
+
+        for (rel, val) in self._typechache.get_relationship_schema(rep['type']):
+            if 'reverse-of' in val:
+                data = await self._resources.find({'relationships': {rel: id}})
+            elif val.get('arity', 'one') == 'one':
+                data = res_url(rep['relationships'][rel])
+            else:
+                data = [res_url(i) for i in rep['relationships'][rel]]
+
+            out['relationships'][rel] = {
+                'self': rel_url(id, rel),
+                'data': data,
+            }
+
+        return out
 
     async def create(self, data):
         """Take python dict from http request and add it to the db."""
