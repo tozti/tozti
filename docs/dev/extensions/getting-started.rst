@@ -10,7 +10,7 @@ Everything defined by an extension lives inside the same folder, whose name is t
 
 Suppose we call it ``extension-name``. Browse to the ``extensions/`` folder and proceed to create a folder ``extension-name``.
 The only requirement for *tozti* to recognize an extension is for this extension to provide a file ``server.py`` declaring a dictionnary ``MANIFEST``.
-Thus a minimal definition would like like so::
+Thus a minimal definition would be like so::
 
     MANIFEST = {}
 
