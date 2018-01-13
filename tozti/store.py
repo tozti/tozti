@@ -39,44 +39,39 @@ register_error('INVALID_ENTITY', 'invalid entity content: {err}', 400)
 
 router = RouterDef()
 
-entity = router.add_resource('/entity')
-
 uuid_re = '-'.join('[0-9a-fA-F]{%d}' % i for i in (8, 4, 4, 4, 12))
-entity_single = router.add_resource('/entity/{eid:%s}' % uuid_re)
+resources = router.add_resource('/resources')
+resources_single = router.add_resource('/resources/{rid:%s}' % uuid_re)
+relationship = router.add_resource('/resources/{rid:%s}/{rel}' % uuid_re)
 
 
+@resources.post
+async def resources_post(req):
+    pass
 
-@entity.post
-async def entity_post(req):
-    """POST /api/store/entity
+@resources_single.get
+async def resources_get(req):
+    pass
 
-    Returns newly created entity.
-    """
+@resources_single.patch
+async def resources_patch(req):
+    pass
 
-    if req.content_type != 'application/json':
-        return api_error('NOT_JSON')
-    try:
-        data = await req.json()
-    except JSONDecodeError:
-        return api_error('BAD_JSON')
-    try:
-        eid = await req.app['tozti-store'].create_entity(data)
-    except ValueError as err:
-        return api_error('INVALID_ENTITY', err=err)
-    return json_response(await req.app['tozti-store'].get_entity(eid))
+@resources_single.delete
+async def resources_delete(req):
+    pass
 
-@entity_single.get
-async def entity_get(req):
-    """GET /api/store/entity/{eid}
+@relationship.get
+async def relationship_get(req):
+    pass
 
-    Returns matching entity if existing and readable.
-    """
+@relationship.put
+async def relationship_put(req):
+    pass
 
-    eid = req.match_info['eid']
-    try:
-        return json_response(await req.app['tozti-store'].get_entity(eid))
-    except KeyError:
-        return api_error('ENTITY_NOT_FOUND', eid=eid)
+@relationship.post
+async def relationship_post(req):
+    pass
 
 
 #########
@@ -92,35 +87,36 @@ async def close_db(app):
     await app['tozti-store'].close()
 
 
-class EntityStore:
+class Store:
     def __init__(self, **kwargs):
         self._client = AsyncIOMotorClient(**kwargs)
-        self._entities = self._client.tozti.entities
+        self._resources = self._client.tozti.resources
+        self._typecache = {}
 
-    async def get_entity(self, eid):
-        logger.debug('querying DB for entity {}'.format(eid))
-        resp = await self._entities.find_one({'eid': eid})
-        if resp is None:
-            raise KeyError
-        del resp['_id']
-        resp['creation'] = resp['creation'].isoformat()
-        resp['last-edit'] = resp['last-edit'].isoformat()
-        return resp
+    async def _render(self, internal):
+        """Take internal rep and return it in an HTTP-API valid format."""
+        return {}
 
-    async def close(self):
-        self._client.close()
+    async def create(self, data):
+        """Take python dict from http request and add it to the db."""
+        return
 
-    async def create_entity(self, data):
-        logger.debug('incoming data: {}'.format(data))
-        if 'type' not in data:
-            raise ValueError('missing type property')
+    async def get(self, id):
+        return
 
-        # complete the metadata
-        eid = str(uuid4())
-        now = datetime.now(timezone.utc).replace(microsecond=0)
-        data['creation'] = now
-        data['last-edit'] = now
-        data['eid'] = eid
+    async def update(self, id, data):
+        return
 
-        await self._entities.insert_one(data)
-        return eid
+    async def remove(self, id):
+        return
+
+    async def rel_get(self, id, rel):
+        return
+
+    async def rel_update(self, id, rel, data):
+        return
+
+    async def rel_append(self, id, rel, data)
+
+    async def close():
+        pass
