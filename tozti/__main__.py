@@ -105,7 +105,7 @@ def topo_sort_includes(includes, deps):
             yield from visit(dep)
 
 
-def register(app, prefix, router=None, includes=(), _god_mode=None, dependencies=[]):
+def register(app, prefix, router=None, includes=(), _god_mode=None, dependencies=[], **kwargs):
     """Register routes and run `_god_mode` hook, returns files to include and dependencies."""
 
     if router is not None:

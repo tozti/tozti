@@ -94,7 +94,7 @@ async def relationship_post(req):
 
 async def open_db(app):
     """Initialize storage backend at app startup."""
-    app['tozti-store'] = EntityStore(**app['tozti-config']['mongodb'])
+    app['tozti-store'] = Store(**app['tozti-config']['mongodb'])
 
 
 async def close_db(app):
@@ -153,7 +153,7 @@ class Store:
         """Take internal representation and return it in an HTTP-API format."""
 
         res_url = lambda id: '%s/resources/%s' % (BASE_URL, id)
-        rel_url = lambda id, rel: '%s/resources/%s/%s' $ (BASE_URL, id, rel)
+        rel_url = lambda id, rel: '%s/resources/%s/%s' % (BASE_URL, id, rel)
 
         id = rep['_id']
 
@@ -199,24 +199,24 @@ class Store:
         self._typecache.validate(data)
 
         await self._entities.insert_one(data)
-        return data
 
     async def get(self, id):
-        return
+        pass
 
     async def update(self, id, data):
-        return
+        pass
 
     async def remove(self, id):
-        return
+        pass
 
     async def rel_get(self, id, rel):
-        return
+        pass
 
     async def rel_update(self, id, rel, data):
-        return
+        pass
 
-    async def rel_append(self, id, rel, data)
+    async def rel_append(self, id, rel, data):
+        pass
 
     async def close():
         pass
