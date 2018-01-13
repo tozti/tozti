@@ -347,8 +347,9 @@ class Store:
         data = {'attributes': attributes, 'relationships': relationships,
                 'meta': meta, 'type': resource_type}
 
-        await self._typecache.validate(data)
-        await self._resources.insert_one(data)
+        sanitized = await self.sanitize_incoming(data)
+        sanitized['_id'] = uuid4()
+        await self._resources.insert_one(sanitized)
 
     async def typeof(self, id):
         pass
