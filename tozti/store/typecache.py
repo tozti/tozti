@@ -40,15 +40,15 @@ META_SCHEMA = {
             'type': 'object',
             'patternProperties': {
                 '.*': {
-                    'oneOf': [{
+                    'anyOf': [{
                         'type': 'object',
                         'properties': {
                             'reverse-of': {
                                 'type': 'object',
                                 'properties': {
                                     'type': { 'anyOf': [
-                                        { 'type': 'string', 'format': 'uri' },
-                                        { 'type': 'string', 'pattern': '^\*$'},
+                                        { 'type': 'string' },#, 'format': 'uri' },
+                                        { 'type': 'string', 'pattern': r'^\*$'},
                                      ]},
                                     'path': { 'type': 'string' },
                                 }
@@ -86,13 +86,14 @@ class TypeCache:
                 async with session.get(type_url) as resp:
                     assert resp.status == 200
                     raw_schema = await resp.json()
-        except:
-            raise ValueError('error while retrieving type schema')
+        except Exception as err:
+            raise ValueError('error while retrieving type schema: {}'.format(err))
 
         try:
             jsonschema.validate(raw_schema, META_SCHEMA)
         except ValidationError as err:
             raise ValueError('invalid schema: %s' % err.message)
+
 
         to_one = []
         to_many = []

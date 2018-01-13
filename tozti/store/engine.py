@@ -72,7 +72,7 @@ class Store:
                 raise ValueError('bad relationship object')
             if 'id' not in rels[rel]['data']:
                 raise ValueError('bad relationship object')
-            id = rels[rel]['data']['id']
+            id = UUID(rels[rel]['data']['id'])
             try:
                 tp = await self.typeof(id)
             except KeyError:
@@ -91,7 +91,7 @@ class Store:
             for rel_obj in rels[rel]['data']:
                 if 'id' not in rel_obj:
                     raise ValueError('bad relationship object')
-                id = rel_obj['id']
+                id = UUID(rel_obj['id'])
                 try:
                     tp = await self.typeof(id)
                 except KeyError:
@@ -99,7 +99,7 @@ class Store:
                 if not tp == rel_obj.get('type', tp):
                     raise ValueError('type mismatch')
                 out_rels.append(id)
-            output['relationships'] = out_rels
+            output['relationships'][rel] = out_rels
 
         return output
 
@@ -141,11 +141,12 @@ class Store:
                 'data': data,
             }
         for (rel, defs) in schema.auto:
-            data = await self._resources.find({'type': defs['type'],
-                                               'relationships': {defs['path']: id}})
+            cursor = self._resources.find({'type': defs['type'],
+                                           'relationships.%s' % defs['path']: id})
             out['relationships'][rel] = {
                 'self': REL_URL(id, rel),
-                'data': [{'type': d['type'], 'id': d['_id'], 'href': RES_URL(d['_id'])} for d in data]
+                'data': [{'type': d['type'], 'id': d['_id'], 'href': RES_URL(d['_id'])}
+                         async for d in cursor]
             }
 
 
