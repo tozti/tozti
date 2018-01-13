@@ -19,8 +19,8 @@
 from aiohttp.web import json_response
 
 
-class ResourceDef:
-    """Definition of a resource.
+class RouteDef:
+    """Definition of a route.
 
     The method :meth:`get`, :meth:`post`, :meth:`put`, etc can be used as
     decorators to specify the handler for the given HTTP method.
@@ -35,10 +35,10 @@ class ResourceDef:
     def register(self, app):
         """Add all our routes to the given `aiohttp.web.Application`."""
 
-        resource = app.add_resource(self._path, name=self._name)
-        resource.add_prefix(self._prefix)
+        route = app.add_resource(self._path, name=self._name)
+        route.add_prefix(self._prefix)
         for m, h in self._routes.items():
-            resource.add_route(m, h)
+            route.add_route(m, h)
 
     def route(self, *meth):
         """Decorator (with arguments) used to specify HTTP handler."""
@@ -107,9 +107,9 @@ class RouterDef:
     Sample usage::
 
         router = RouterDef()
-        resource = router.add_resource('/foo')
+        route = router.add_route('/foo')
 
-        @resource.get
+        @route.get
         def handle_get(req):
             return ...
 
@@ -119,23 +119,23 @@ class RouterDef:
     """
 
     def __init__(self):
-        self._resources = []
+        self._routes = []
 
-    def add_resource(self, path, name=None):
-        """Add and return a resource with given path to the router."""
+    def add_route(self, path, name=None):
+        """Add and return a route with given path to the router."""
 
-        r = ResourceDef(path, name=name)
-        self._resources.append(r)
+        r = RouteDef(path, name=name)
+        self._routes.append(r)
         return r
 
     def add_prefix(self, prefix):
-        """Prefix every contained resource."""
+        """Prefix every contained route."""
 
-        for r in self._resources:
+        for r in self._routes:
             r._prefix = prefix
 
     def __iter__(self):
-        return iter(self._resources)
+        return iter(self._routes)
 
 
 API_ERRORS = {}
