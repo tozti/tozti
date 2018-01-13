@@ -44,9 +44,12 @@ window.tozti = new Vue({
   store,
 
   router: new VueRouter({
+    mode: 'history',
     routes: [
       { path: '/', component: Dashboard },
-      { path: '/:workspace/:taxonomy*', component: Taxonomy }
+      // TODO(flupe): find how to define a wildcard and
+      // still allow new routes to be added with higher priority
+      { path: '/group/:workspace/:taxonomy*', component: Taxonomy }
     ]
   }),
 

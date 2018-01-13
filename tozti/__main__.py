@@ -73,10 +73,10 @@ def load_exts(app):
             continue
 
         new_incs, new_deps = register(app, ext, **mod.MANIFEST)
-        
+
         # extensions always depend on the core
         new_deps.append('core')
-        
+
         includes[ext] = new_incs
         deps[ext] = new_deps
 
