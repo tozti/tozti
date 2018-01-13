@@ -46,7 +46,7 @@ uuid_re = '-'.join('[0-9a-fA-F]{%d}' % i for i in (8, 4, 4, 4, 12))
 relationship_re = r'[\da-z]+'
 resources = router.add_resource('/resources')
 resources_single = router.add_resource('/resources/{id:%s}' % uuid_re)
-relationship = router.add_resource('/resources/{id:%s}/{rel:%s}' % uuid_re, relationship_re)
+relationship = router.add_resource('/resources/{id:%s}/{rel:%s}' % (uuid_re, relationship_re))
 
 
 @resources.post
