@@ -31,7 +31,7 @@ from tozti import logger
 from tozti.utils import RouterDef, register_error, api_error
 
 
-register_error('ENTITY_NOT_FOUND', 'entity {eid} not found', 404)
+register_error('ENTITY_NOT_FOUND', 'entity {id} not found', 404)
 register_error('NOT_JSON', 'expected json data', 406)
 register_error('BAD_JSON', 'malformated json data', 400)
 register_error('INVALID_ENTITY', 'invalid entity content: {err}', 400)
@@ -59,10 +59,10 @@ async def resources_post(req):
     except JSONDecodeError:
         return api_error('BAD_JSON')
     try:
-        eid = await req.app['tozti-store'].create_entity(data)
+        eid = await req.app['tozti-store'].create(data)
     except ValueError as err:
         return api_error('INVALID_ENTITY', err=err)
-    return json_response(await req.app['tozti-store'].get_entity(eid))
+    return json_response(await req.app['tozti-store'].get(eid))
 
 
 @resources_single.get
@@ -194,12 +194,11 @@ class Store:
         relationships = data.get('relationships', {})
         data = {'attributes': attributes, 'relationships': relationships}
 
-        self._typecache.validate(data)
-
-        await self._entities.insert_one(data)
+        await self._typecache.validate(data)
+        await self._resources.insert_one(data)
 
     async def get(self, id):
-        pass
+        return await self._resource.find_one({'id': id})
 
     async def update(self, id, data):
         pass
