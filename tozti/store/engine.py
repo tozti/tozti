@@ -55,11 +55,10 @@ class Store:
         }
 
         try:
-            print("Validating", data['attributes'], "against", schema.attributes)
             jsonschema.validate(data['attributes'], schema.attributes)
         except ValidationError as err:
             raise ValueError(err.message)
-        output['attributes'] = attributes
+        output['attributes'] = data['attributes']
 
         rels = data.get('relationships', {})
         if not rels.keys() <= schema.allowed_rels:
