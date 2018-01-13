@@ -31,7 +31,7 @@ from tozti import logger
 
 
 # base path to the tozti distribution
-TOZTI_BASE = os.path.join(os.path.dirname(__file__), '..')
+TOZTI_BASE = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 
 
 def load_exts(app):
@@ -162,6 +162,11 @@ def main():
     except Exception as err:
         logger.critical('Error during initialization: {}'.format(err))
         sys.exit(1)
+
+    # adding core js dependency
+    statics.append(('core', os.path.join(TOZTI_BASE, 'dist')))
+    includes['core'] = ['static/core/core.js']
+    deps['core'] = []
 
     # deploy static files
     if args.command == 'dev':

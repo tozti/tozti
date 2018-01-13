@@ -26,6 +26,15 @@ The next step is to install tozti's dependencies. This can be done like that:
 pip install -r requirements.txt
 ```
 
+```
+npm install
+npm run-script build
+```
+
+```
+python3 -m tozti dev
+```
+
 ### Install an extension
 
 To install an extension, copy the extension inside `extensions/`.
