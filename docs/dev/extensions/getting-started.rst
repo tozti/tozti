@@ -70,11 +70,9 @@ Let's create a file called ``index.js`` inside ``extension-name/dist/``:
 
 .. code-block:: javascript
 
-  Vue.component('extension-name-widget', {
+  tozti.store.commit('registerWidget', {
     template: '<div class="uk-placeholder">A widget coming directly from our extension! :)</div>'
   })
-
-  tozti.store.commit('registerWidget', 'extension-name-widget')
 
 As you might have guessed, we need to inform *tozti* of the existence of this file, inside ``MANIFEST``::
 
