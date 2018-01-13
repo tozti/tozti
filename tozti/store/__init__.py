@@ -17,6 +17,7 @@
 
 
 from json import JSONDecodeError
+from uuid import UUID
 
 from tozti.utils import RouterDef, register_error, api_error, json_response
 from tozti.store.engine import Store
@@ -56,9 +57,9 @@ async def resources_post(req):
 
 @resources_single.get
 async def resources_get(req):
-    """GET /api/store/resources
+    """GET /api/store/resources/{id}
     """
-    id = req.match_info['id']
+    id = UUID(req.match_info['id'])
     try:
         return json_response(await req.app['tozti-store'].get(id))
     except KeyError:
@@ -66,11 +67,22 @@ async def resources_get(req):
 
 @resources_single.patch
 async def resources_patch(req):
-    pass
+    """PATCH /api/store/resources/{id}
+    """
+    id = UUID(req.match_info['id'])
+    try:
+        data = await req.json()
+        await req.app['tozti-store'].update(id, data)
+        updated_data = await req.app['tozti-store'].get(id)
+        return json_response(updated_data)
+    except KeyError:
+        return api_error('RESOURCE_NOT_FOUND', id=id)
+    except ValueError as err:
+        return api_error('INVALID_DATA', err=err)
 
 @resources_single.delete
 async def resources_delete(req):
-    id = req.match_info['id']
+    id = UUID(req.match_info['id'])
     try:
         req.app['tozti-store'].remove(id)
     except KeyError:
@@ -79,7 +91,7 @@ async def resources_delete(req):
 
 @relationship.get
 async def relationship_get(req):
-    id = req.match_info['id']
+    id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
     try:
         resp = await req.app['tozti-store'].get(id)

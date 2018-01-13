@@ -179,7 +179,18 @@ class Store:
         return await self._render(resp)
 
     async def update(self, id, data):
-        pass
+        resource_type = await self.typeof(id)
+        schema = await self._typecache[resource_type]
+        allowed_attributes = schema.attributes
+        for attr, value in data['attributes'].items():
+            schema = allowed_attributes.get(attr, None)
+            if schema is None:
+                raise ValueError("invalid attribute {}".format(attr))
+            jsonschema.validate(value, schema)
+
+        res = await self._resources.update_one({'_id': id}, { '$set': data})
+        if res.matched_count == 0:
+            raise KeyError
 
     async def remove(self, id):
         logger.debug('deleting resource {} from the DB'.format(id))
