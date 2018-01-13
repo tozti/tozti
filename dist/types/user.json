@@ -1,0 +1,32 @@
+{
+    "attributes": {
+        "nick": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_0-9]+$",
+        },
+    },
+    "relationships": {
+        "groups": {
+            "reverse-of": {
+                "type": "http://tozti/group.json",
+                "path": "members",
+            }
+        }
+    }
+}
+
+// group.json
+{
+    "attributes": {
+        "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_0-9]+$",
+        },
+    },
+    "relationships": {
+        "members": {
+           "arity": "to-many",
+           "target": "http://.../user.json"
+        }
+    }
+}

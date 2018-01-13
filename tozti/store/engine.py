@@ -27,9 +27,8 @@ from tozti.store.typecache import TypeCache
 
 
 #FIXME: how do we get the hostname? config file?
-BASE_URL = 'http://localhost'
-RES_URL = lambda id: '%s/resources/%s' % (BASE_URL, id)
-REL_URL = lambda id, rel: '%s/resources/%s/%s' % (BASE_URL, id, rel)
+RES_URL = lambda id: '/api/store/resources/%s' % id
+REL_URL = lambda id, rel: '/api/store/resources/%s/%s' % (id, rel)
 
 
 class Store:
