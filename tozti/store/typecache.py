@@ -20,6 +20,7 @@ from collections import namedtuple
 
 import jsonschema
 import aiohttp
+from jsonschema.exceptions import ValidationError
 
 
 Schema = namedtuple('Schema', ('attributes', 'to_one', 'to_many', 'auto',
@@ -30,7 +31,7 @@ META_SCHEMA = {
     'type': 'object',
     'properties': {
         'attributes': jsonschema.Draft4Validator.META_SCHEMA,
-        'relationship': {
+        'relationships': {
             'type': 'object',
             'patternProperties': {
                 '.*': {

@@ -20,7 +20,6 @@ from datetime import datetime, timezone
 from uuid import uuid4, UUID
 
 import jsonschema
-from jsonschema.exceptions import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from tozti import logger
@@ -56,6 +55,7 @@ class Store:
         }
 
         try:
+            print("Validating", data['attributes'], "against", schema.attributes)
             jsonschema.validate(data['attributes'], schema.attributes)
         except ValidationError as err:
             raise ValueError(err.message)
