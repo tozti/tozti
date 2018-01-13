@@ -22,7 +22,7 @@ Defining an API endpoint
 
 The previous extension currently does nothing. We will now see how to add new API endpoints to the application.
 
-For the moment our ``MANIFEST`` is empty. To declare new routes, we must import some modules::
+At the moment our ``MANIFEST`` is empty. To declare new routes, we must import some modules::
 
     from tozti.utils import RouterDef
     from aiohttp import web
@@ -66,7 +66,9 @@ Providing custom javascript to the tozti application
 If the previous paragraph showed how to serve content on specific URLs, this is *not* how we modify the behavior of the *tozti* application. *tozti* is a single-page app built with the framework **Vue.js**. Therefore if you want to be able to interact with the application and define new interactions, you need to be able to serve custom *javascript* code to the client.
 
 As a convention, all static assets must be put inside a folder ``dist`` inside your extension folder.
-Let's create a file called ``index.js`` inside ``extension-name/dist/``::
+Let's create a file called ``index.js`` inside ``extension-name/dist/``:
+
+.. code-block:: javascript
 
   Vue.component('extension-name-widget', {
     template: '<div class="uk-placeholder">A widget coming directly from our extension! :)</div>'
@@ -78,7 +80,7 @@ As you might have guessed, we need to inform *tozti* of the existence of this fi
 
   MANIFEST = {
     # ..
-    `includes`: ['index.js']
+    'includes': ['index.js']
   }
 
 Once again, start the server and visit the URL ``<tozti>/``. A new widget should have appeared inside the Dashboard.
