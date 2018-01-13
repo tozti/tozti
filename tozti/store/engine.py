@@ -39,7 +39,7 @@ class Store:
         self._typecache = TypeCache()
 
     async def sanitize_incoming(self, data):
-        allowed_keys = {'type', 'attributes', 'meta', 'relationships'}
+        allowed_keys = {'type', 'attributes', 'relationships'}
         if not data.keys() <= allowed_keys:
             raise ValueError('unknown key')
 
@@ -169,7 +169,8 @@ class Store:
         return sanitized['_id']
 
     async def typeof(self, id):
-        pass
+        res = await self._resources.find_one({'_id': id}, {'type': 1})
+        return res['type']
 
     async def get(self, id):
         logger.debug('querying DB for resource {}'.format(id))
