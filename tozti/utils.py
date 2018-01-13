@@ -16,8 +16,10 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from aiohttp.web import json_response
-
+from aiohttp.web import json_response as original_json_response
+from json import JSONEncoder, dumps
+from datetime import datetime
+from uuid import UUID
 
 class RouteDef:
     """Definition of a route.
@@ -149,3 +151,16 @@ def api_error(name, **vars):
     code, fmt, status = API_ERRORS[name]
     return json_response({'error': code, 'msg': fmt.format(**vars)},
                          status=status)
+
+def json_response(data, **kwargs):
+    fancy_dumps = lambda obj: dumps(obj, cls=ExtendedJSONEncoder)
+    return original_json_response(data, dumps=fancy_dumps, **kwargs)
+
+class ExtendedJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, UUID):
+            return str(obj)
+        else:
+            super().default(obj)

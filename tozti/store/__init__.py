@@ -18,10 +18,7 @@
 
 from json import JSONDecodeError
 
-import aiohttp
-from aiohttp.web import json_response
-
-from tozti.utils import RouterDef, register_error, api_error
+from tozti.utils import RouterDef, register_error, api_error, json_response
 from tozti.store.engine import Store
 
 
