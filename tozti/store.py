@@ -43,9 +43,10 @@ register_error('INVALID_DATA', 'invalid submission: {err}', 400)
 router = RouterDef()
 
 uuid_re = '-'.join('[0-9a-fA-F]{%d}' % i for i in (8, 4, 4, 4, 12))
+relationship_re = r'[\da-z]+'
 resources = router.add_resource('/resources')
-resources_single = router.add_resource('/resources/{rid:%s}' % uuid_re)
-relationship = router.add_resource('/resources/{rid:%s}/{rel}' % uuid_re)
+resources_single = router.add_resource('/resources/{id:%s}' % uuid_re)
+relationship = router.add_resource('/resources/{id:%s}/{rel:%s}' % uuid_re, relationship_re)
 
 
 @resources.post
@@ -81,11 +82,22 @@ async def resources_patch(req):
 
 @resources_single.delete
 async def resources_delete(req):
-    pass
+    id = req.match_info['id']
+    try:
+        req.app['tozti-store'].remove(id)
+    except KeyError:
+        return api_error('RESOURCE_NOT_FOUND', id=id)
+
 
 @relationship.get
 async def relationship_get(req):
-    pass
+    id = req.match_info['id']
+    rel = req.match_info['rel']
+    try:
+        resp = await req.app['tozti-store'].get(id)
+        return json_response(resp[rel])
+    except KeyError:
+        return api_error('RESOURCE_NOT_FOUND', id=id)
 
 @relationship.put
 async def relationship_put(req):
@@ -209,7 +221,7 @@ class Store:
 
     async def get(self, id):
         logger.debug('querying DB for resource {}'.format(id))
-        resp = await self._entities.find_one({'_id': id})
+        resp = await self._resources.find_one({'_id': id})
         if resp is None:
             raise KeyError
         return await self._render(resp)
@@ -218,7 +230,10 @@ class Store:
         pass
 
     async def remove(self, id):
-        pass
+        logger.debug('deleting resource {} from the DB'.format(id))
+        result = await self._resources.delete_one({'_id': id})
+        if result.deleted_count == 0:
+            raise KeyError
 
     async def rel_get(self, id, rel):
         pass
