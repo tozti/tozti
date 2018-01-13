@@ -17,6 +17,7 @@
 
 
 from json import JSONDecodeError
+from collections import namedtuple
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -102,39 +103,35 @@ async def close_db(app):
     await app['tozti-store'].close()
 
 
+Schema = namedtuple('Schema', ('attributes', 'relationships'))
+
+
 class TypeCache:
     def __init__(self):
         self._cache = {}
 
-    
-    async def get_attribute_schema(self, type_url):
-        return self.get_schemas(type_url)[0]
-    
-    async def get_relationship_schema(self, type_url):
-        return self.get_schemas(type_url)[1]
-
-    async def get_schemas(self, type_url):
+    async def __getitem__(self, type_url):
         if type_url in self._cache:
             return self._cache[type_url]
-       
+
         async with aiohttp.request('GET', type_url) as resp:
             assert resp.status == 200
-            full_schema = await resp.json()
-        
-        schemas = full_schema['attributes'], full_schema['relationships']
-        self._cache[type_url] = schemas
+            raw_schema = await resp.json()
 
-        return schemas
-    
+        schema = Schema(**raw_schema)
+        self._cache[type_url] = schema
+
+        return schema
+
     def validate_relationships(self, relationships):
         forbidden_keys = {'creator', 'self'}
         if not (forbidden_keys & relationships.keys()).empty():
             raise ValueError("forbidden key used in relationships")
 
     async def validate(self, data):
-        attribute_schema = await get_attribute_schema(data['type'])
+        schema = await self[data['type']]
         try:
-            validate(data['attributes'], attribute_schema)
+            validate(data['attributes'], schema.attributes)
         except ValidationError as err:
             raise ValueError(err.message)
         validate_relationships(data['relationships'])
@@ -170,7 +167,8 @@ class Store:
             },
         }
 
-        for (rel, val) in self._typechache.get_relationship_schema(rep['type']):
+        schema = await self._typecache[rep['type']]
+        for (rel, val) in schema.relationships:
             if 'reverse-of' in val:
                 data = await self._resources.find({'relationships': {rel: id}})
             elif val.get('arity', 'one') == 'one':
@@ -218,5 +216,5 @@ class Store:
     async def rel_append(self, id, rel, data):
         pass
 
-    async def close():
+    async def close(self):
         pass
