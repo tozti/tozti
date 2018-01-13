@@ -31,10 +31,10 @@ from tozti import logger
 from tozti.utils import RouterDef, register_error, api_error
 
 
-register_error('ENTITY_NOT_FOUND', 'entity {id} not found', 404)
+register_error('RESOURCE_NOT_FOUND', 'resource {id} not found', 404)
 register_error('NOT_JSON', 'expected json data', 406)
 register_error('BAD_JSON', 'malformated json data', 400)
-register_error('INVALID_ENTITY', 'invalid entity content: {err}', 400)
+register_error('INVALID_DATA', 'invalid submission: {err}', 400)
 
 
 ########
@@ -59,15 +59,21 @@ async def resources_post(req):
     except JSONDecodeError:
         return api_error('BAD_JSON')
     try:
-        eid = await req.app['tozti-store'].create(data)
+        id = await req.app['tozti-store'].create(data)
     except ValueError as err:
-        return api_error('INVALID_ENTITY', err=err)
-    return json_response(await req.app['tozti-store'].get(eid))
+        return api_error('INVALID_DATA', err=err)
+    return json_response(await req.app['tozti-store'].get(id))
 
 
 @resources_single.get
 async def resources_get(req):
-    pass
+    """GET /api/store/resources
+    """
+    id = req.match_info['id']
+    try:
+        return json_response(await req.app['tozti-store'].get(id))
+    except KeyError:
+        return api_error('RESOURCE_NOT_FOUND', id=id)
 
 @resources_single.patch
 async def resources_patch(req):
@@ -114,9 +120,10 @@ class TypeCache:
         if type_url in self._cache:
             return self._cache[type_url]
 
-        async with aiohttp.request('GET', type_url) as resp:
-            assert resp.status == 200
-            raw_schema = await resp.json()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(type_url) as resp:
+                assert resp.status == 200
+                raw_schema = await resp.json()
 
         schema = Schema(**raw_schema)
         self._cache[type_url] = schema
@@ -201,7 +208,11 @@ class Store:
         await self._resources.insert_one(data)
 
     async def get(self, id):
-        return await self._resource.find_one({'id': id})
+        logger.debug('querying DB for resource {}'.format(id))
+        resp = await self._entities.find_one({'_id': id})
+        if resp is None:
+            raise KeyError
+        return await self._render(resp)
 
     async def update(self, id, data):
         pass
