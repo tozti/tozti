@@ -1,61 +1,63 @@
-****************************
-Architecture of an extension
-****************************
-
-We will describe here how to write a basic extensions. 
-
-An extension is a folder. The name of this folder is the name of the extension. 
+***************
+Getting Started
+***************
 
 Our first extension
 ===================
 
-Let's create our first extension ! Suppose we call it `<extension-name>`. Create a folder `<extension-name>` and inside it a file `server.py` with the following lines::
-    
-    MANIFEST = {
-    }
+Let's see how to create a simple extension to *tozti*.
+Everything defined by an extension lives inside the same folder, whose name is the name of the extension.
 
-Every extension **must** include a `server.py` declaring a dictionnary `MANIFEST`.
-Well done, you've just created your first extension !
+Suppose we call it ``extension-name``. Browse to the ``extensions/`` folder and proceed to create a folder ``extension-name``.
+The only requirement for *tozti* to recognize an extension is for this extension to provide a file ``server.py`` declaring a dictionnary ``MANIFEST``.
+Thus a minimal definition would like like so::
+
+    MANIFEST = {}
+
+Well done, you've just created your first extension!
 
 
-Hello-world extension
-=====================
+Defining an API endpoint
+========================
 
-The previous extension is not doing anything. We will know create an extension that will add one api endpoint. This will allow us to speak about router.
+The previous extension currently does nothing. We will now see how to add new API endpoints to the application.
 
-For the moment our `server.py` is empty. To declare new routes, we must import some files::
-    
+For the moment our ``MANIFEST`` is empty. To declare new routes, we must import some modules::
+
     from tozti.utils import RouterDef
     from aiohttp import web
     from tozti import logger
 
-The first import include an object allowing us to add routes to tozti API. The second import include an object allowing us to create a http request. And the last import import us a logger (something to debug informations).
+- ``RouterDef`` allows us to define a new router and therefore new request handlers.
+- ``web`` from ``aiohttp`` enables us to send back to the user simple responses.
+- ``logger`` is a simple utility to pretty print information in the server logs.
 
 Then, we create an empty router::
 
     router = RouterDef()
 
-And we had one endpoint to it. We call it `hello_world` and it will be accessible at the url `<tozti>/api/<extension-name>/hello_world/`::
+And we add one endpoint to it. We call it ``hello_world``, and make it accessible from the URL ``<tozti>/api/extension-name/hello_world``::
 
     hello_world = router.add_resource('/hello_world')
 
-Finally, we define what action our extension should behave when this endpoint is activated. We choose to behave to `get` requests on this endpoint in our example::
+Finally, we define how our extension should behave when this endpoint is requested. In this example, we respond to ``GET`` requests on this endpoint with some dummy text::
 
     @hello_world.get
     async def hello_world_get(req):
         logger.info("hello world")
         return web.Response(text='Hello world!')
 
-If we wanted to answer to a `post` request, we should have write `@hello_world.post` instead of `@hello_world.get`. 
+Similar decorators are available for the usual HTTP methods: ``@hello_world.post``, etc.
 
-Unfortunately, for now Tozti doesn't know that the router `router` exists. And that's normal, as we didn't declare it in `MANIFEST`. Remember, `MANIFEST` is the brain of our extension. Everything that an extension defined must be put in the manifest for the server to know of it.
+Unfortunately, for now *tozti* still isn't aware of this new request handler we just defined. This is where ``MANIFEST`` comes to use: We simply add the router in the ``MANIFEST`` dict under the key ``router``::
 
-To add the router in the `MANIFEST`, we will modify the declaration of `MANIFEST` such as it is now::
     MANIFEST = {
         'router': router,
     }
 
-Now, when we will be calling `<tozti>/api/<extension-name>/hello_world`, your tozti instance should output a blank web page with the text "Hello world!". And their should also be "hello world" in the logs.
+In fact, ``MANIFEST`` is where we declare anything that *tozti* should be made aware of.
+
+And now, if you launch the server again, and visit the URL ``<tozti>/api/extension-name/hello_world``, your browser should display a blank web page with the text *"Hello world!"*. If you look in the server logs, some ``hello world`` must have appeared.
 
 
 Using Vue.js inside of your extension

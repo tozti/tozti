@@ -17,7 +17,7 @@ Extensions
 The tozti core is really lightweight but it has the ability to load extensions. For now, you only need to know that extension is a folder providing a python file (`server.py`), describing how the extension works on the server (its routes, which files must be included from the client...).
 An extension can be installed by pasting its folder inside tozti's `extensions/` folder. During startup, the server will go through every subfolders of `extensions/` and try to load them as an extension.
 
-If you want to know how to create an extension, you can see this page `architecture of an extension`.
+If you want to know how to create an extension, you can see `the related documentation pages`.
 
 .. _setuptools entrypoint: https://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins
-.. _architecture of an extension: extensions/arch
+.. _the related documentation pages: extensions/index
