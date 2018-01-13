@@ -167,7 +167,8 @@ class Store:
 
         sanitized = await self.sanitize_incoming(data)
         sanitized['_id'] = uuid4()
-        await self._resources.insert_one(sanitized)
+        ret = await self._resources.insert_one(sanitized)
+        return ret.inserted_id
 
     async def typeof(self, id):
         pass
