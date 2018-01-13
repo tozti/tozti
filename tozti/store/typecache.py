@@ -30,7 +30,12 @@ Schema = namedtuple('Schema', ('attributes', 'to_one', 'to_many', 'auto',
 META_SCHEMA = {
     'type': 'object',
     'properties': {
-        'attributes': jsonschema.Draft4Validator.META_SCHEMA,
+        'attributes': {
+            'type': 'object',
+            'patternProperties': {
+                '.*': jsonschema.Draft4Validator.META_SCHEMA,
+            }
+        },
         'relationships': {
             'type': 'object',
             'patternProperties': {

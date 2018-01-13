@@ -55,7 +55,8 @@ class Store:
         }
 
         try:
-            jsonschema.validate(data['attributes'], schema.attributes)
+            for (attr, sch) in schema.attributes.items():
+                jsonschema.validate(data['attributes'][attr], sch)
         except ValidationError as err:
             raise ValueError(err.message)
         output['attributes'] = data['attributes']
