@@ -91,7 +91,7 @@ def load_exts(app):
 def topo_sort_includes(includes, deps):
     """Given includes, a dictionnary of dependencies & includes for each extensions,
     will construct a list of includes file sorted so that dependencies are respected"""
-   
+
     visited = set()
     def visit(node):
         visited.add(node)
@@ -118,16 +118,17 @@ def register(app, prefix, router=None, includes=(), _god_mode=None, dependencies
                 'on_shutdown'):
         if sig in kwargs:
             getattr(app, sig).append(kwargs[sig])
-            
+
     if _god_mode is not None:
         _god_mode(app)
     return ['/static/{}/{}'.format(prefix, incl) for incl in includes], dependencies
 
 
-def render_index(includes, deps):
+def render_index(includes, deps, final = []):
     """Create the index.html file with the right things included."""
 
-    includes = list(topo_sort_includes(includes, deps))
+    includes = list(topo_sort_includes(includes, deps)) + final
+
     context = {
         'styles': [{'src': u} for u in includes if u.split('.')[-1] == 'css'],
         'scripts': [{'src': u} for u in includes if u.split('.')[-1] == 'js']
@@ -182,7 +183,7 @@ def main():
 
     # adding core js dependency
     statics.append(('core', os.path.join(TOZTI_BASE, 'dist')))
-    includes['core'] = ['static/core/core.js']
+    includes['core'] = ['static/core/bootstrap.js']
     deps['core'] = []
 
     # deploy static files
@@ -195,7 +196,7 @@ def main():
         logger.info("ROUTE {}".format(resource))
     # render index.html
     logger.debug('Rendering index.html')
-    index_html = render_index(includes, deps)
+    index_html = render_index(includes, deps, ['/static/core/launch.js'])
     if args.command == 'dev':
         async def index_handler(req):
             return web.Response(text=index_html, content_type='text/html',

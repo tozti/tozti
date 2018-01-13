@@ -218,5 +218,5 @@ class Store:
     async def rel_append(self, id, rel, data):
         pass
 
-    async def close():
+    async def close(self):
         pass
