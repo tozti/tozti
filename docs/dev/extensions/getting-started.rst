@@ -49,7 +49,7 @@ Finally, we define how our extension should behave when this endpoint is request
 
 Similar decorators are available for the usual HTTP methods: ``@hello_world.post``, etc.
 
-Unfortunately, for now *tozti* still isn't aware of this new request handler we just defined. This is where ``MANIFEST`` comes to use: We simply add the router in the ``MANIFEST`` dict under the key ``router``::
+Unfortunately, for now *tozti* still isn't aware of this new request handler we just defined. This is where ``MANIFEST`` comes into use: We simply add the router in the ``MANIFEST`` dict under the key ``router``::
 
     MANIFEST = {
         'router': router,
@@ -57,23 +57,37 @@ Unfortunately, for now *tozti* still isn't aware of this new request handler we 
 
 In fact, ``MANIFEST`` is where we declare anything that *tozti* should be made aware of.
 
-And now, if you launch the server again, and visit the URL ``<tozti>/api/extension-name/hello_world``, your browser should display a blank web page with the text *"Hello world!"*. If you look in the server logs, some ``hello world`` must have appeared.
+And now, if you launch the server again, and visit the URL ``<tozti>/api/extension-name/hello_world``, your web browser should display a blank web page with the text *"Hello world!"*. If you look in the server logs, some ``hello world`` must have appeared.
 
 
-Using Vue.js inside of your extension
-=====================================
+Providing custom javascript to the tozti application
+====================================================
 
-You will probably want to be able to add some javascript to your extension, so that it can add a page to your website. As we chose to work with `vue.js`, I will explain here how to use it in an extension.
+If the previous paragraph showed how to serve content on specific URLs, this is *not* how we modify the behavior of the *tozti* application. *tozti* is a single-page app built with the framework **Vue.js**. Therefore if you want to be able to interact with the application and define new interactions, you need to be able to serve custom *javascript* code to the client.
 
-Remember,`vue.js`works with `npm`. So we will add a `package.json` file inside `<extension-name>/` to deal with npm's packages. You can also add a `webpack.config.js` file if you wanted to. In the end, most of the time you will want to add a javascript file` to the static pages of tozti (or/and a CSS page). This is to what corresponds the key `includes` inside the `MANIFEST` dictionary.
-For example, adding `includes=['build.js', 'assets/css/test.css']` will allow tozti to link the corresponding files inside of its `index.html`
+As a convention, all static assets must be put inside a folder ``dist`` inside your extension folder.
+Let's create a file called ``index.js`` inside ``extension-name/dist/``::
 
-A concrete example of a small `vue js` extension of tozti is disponible inside the repository (TODO: add repository name, I will do it later)
+  Vue.component('extension-name-widget', {
+    template: '<div class="uk-placeholder">A widget coming directly from our extension! :)</div>'
+  })
 
+  tozti.$store.commit('registerWidget', 'extension-name-widget')
 
-**Warning**
-As vue.js uses the npm ecosystem, chances are that you need to do some actions (like compile) on some files before generating a `build.js` file (or whatever). Make sure to execute these commands before installing/updating the extensions, otherwise it will not work correctly. 
+As you might have guessed, we need to inform *tozti* of the existence of this file, inside ``MANIFEST``::
 
+  MANIFEST = {
+    # ..
+    `includes`: ['index.js']
+  }
+
+Once again, start the server and visit the URL ``<tozti>/``. A new widget should have appeared inside the Dashboard.
+
+As stated below, adding CSS files in this ``includes`` list in exactly the same fashion allows the inclusion of custom CSS to *tozti*.
+
+Quick note on file structure
+----------------------------
+Most extensions do not serve directly their javascript files to *tozti*. They often split their code in separate files, and use some build process to obtain a single file ``build.js`` out of their code. This is the file that they send to the client. We will not describe here how to setup such a build process, as it would end up very much opinionated, and still would have to differ between extensions. However it is very much recommended to proceed in such a way, and the sample extensions available on our github page provide some insight as to how things can be organised.
 
 Going further with MANIFEST
 ===========================
@@ -99,9 +113,3 @@ Here are a complete list of keys that `MANIFEST` can possess:
 ``dependencies``
     A list of names of extensions that must be loaded before this extension in 
     order for it to be working as intended.
-
-
-MANIFEST = {
-    'router': router,
-    'includes': ['build.js', 'assets/css/test.css'],
-}

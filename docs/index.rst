@@ -29,7 +29,8 @@ the inner workings of the project.
 
    dev/quickstart
    dev/arch
-   dev/extensions
+   dev/extensions/index
+   dev/extensions/getting-started
 
 
 Project internals
