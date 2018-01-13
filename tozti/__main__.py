@@ -141,6 +141,9 @@ def render_index(includes, deps):
 def main():
     """Entry point for server startup."""
 
+    # Fix for some Python implementations that do not create a default event loop (?!)
+    asyncio.set_event_loop(asyncio.new_event_loop())
+
     parser = argparse.ArgumentParser('tozti')
     parser.add_argument(
         '-c', '--config', default=os.path.join(TOZTI_BASE, 'config.toml'),
