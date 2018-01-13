@@ -61,7 +61,7 @@ META_SCHEMA = {
                                 { 'type': 'string', 'pattern': '^to-one$' },
                                 { 'type': 'string', 'pattern': '^to-many$' },
                             ]},
-                            'target': { 'type': 'string', 'format': 'uri' }
+                            'type': { 'type': 'string', 'format': 'uri' }
                         }
                     }]
                 }
@@ -102,10 +102,10 @@ class TypeCache:
             if 'reverse-of' in val:
                 auto.append((rel, val['reverse-of']))
             elif val['arity'] == 'to-one':
-                to_one.append((rel, val['target']))
+                to_one.append((rel, val['type']))
                 allowed.add(rel)
             elif val['arity'] == 'to-many':
-                to_many.append((rel, val['target']))
+                to_many.append((rel, val['type']))
                 allowed.add(rel)
             else:
                 raise AssertionError('?! invalid schema after validation')
