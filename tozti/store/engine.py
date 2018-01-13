@@ -166,7 +166,6 @@ class Store:
         sanitized['last-modified'] = current_time
 
         ret = await self._resources.insert_one(sanitized)
-        print(type(ret.inserted_id), type(sanitized['_id'] ))
         return sanitized['_id']
 
     async def typeof(self, id):
