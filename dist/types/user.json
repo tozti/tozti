@@ -1,32 +1,15 @@
 {
     "attributes": {
-        "nick": {
-            "type": "string",
-            "pattern": "^[a-zA-Z_0-9]+$",
-        },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "login": { "type": "string" }
     },
     "relationships": {
         "groups": {
             "reverse-of": {
-                "type": "http://tozti/group.json",
-                "path": "members",
+                "type": "http://127.0.0.1:8080/static/core/types/group.json",
+                "path": "members"
             }
-        }
-    }
-}
-
-// group.json
-{
-    "attributes": {
-        "name": {
-            "type": "string",
-            "pattern": "^[a-zA-Z_0-9]+$",
-        },
-    },
-    "relationships": {
-        "members": {
-           "arity": "to-many",
-           "target": "http://.../user.json"
         }
     }
 }

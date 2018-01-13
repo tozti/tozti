@@ -1,11 +1,11 @@
 {
     "attributes": {
-        "name": { "type": "string" },
+        "name": { "type": "string" }
     },
     "relationships": {
         "members": {
             "arity": "to-many",
-            "type": "/static/core/types/user.json",
+            "type": "http://127.0.0.1:8080/static/core/types/user.json"
         }
     }
 }
