@@ -19,11 +19,11 @@
 from json import JSONDecodeError
 from collections import namedtuple
 from datetime import datetime, timezone
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 import aiohttp
 from aiohttp.web import json_response
-from jsonschema import validate
+import jsonschema
 from jsonschema.exceptions import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -121,7 +121,49 @@ async def close_db(app):
     await app['tozti-store'].close()
 
 
-Schema = namedtuple('Schema', ('attributes', 'relationships'))
+Schema = namedtuple('Schema', ('attributes', 'to_one', 'to_many', 'auto',
+                               'allowed_rels'))
+
+
+META_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'attributes': jsonschema.Draft4Validator.META_SCHEMA,
+        'relationship': {
+            'type': 'object',
+            'patternProperties': {
+                '.*': {
+                    'oneOf': [{
+                        'type': 'object',
+                        'properties': {
+                            'reverse-of': {
+                                'type': 'object',
+                                'properties': {
+                                    'type': { 'anyOf': [
+                                        { 'type': 'string', 'format': 'uri' },
+                                        { 'type': 'string', 'pattern': '^\*$'},
+                                     ]},
+                                    'path': { 'type': 'string' },
+                                }
+                            },
+                        }
+                    }, {
+                        'type': 'object',
+                        'properties': {
+                            'arity': { 'anyOf': [
+                                { 'type': 'string', 'pattern': '^to-one$' },
+                                { 'type': 'string', 'pattern': '^to-many$' },
+                            ]},
+                            'target': { 'type': 'string', 'format': 'uri' }
+                        }
+                    }]
+                }
+            }
+        }
+    },
+    'additionalProperties': False,
+    'required': ['attributes', 'relationships'],
+}
 
 
 class TypeCache:
@@ -132,32 +174,45 @@ class TypeCache:
         if type_url in self._cache:
             return self._cache[type_url]
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(type_url) as resp:
-                assert resp.status == 200
-                raw_schema = await resp.json()
-
-        schema = Schema(**raw_schema)
-        self._cache[type_url] = schema
-
-        return schema
-
-    def validate_relationships(self, relationships):
-        forbidden_keys = {'creator', 'self'}
-        if not (forbidden_keys & relationships.keys()).empty():
-            raise ValueError("forbidden key used in relationships")
-
-    async def validate(self, data):
-        schema = await self[data['type']]
         try:
-            validate(data['attributes'], schema.attributes)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(type_url) as resp:
+                    assert resp.status == 200
+                    raw_schema = await resp.json()
+        except:
+            raise ValueError('error while retrieving type schema')
+
+        try:
+            jsonschema.validate(raw_schema, META_SCHEMA)
         except ValidationError as err:
-            raise ValueError(err.message)
-        validate_relationships(data['relationships'])
+            raise ValueError('invalid schema: %s' % err.message)
+
+        to_one = []
+        to_many = []
+        auto = []
+        allowed = set()
+        for (rel, val) in raw_schema['relationships'].items():
+            if 'reverse-of' in val:
+                auto.append((rel, val['reverse-of']))
+            elif val['arity'] == 'to-one':
+                to_one.append((rel, val['target']))
+                allowed.add(rel)
+            elif val['arity'] == 'to-many':
+                to_many.append((rel, val['target']))
+                allowed.add(rel)
+            else:
+                raise AssertionError('?! invalid schema after validation')
+
+        schema = Schema(raw_schema['attributes'], to_one, to_many, auto, allowed)
+        self._cache[type_url] = schema
+        return schema
 
 
 #FIXME: how do we get the hostname? config file?
 BASE_URL = 'http://localhost'
+RES_URL = lambda id: '%s/resources/%s' % (BASE_URL, id)
+REL_URL = lambda id, rel: '%s/resources/%s/%s' % (BASE_URL, id, rel)
+
 
 class Store:
     def __init__(self, **kwargs):
@@ -165,11 +220,74 @@ class Store:
         self._resources = self._client.tozti.resources
         self._typecache = TypeCache()
 
+    async def sanitize_incoming(self, data):
+        allowed_keys = {'type', 'attributes', 'meta', 'relationships'}
+        if not data.keys() <= allowed_keys:
+            raise ValueError('unknown key')
+
+        try:
+            type = data['type']
+        except KeyError:
+            raise ValueError('no type specified')
+        schema = await self._typecache[type]
+
+        output = {
+            'type': type,
+            'relationships': {}
+        }
+
+        try:
+            jsonschema.validate(data['attributes'], schema.attributes)
+        except ValidationError as err:
+            raise ValueError(err.message)
+        output['attributes'] = attributes
+
+        rels = data.get('relationships', {})
+        if not rels.keys() <= schema.allowed_rels:
+            raise ValueError('unknown relationship')
+
+        for (rel, target) in schema.to_one:
+            if not rel in rels:
+                output['relationships'][rel] = UUID('00000000-0000-0000-0000-000000000000')
+                continue
+            if not rels[rel].keys() == {'data'}:
+                raise ValueError('bad relationship object')
+            if 'id' not in rels[rel]['data']:
+                raise ValueError('bad relationship object')
+            id = rels[rel]['data']['id']
+            try:
+                tp = await self.typeof(id)
+            except KeyError:
+                raise ValueError('unknown target object')
+            if not tp == rels[rel]['data'].get('type', tp):
+                raise ValueError('type mismatch')
+            output['relationships'][rel] = id
+
+        for (rel, target) in schema.to_many:
+            if not rel in rels:
+                output['relationships'][rel] = []
+                continue
+            if not rels[rel].keys() == {'data'}:
+                raise ValueError('bad relationship object')
+            out_rels = []
+            for rel_obj in rels[rel]['data']:
+                if 'id' not in rel_obj:
+                    raise ValueError('bad relationship object')
+                id = rel_obj['id']
+                try:
+                    tp = await self.typeof(id)
+                except KeyError:
+                    raise ValueError('unknown target object')
+                if not tp == rel_obj.get('type', tp):
+                    raise ValueError('type mismatch')
+                out_rels.append(id)
+            output['relationships'] = out_rels
+
+        return output
+
+
     async def _render(self, rep):
         """Take internal representation and return it in an HTTP-API format."""
-
-        res_url = lambda id: '%s/resources/%s' % (BASE_URL, id)
-        rel_url = lambda id, rel: '%s/resources/%s/%s' % (BASE_URL, id, rel)
 
         id = rep['_id']
 
@@ -182,23 +300,36 @@ class Store:
                 'last-modified': rep['last-modified'],
             },
             'relationships': {
-                'self': {'data': res_url(id)},
+                'self': {'data': {'href': RES_URL(id), 'id': id, 'type': rep['type']}},
             },
         }
 
         schema = await self._typecache[rep['type']]
-        for (rel, val) in schema.relationships:
-            if 'reverse-of' in val:
-                data = await self._resources.find({'relationships': {rel: id}})
-            elif val.get('arity', 'one') == 'one':
-                data = res_url(rep['relationships'][rel])
-            else:
-                data = [res_url(i) for i in rep['relationships'][rel]]
-
+        for (rel, _) in schema.to_one:
+            target = rep['relationships'][rel]
             out['relationships'][rel] = {
-                'self': rel_url(id, rel),
+                'self': REL_URL(id, rel),
+                'data': {
+                    'id': target,
+                    'type': await self.typeof(target),
+                    'href': RES_URL(target),
+                }
+            }
+        for (rel, _) in schema.to_many:
+            data = [{'href': RES_URL(i), 'type': await self.typeof(i), 'id': i}
+                    for i in rep['relationships'][rel]]
+            out['relationships'][rel] = {
+                'self': REL_URL(id, rel),
                 'data': data,
             }
+        for (rel, defs) in schema.auto:
+            data = await self._resources.find({'type': defs['type'],
+                                               'relationships': {defs['path']: id}})
+            out['relationships'][rel] = {
+                'self': REL_URL(id, rel),
+                'data': [{'type': d['type'], 'id': d['_id'], 'href': RES_URL(d['_id'])} for d in data]
+            }
+
 
         return out
 
@@ -218,6 +349,9 @@ class Store:
 
         await self._typecache.validate(data)
         await self._resources.insert_one(data)
+
+    async def typeof(self, id):
+        pass
 
     async def get(self, id):
         logger.debug('querying DB for resource {}'.format(id))
