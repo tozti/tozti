@@ -113,14 +113,14 @@ class Store:
 
         rels = {'self': await self._render_to_one(id, 'self', id)}
 
-        for (rel, rel_obj) in rep['rels']:
+        for (rel, rel_obj) in rep['rels'].items():
             if isinstance(rel_obj, UUID):
                 rels[rel] = await self._render_to_one(id, rel, rel_obj)
             else:
                 rels[rel] = await self._render_to_many(id, rel, rel_obj)
 
         schema = await self._typecache[rep['type']]
-        for (rel, auto_def) in schema.autos:
+        for (rel, auto_def) in schema.autos.items():
             rels[rel] = await self._render_auto(id, rel, *auto_def)
 
         return {'id': id,
@@ -151,7 +151,7 @@ class Store:
         """
 
         return {'self': REL_URL(id, rel),
-                'data': await self._render_rel_data(target)}
+                'data': await self._render_linkage(target)}
 
     async def _render_to_many(self, id, rel, targets):
         """Render a to-many relationship object.
@@ -160,11 +160,13 @@ class Store:
         """
 
         return {'self': REL_URL(id, rel),
-                'data': [await self._render_rel_data(t) for t in targets]}
+                'data': [await self._render_linkage(t) for t in targets]}
 
-    async def _render_auto(self, id, rel, type, path):
-        cursor = self._resources.find({'type': defs['type'],
-                                       'rels.%s' % defs['path']: id},
+    async def _render_auto(self, id, rel, type_url, path):
+        """Render a `reverse-of` to-many relationship object."""
+
+        cursor = self._resources.find({'type': type_url,
+                                       'rels.%s' % path: id},
                                       {'_id': 1, 'type': 1})
         return {'self': REL_URL(id, rel),
                 'data': [{'id': hit['_id'],
@@ -190,6 +192,8 @@ class Store:
 
     async def typeof(self, id):
         res = await self._resources.find_one({'_id': id}, {'type': 1})
+        if res is None:
+            raise KeyError
         return res['type']
 
     async def get(self, id):
