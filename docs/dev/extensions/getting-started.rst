@@ -113,3 +113,8 @@ Here are a complete list of keys that `MANIFEST` can possess:
 ``dependencies``
     A list of names of extensions that must be loaded before this extension in 
     order for it to be working as intended.
+
+Having a more complex server.py
+===============================
+
+Sometimes you can find that putting the whole server part inside `server.py` is a bit too restrictive. As your extension grow you'll probably want to refactor it in several files. Tozti provide a way to do so. Instead of creating a `server.py` file, you could create a `server/` folder, and inside it write a file `__init__.py` defining (at least) the `MANIFEST` structure.
