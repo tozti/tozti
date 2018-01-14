@@ -88,7 +88,8 @@ async def resources_patch(req):
 async def resources_delete(req):
     id = UUID(req.match_info['id'])
     try:
-        req.app['tozti-store'].remove(id)
+        await req.app['tozti-store'].remove(id)
+        return json_response({})
     except KeyError:
         return api_error('RESOURCE_NOT_FOUND', id=id)
 
