@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from uuid import uuid4, UUID
 
 import jsonschema
+from jsonschema.exceptions import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from tozti import logger
@@ -30,6 +31,20 @@ from tozti.store.typecache import TypeCache
 RES_URL = lambda id: '/api/store/resources/%s' % id
 REL_URL = lambda id, rel: '/api/store/resources/%s/%s' % (id, rel)
 
+INVALID_UUID = UUID('00000000-0000-0000-0000-000000000000')
+
+
+# JSON-Schema for incoming data on resource creation.
+INPUT_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'type': { 'type': 'string', 'format': 'uri' },
+        'attributes': { 'type': 'object' },
+        'relationships': { 'type': 'object' },
+    },
+    'required': ['type', 'attributes'],
+}
+
 
 class Store:
     def __init__(self, **kwargs):
@@ -37,71 +52,80 @@ class Store:
         self._resources = self._client.tozti.resources
         self._typecache = TypeCache()
 
-    async def sanitize_incoming(self, data):
-        allowed_keys = {'type', 'attributes', 'relationships'}
-        if not data.keys() <= allowed_keys:
-            raise ValueError('unknown key')
+    async def _sanitize_linkage(self, link):
+        """Verify that a given linkage is valid.
 
+        Checks if the target exists and if the given type (if any) is valid.
+        Returns the UUID of the target.
+        """
+
+        id = UUID(link['id'])
         try:
-            type = data['type']
+            type_url = await self.typeof(id)
         except KeyError:
-            raise ValueError('no type specified')
-        schema = await self._typecache[type]
+            raise ValueError('linked resource %s does not exist' % id)
+        if 'type' in link and link['type'] != type_url:
+            raise ValueError('mismatched type for linked resource %s: '
+                             'given: %s, real: %s' % (id, link['type'], type_url))
+        return id
 
-        output = {
-            'type': type,
-            'relationships': {}
-        }
+
+    async def _sanitize(self, data):
+        """Verify the content posted for entity creation.
+
+        Returns a partial internal representation, that is a dictionary with
+        `type`, `attrs` and `rels` validated.
+        """
 
         try:
-            for (attr, sch) in schema.attributes.items():
-                jsonschema.validate(data['attributes'][attr], sch)
+            jsonschema.validate(data, INPUT_SCHEMA)
         except ValidationError as err:
-            raise ValueError(err.message)
-        output['attributes'] = data['attributes']
+            raise ValueError('invalid data: %s' % err)
 
-        rels = data.get('relationships', {})
-        if not rels.keys() <= schema.allowed_rels:
-            raise ValueError('unknown relationship')
+        schema = await self._typecache[data['type']]
 
-        for (rel, target) in schema.to_one:
-            if not rel in rels:
-                output['relationships'][rel] = UUID('00000000-0000-0000-0000-000000000000')
-                continue
-            if not rels[rel].keys() == {'data'}:
-                raise ValueError('bad relationship object')
-            if 'id' not in rels[rel]['data']:
-                raise ValueError('bad relationship object')
-            id = UUID(rels[rel]['data']['id'])
+        attrs = {}
+        for (attr, attr_schema) in schema.attrs.items():
+            if attr not in data['attributes']:
+                raise ValueError('attribute %s not found' % attr)
+            attr_obj = data['attributes'].pop(attr)
             try:
-                tp = await self.typeof(id)
-            except KeyError:
-                raise ValueError('unknown target object')
-            if not tp == rels[rel]['data'].get('type', tp):
-                raise ValueError('type mismatch')
-            output['relationships'][rel] = id
+                jsonschema.validate(attr_obj, schema.attrs[attr])
+            except ValidationError as err:
+                raise ValueError('invalid attribute %s: %s' % (attr, err))
+            attrs[attr] = attr_obj
+        if len(data['attributes']) > 0:
+                raise ValueError('unknown attribute %s' % data['attributes'].pop())
 
-        for (rel, target) in schema.to_many:
-            if not rel in rels:
-                output['relationships'][rel] = []
+        rels = {}
+        for (rel, rel_schema) in schema.to_one.items():
+            if rel not in data['relationships']:
+                rels[rel] = INVALID_UUID
                 continue
-            if not rels[rel].keys() == {'data'}:
-                raise ValueError('bad relationship object')
-            out_rels = []
-            for rel_obj in rels[rel]['data']:
-                if 'id' not in rel_obj:
-                    raise ValueError('bad relationship object')
-                id = UUID(rel_obj['id'])
-                try:
-                    tp = await self.typeof(id)
-                except KeyError:
-                    raise ValueError('unknown target object')
-                if not tp == rel_obj.get('type', tp):
-                    raise ValueError('type mismatch')
-                out_rels.append(id)
-            output['relationships'][rel] = out_rels
+            rel_obj = data['relationships'].pop(rel)
+            try:
+                jsonschema.validate(rel_obj, rel_schema)
+            except ValidationError as err:
+                raise ValueError('invalid relationship %s: %s' % (rel, err))
+            rels[rel] = await self._sanitize_linkage(rel_obj['data'])
 
-        return output
+        for (rel, rel_schema) in schema.to_many.items():
+            if rel not in data['relationships']:
+                rels[rel] = []
+                continue
+            rel_obj = data['relationships'].pop(rel)
+            try:
+                jsonschema.validate(rel_obj, rel_schema)
+            except ValidationError as err:
+                raise ValueError('invalid relationship %s: %s' % (rel, err))
+            rels[rel] = [await self._sanitize_linkage(link)
+                         for link in rel_obj['data']]
+
+        if 'relationships' in data and len(data['relationships']) > 0:
+            raise ValueError('unknown relationship: %s'
+                             % data['relationships'].pop())
+
+        return {'type': data['type'], 'attrs': attrs, 'rels': rels}
 
     async def _render(self, rep):
         """Render a resource object given it's internal representation.
@@ -176,11 +200,12 @@ class Store:
 
     async def create(self, data):
         """Take python dict from http request and add it to the db."""
+
         logger.debug('incoming data: {}'.format(data))
         if 'type' not in data:
             raise ValueError('missing type property')
 
-        sanitized = await self.sanitize_incoming(data)
+        sanitized = await self._sanitize(data)
 
         sanitized['_id'] = uuid4()
         current_time = datetime.utcnow().replace(microsecond=0)

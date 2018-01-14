@@ -19,6 +19,8 @@
 from json import JSONDecodeError
 from uuid import UUID
 
+UUID_RE = '-'.join('[0-9a-fA-F]{%d}' % i for i in (8, 4, 4, 4, 12))
+
 from tozti.utils import RouterDef, register_error, api_error, json_response
 from tozti.store.engine import Store
 
@@ -30,7 +32,6 @@ register_error('INVALID_DATA', 'invalid submission: {err}', 400)
 
 
 router = RouterDef()
-UUID_RE = '-'.join('[0-9a-fA-F]{%d}' % i for i in (8, 4, 4, 4, 12))
 resources = router.add_route('/resources')
 resources_single = router.add_route('/resources/{id:%s}' % UUID_RE)
 relationship = router.add_route('/resources/{id:%s}/{rel}' % UUID_RE)

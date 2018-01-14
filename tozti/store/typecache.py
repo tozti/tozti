@@ -17,14 +17,13 @@
 
 
 from collections import namedtuple
+import re
 
 import jsonschema
 import aiohttp
 from jsonschema.exceptions import ValidationError
 
-
-Schema = namedtuple('Schema', ('attributes', 'to_one', 'to_many', 'auto',
-                               'allowed_rels'))
+from tozti.store import UUID_RE
 
 
 META_SCHEMA = {
@@ -46,23 +45,23 @@ META_SCHEMA = {
                             'reverse-of': {
                                 'type': 'object',
                                 'properties': {
-                                    'type': { 'anyOf': [
-                                        { 'type': 'string' },#, 'format': 'uri' },
-                                        { 'type': 'string', 'pattern': r'^\*$'},
-                                     ]},
+                                    'type': { 'type': 'string', 'format': 'uri' },
                                     'path': { 'type': 'string' },
-                                }
+                                },
+                                'required': ['type', 'path'],
                             },
-                        }
+                        },
+                        'required': ['reverse-of']
                     }, {
                         'type': 'object',
                         'properties': {
-                            'arity': { 'anyOf': [
-                                { 'type': 'string', 'pattern': '^to-one$' },
-                                { 'type': 'string', 'pattern': '^to-many$' },
-                            ]},
+                            'arity': {
+                                'type': 'string',
+                                'pattern': '^(to-one|to-many)$',
+                            },
                             'type': { 'type': 'string', 'format': 'uri' }
-                        }
+                        },
+                        'required': ['arity'],
                     }]
                 }
             }
@@ -73,20 +72,66 @@ META_SCHEMA = {
 }
 
 
+Schema = namedtuple('Schema', ('attrs', 'to_one', 'to_many', 'autos'))
+
+
 class TypeCache:
     def __init__(self):
         self._cache = {}
 
+    def compile_schema(self, raw, name):
+        attrs = raw['attributes']
+
+        to_one = {}
+        to_many = {}
+        autos = {}
+        for (rel, rel_def) in raw['relationships'].items():
+            if 'reverse-of' in rel_def:
+                autos[rel] = (rel_def['reverse-of']['type'],
+                              rel_def['reverse-of']['path'])
+                continue
+
+            if 'type' in rel_def:
+                if isinstance(rel_def['type'], str):
+                    pat = '^%s$' % re.escape(rel_def['type'])
+                else:
+                    pat = '^(%s)$' % '|'.join(map(re.escape, rel_def['type']))
+                type_s = {'type': 'string',
+                          'format': 'uri',
+                          'pattern': pat}
+            else:
+                type_s = {'type': 'string', 'format': 'uri'}
+            data_s = {'type': 'object',
+                      'properties': {'id': {'type': 'string',
+                                            'pattern': '^%s$' % UUID_RE},
+                                     'type': type_s},
+                      'required': ['id']}
+
+            if rel_def['arity'] == 'to-one':
+                to_one[rel] = {'type': 'object', 'properties': {'data': data_s}}
+            elif rel_def['arity'] == 'to-many':
+                to_many[rel] = {'type': 'object',
+                                'properties': {'data': {'type': 'array',
+                                                        'items': data_s}},
+                                'required': ['data']}
+            else:
+                raise AssertionError('BAD! Invalid schema after validation')
+
+        return Schema(attrs, to_one, to_many, autos)
+
     async def __getitem__(self, type_url):
         if type_url in self._cache:
             return self._cache[type_url]
+
+        print(type_url)
 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(type_url) as resp:
                     assert resp.status == 200
                     raw_schema = await resp.json()
-        except Exception as err:
+        except ValueError as err:
+            print(type(err))
             raise ValueError('error while retrieving type schema: {}'.format(err))
 
         try:
@@ -94,23 +139,6 @@ class TypeCache:
         except ValidationError as err:
             raise ValueError('invalid schema: %s' % err.message)
 
-
-        to_one = []
-        to_many = []
-        auto = []
-        allowed = set()
-        for (rel, val) in raw_schema['relationships'].items():
-            if 'reverse-of' in val:
-                auto.append((rel, val['reverse-of']))
-            elif val['arity'] == 'to-one':
-                to_one.append((rel, val['type']))
-                allowed.add(rel)
-            elif val['arity'] == 'to-many':
-                to_many.append((rel, val['type']))
-                allowed.add(rel)
-            else:
-                raise AssertionError('?! invalid schema after validation')
-
-        schema = Schema(raw_schema['attributes'], to_one, to_many, auto, allowed)
+        schema = self.compile_schema(raw_schema, type_url)
         self._cache[type_url] = schema
         return schema
