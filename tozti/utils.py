@@ -149,7 +149,7 @@ def register_error(name, fmt, status):
 
 def api_error(name, **vars):
     code, fmt, status = API_ERRORS[name]
-    return json_response({'error': code, 'msg': fmt.format(**vars)},
+    return json_response({'error': {'code': name, 'msg': fmt.format(**vars)}},
                          status=status)
 
 def json_response(data, **kwargs):
