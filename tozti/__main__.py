@@ -26,6 +26,7 @@ from aiohttp import web
 import logbook
 import pystache
 import toml
+import tozti
 
 from tozti import logger, store
 
@@ -34,7 +35,6 @@ from tozti import logger, store
 TOZTI_BASE = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 
 #Configuration dict loaded from the toml
-CONFIG = {}
 
 def load_exts(app):
     """Register the extensions found.
@@ -173,7 +173,7 @@ def main():
     app['tozti-config'] = config
 
     #share the configuration
-    CONFIG = config
+    tozti.CONFIG = config
 
     # initialize core api
     register(app, 'store', router=store.router, on_startup=store.open_db,
