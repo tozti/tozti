@@ -103,54 +103,74 @@ class Store:
 
         return output
 
-
     async def _render(self, rep):
-        """Take internal representation and return it in an HTTP-API format."""
+        """Render a resource object given it's internal representation.
+
+        See https://jsonapi.org/format/#document-resource-objects.
+        """
 
         id = rep['_id']
 
-        out = {
-            'type': rep['type'],
-            'id': id,
-            'attributes': rep['attributes'],
-            'meta': {
-                'created': rep['created'],
-                'last-modified': rep['last-modified'],
-            },
-            'relationships': {
-                'self': {'data': {'href': RES_URL(id), 'id': id, 'type': rep['type']}},
-            },
-        }
+        rels = {'self': await self._render_to_one(id, 'self', id)}
+
+        for (rel, rel_obj) in rep['rels']:
+            if isinstance(rel_obj, UUID):
+                rels[rel] = await self._render_to_one(id, rel, rel_obj)
+            else:
+                rels[rel] = await self._render_to_many(id, rel, rel_obj)
 
         schema = await self._typecache[rep['type']]
-        for (rel, _) in schema.to_one:
-            target = rep['relationships'][rel]
-            out['relationships'][rel] = {
-                'self': REL_URL(id, rel),
-                'data': {
-                    'id': target,
-                    'type': await self.typeof(target),
-                    'href': RES_URL(target),
-                }
-            }
-        for (rel, _) in schema.to_many:
-            data = [{'href': RES_URL(i), 'type': await self.typeof(i), 'id': i}
-                    for i in rep['relationships'][rel]]
-            out['relationships'][rel] = {
-                'self': REL_URL(id, rel),
-                'data': data,
-            }
-        for (rel, defs) in schema.auto:
-            cursor = self._resources.find({'type': defs['type'],
-                                           'relationships.%s' % defs['path']: id})
-            out['relationships'][rel] = {
-                'self': REL_URL(id, rel),
-                'data': [{'type': d['type'], 'id': d['_id'], 'href': RES_URL(d['_id'])}
-                         async for d in cursor]
-            }
+        for (rel, auto_def) in schema.autos:
+            rels[rel] = await self._render_auto(id, rel, *auto_def)
 
+        return {'id': id,
+                'type': rep['type'],
+                'attributes': rep['attrs'],
+                'relationships': rels,
+                'meta': {'created': rep['created'],
+                         'last-modified': rep['last-modified']}}
 
-        return out
+    async def _render_linkage(self, target):
+        """Render a resource object linkage.
+
+        Does not catch KeyError in case the target is not found. The divergence
+        from the spec is that we include an `href` property which is an URI
+        resolving to the given target resource.
+
+        See https://jsonapi.org/format/#document-resource-object-linkage.
+        """
+
+        return {'id': target,
+                'type': await self.typeof(target),
+                'href': RES_URL(target)}
+
+    async def _render_to_one(self, id, rel, target):
+        """Render a to-one relationship object.
+
+        See https://jsonapi.org/format/#document-resource-object-relationships.
+        """
+
+        return {'self': REL_URL(id, rel),
+                'data': await self._render_rel_data(target)}
+
+    async def _render_to_many(self, id, rel, targets):
+        """Render a to-many relationship object.
+
+        See https://jsonapi.org/format/#document-resource-object-relationships.
+        """
+
+        return {'self': REL_URL(id, rel),
+                'data': [await self._render_rel_data(t) for t in targets]}
+
+    async def _render_auto(self, id, rel, type, path):
+        cursor = self._resources.find({'type': defs['type'],
+                                       'rels.%s' % defs['path']: id},
+                                      {'_id': 1, 'type': 1})
+        return {'self': REL_URL(id, rel),
+                'data': [{'id': hit['_id'],
+                          'type': hit['type'],
+                          'href': RES_URL(hit['_id'])}
+                         async for hit in cursor]}
 
     async def create(self, data):
         """Take python dict from http request and add it to the db."""
