@@ -33,6 +33,8 @@ from tozti import logger, store
 # base path to the tozti distribution
 TOZTI_BASE = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 
+#Configuration dict loaded from the toml
+CONFIG = {}
 
 def load_exts(app):
     """Register the extensions found.
@@ -169,6 +171,9 @@ def main():
     logger.debug('Initializing app')
     app = web.Application()
     app['tozti-config'] = config
+
+    #share the configuration
+    CONFIG = config
 
     # initialize core api
     register(app, 'store', router=store.router, on_startup=store.open_db,
