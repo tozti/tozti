@@ -93,6 +93,7 @@ Going further with MANIFEST
 ===========================
 
 Here are a complete list of keys that `MANIFEST` can possess:
+
 ``router``
    This is used to declare new API endpoints. It should be an instance of
    :py:class:`tozti.utils.RouterDef`. More precisely it must have an
@@ -114,7 +115,23 @@ Here are a complete list of keys that `MANIFEST` can possess:
     A list of names of extensions that must be loaded before this extension in 
     order for it to be working as intended.
 
+For more advanced user, you can also add signals for the `aiohttp.web` in the `MANIFEST`. Please see `aiohttp server documentation`_ to learn more about signals.
+
+``on_response_prepare``
+    This should be a function. It is a hook for changing HTTP headers for streamed responses and WebSockets.
+
+``on_startup``
+    This should be a function. Will be called during the startup of the application. Usefull to launch background services for exemple.
+
+``on_cleanup``
+    This should be a function. Will be called on application cleanup. You can use it to close connections to the database for exemple.
+
+``on_shutdown``
+    This should be a function. Will be closed on application shutdown.
+
 Having a more complex server.py
 ===============================
 
 Sometimes you can find that putting the whole server part inside `server.py` is a bit too restrictive. As your extension grow you'll probably want to refactor it in several files. Tozti provide a way to do so. Instead of creating a `server.py` file, you could create a `server/` folder, and inside it write a file `__init__.py` defining (at least) the `MANIFEST` structure.
+
+.. _aiohttp server documentation: https://docs.aiohttp.org/en/stable/web.html
