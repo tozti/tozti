@@ -229,4 +229,4 @@ class Store:
         pass
 
     async def close(self):
-        pass
+        self._client.close()
