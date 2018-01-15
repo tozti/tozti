@@ -17,11 +17,21 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+#import os
+#import sys
+#sys.path.insert(0, os.path.abspath('../'))
 
+def run_apidoc(_):
+	from sphinx.apidoc import main
+	import os
+	import sys
+	sys.path.append(os.path.abspath("../"))
+	cur_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "dev", "api")
+	module = os.path.join(os.path.abspath('../'))
+	main(['-e', '-o', cur_dir, module, '--force'])
 
+def setup(app):
+	app.connect('builder-inited', run_apidoc)
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -31,7 +41,7 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.mathjax', 'sphinx.ext.intersphinx']
+extensions = ['sphinx.ext.mathjax', 'sphinx.ext.intersphinx', 'sphinx.ext.autodoc', 'sphinx.ext.autosummary']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
