@@ -1,5 +1,7 @@
 # tozti
 
+![](https://readthedocs.org/projects/pip/badge/?version=latest)
+
 This repository contains the core of the **tozti** software project. It is licensed
 under the AGPLv3. See [documentation](https://tozti.readthedocs.io/en/latest/)
 for more informations.
