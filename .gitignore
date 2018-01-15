@@ -6,3 +6,4 @@ package-lock.json
 *.egg-info
 **/__pycache__
 .venv
+docs/_build
