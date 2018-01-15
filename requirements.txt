@@ -4,3 +4,4 @@ logbook==1.1
 pystache==0.5.4
 motor==1.2.0
 jsonschema==2.6.0
+yarl==0.18.0
