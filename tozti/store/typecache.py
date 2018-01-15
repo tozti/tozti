@@ -93,27 +93,15 @@ class TypeCache:
 
             if 'type' in rel_def:
                 if isinstance(rel_def['type'], str):
-                    pat = '^%s$' % re.escape(rel_def['type'])
+                    types = {rel_def['type']}
                 else:
-                    pat = '^(%s)$' % '|'.join(map(re.escape, rel_def['type']))
-                type_s = {'type': 'string',
-                          'format': 'uri',
-                          'pattern': pat}
+                    types = set(rel_def['type'])
             else:
-                type_s = {'type': 'string', 'format': 'uri'}
-            data_s = {'type': 'object',
-                      'properties': {'id': {'type': 'string',
-                                            'pattern': '^%s$' % UUID_RE},
-                                     'type': type_s},
-                      'required': ['id']}
-
+                types = None
             if rel_def['arity'] == 'to-one':
-                to_one[rel] = {'type': 'object', 'properties': {'data': data_s}}
+                to_one[rel] = types
             elif rel_def['arity'] == 'to-many':
-                to_many[rel] = {'type': 'object',
-                                'properties': {'data': {'type': 'array',
-                                                        'items': data_s}},
-                                'required': ['data']}
+                to_many[rel] = types
             else:
                 raise AssertionError('BAD! Invalid schema after validation')
 
@@ -123,15 +111,12 @@ class TypeCache:
         if type_url in self._cache:
             return self._cache[type_url]
 
-        print(type_url)
-
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(type_url) as resp:
                     assert resp.status == 200
                     raw_schema = await resp.json()
         except ValueError as err:
-            print(type(err))
             raise ValueError('error while retrieving type schema: {}'.format(err))
 
         try:

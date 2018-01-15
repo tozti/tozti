@@ -24,6 +24,7 @@ from jsonschema.exceptions import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from tozti import logger
+from tozti.store import UUID_RE
 from tozti.store.typecache import TypeCache
 
 
@@ -45,6 +46,40 @@ INPUT_SCHEMA = {
     'required': ['type', 'attributes'],
 }
 
+INPUT_REL_TO_ONE_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'data': {
+            'type': 'object',
+            'properties': {
+                'id': { 'type': 'string', 'pattern': UUID_RE },
+                'type': { 'type': 'string', 'format': 'uri' },
+            },
+            'required': ['id'],
+        },
+    },
+    'required': ['data'],
+}
+
+
+INPUT_REL_TO_MANY_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'data': {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'id': { 'type': 'string', 'pattern': UUID_RE },
+                    'type': { 'type': 'string', 'format': 'uri' },
+                },
+                'required': ['id'],
+            },
+        },
+    },
+    'required': ['data'],
+}
+
 
 class Store:
     def __init__(self, **kwargs):
@@ -52,7 +87,7 @@ class Store:
         self._resources = self._client.tozti.resources
         self._typecache = TypeCache()
 
-    async def _sanitize_linkage(self, link):
+    async def _sanitize_linkage(self, link, types):
         """Verify that a given linkage is valid.
 
         Checks if the target exists and if the given type (if any) is valid.
@@ -67,8 +102,29 @@ class Store:
         if 'type' in link and link['type'] != type_url:
             raise ValueError('mismatched type for linked resource %s: '
                              'given: %s, real: %s' % (id, link['type'], type_url))
+        if types is not None and type_url not in types:
+            raise ValueError('unallowed type %s for linked resource %s' % (
+                             id, type_url))
         return id
 
+    async def _sanitize_to_one(self, rel_obj, types):
+        """Verify the relationship object and return the UUID of the target."""
+
+        try:
+            jsonschema.validate(rel_obj, INPUT_REL_TO_ONE_SCHEMA)
+        except ValidationError as err:
+            raise ValueError('invalid relationship object: %s' % err)
+        rels[rel] = await self._sanitize_linkage(rel_obj['data'], types)
+
+    async def _sanitize_to_many(self, rel_obj, types):
+        """Verify the relationship object and return the target UUID list."""
+
+        try:
+            jsonschema.validate(rel_obj, INPUT_REL_TO_MANY_SCHEMA)
+        except ValidationError as err:
+            raise ValueError('invalid relationship object: %s' % err)
+        return [await self._sanitize_linkage(link, types)
+                for link in rel_obj['data']]
 
     async def _sanitize(self, data):
         """Verify the content posted for entity creation.
@@ -98,28 +154,19 @@ class Store:
                 raise ValueError('unknown attribute %s' % data['attributes'].pop())
 
         rels = {}
-        for (rel, rel_schema) in schema.to_one.items():
+        for (rel, types) in schema.to_one.items():
             if rel not in data['relationships']:
                 rels[rel] = INVALID_UUID
                 continue
-            rel_obj = data['relationships'].pop(rel)
-            try:
-                jsonschema.validate(rel_obj, rel_schema)
-            except ValidationError as err:
-                raise ValueError('invalid relationship %s: %s' % (rel, err))
-            rels[rel] = await self._sanitize_linkage(rel_obj['data'])
+            rels[rel] = await self._sanitize_to_one(
+                data['relationships'].pop(rel), types)
 
-        for (rel, rel_schema) in schema.to_many.items():
+        for (rel, types) in schema.to_many.items():
             if rel not in data['relationships']:
                 rels[rel] = []
                 continue
-            rel_obj = data['relationships'].pop(rel)
-            try:
-                jsonschema.validate(rel_obj, rel_schema)
-            except ValidationError as err:
-                raise ValueError('invalid relationship %s: %s' % (rel, err))
-            rels[rel] = [await self._sanitize_linkage(link)
-                         for link in rel_obj['data']]
+            rels[rel] = await self._sanitize_to_many(
+                data['relationships'].pop(rel), types)
 
         if 'relationships' in data and len(data['relationships']) > 0:
             raise ValueError('unknown relationship: %s'
