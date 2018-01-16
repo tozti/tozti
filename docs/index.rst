@@ -29,6 +29,7 @@ the inner workings of the project.
 
    dev/quickstart
    dev/arch
+   dev/store
    dev/extensions/index
 
    dev/api
