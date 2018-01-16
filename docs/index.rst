@@ -31,7 +31,7 @@ the inner workings of the project.
    dev/arch
    dev/extensions/index
 
-   dev/api/tozti
+   dev/api
 
 
 Project internals
