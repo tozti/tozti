@@ -6,3 +6,10 @@ install:
     - npm install
 script:
     - npm run build
+
+cache:
+    directories:
+        - $HOME/.cache/pip
+        - $HOME/.cache/bower
+        - $HOME/.npm
+        - "node_modules"
