@@ -28,7 +28,10 @@ import pystache
 import toml
 import tozti
 
-from tozti import logger, store
+from tozti import store
+
+
+logger = logbook.Logger('tozti.main')
 
 
 # base path to the tozti distribution
@@ -166,6 +169,7 @@ def main():
 
     # logging handlers
     # FIXME: make things fancier and configurable (logrotate, etc)
+    logbook.compat.redirect_logging()
     if args.command == 'dev':
         handler = logbook.StreamHandler(sys.stdout)
         handler.push_application()

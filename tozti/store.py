@@ -25,9 +25,12 @@ from aiohttp.web import json_response
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
+import logbook
 
-from tozti import logger
 from tozti.utils import RouterDef, register_error, api_error
+
+
+logger = logbook.Logger('tozti.store')
 
 
 register_error('ENTITY_NOT_FOUND', 'entity {eid} not found', 404)
