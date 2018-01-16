@@ -16,4 +16,9 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__all__ = ('TOZTI_BASE',)
 __version__ = '0.1'
+
+
+import os
+TOZTI_BASE = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))

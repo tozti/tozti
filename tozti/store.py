@@ -27,6 +27,7 @@ from jsonschema.exceptions import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
 import logbook
 
+import tozti
 from tozti.utils import RouterDef, register_error, api_error
 
 
@@ -97,7 +98,7 @@ async def relationship_post(req):
 
 async def open_db(app):
     """Initialize storage backend at app startup."""
-    app['tozti-store'] = Store(**app['tozti-config']['mongodb'])
+    app['tozti-store'] = Store(**tozti.CONFIG['mongodb'])
 
 
 async def close_db(app):
