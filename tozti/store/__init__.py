@@ -16,6 +16,9 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__all__ = ('UUID_RE', 'router', 'open_db', 'close_db', 'Store')
+
+
 from json import JSONDecodeError
 from uuid import UUID
 
@@ -39,8 +42,7 @@ relationship = router.add_route('/resources/{id:%s}/{rel}' % UUID_RE)
 
 @resources.post
 async def resources_post(req):
-    """POST /api/store/resources
-    """
+    """Request handler for ``POST /api/store/resources``."""
 
     if req.content_type != 'application/json':
         return api_error('NOT_JSON')
@@ -57,8 +59,7 @@ async def resources_post(req):
 
 @resources_single.get
 async def resources_get(req):
-    """GET /api/store/resources/{id}
-    """
+    """Request handler for ``GET /api/store/resources/{id}``."""
 
     id = UUID(req.match_info['id'])
     try:
@@ -69,15 +70,13 @@ async def resources_get(req):
 
 @resources_single.patch
 async def resources_patch(req):
-    """PATCH /api/store/resources/{id}
-    """
+    """Request handler for ``PATCH /api/store/resources/{id}``."""
 
     id = UUID(req.match_info['id'])
     try:
         data = await req.json()
         await req.app['tozti-store'].update(id, data)
-        new = await req.app['tozti-store'].get(id)
-        return json_response({'data': new})
+        return json_response({'data': await req.app['tozti-store'].get(id)})
     except KeyError:
         return api_error('RESOURCE_NOT_FOUND', id=id)
     except ValueError as err:
@@ -86,6 +85,8 @@ async def resources_patch(req):
 
 @resources_single.delete
 async def resources_delete(req):
+    """Request handler for ``DELETE /api/store/resources/{id}``."""
+
     id = UUID(req.match_info['id'])
     try:
         await req.app['tozti-store'].remove(id)
@@ -96,6 +97,8 @@ async def resources_delete(req):
 
 @relationship.get
 async def relationship_get(req):
+    """Request handler for ``GET /api/store/resources/{id}/{rel}``."""
+
     id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
     try:
@@ -107,16 +110,17 @@ async def relationship_get(req):
 
 @relationship.put
 async def relationship_put(req):
+    """Request handler for ``PUT /api/store/resources/{id}/{rel}``."""
+
     pass
 
 
 @relationship.post
 async def relationship_post(req):
+    """Request handler for ``POST /api/store/resources/{id}/{rel}``."""
+
     pass
 
-
-#########
-# Backend
 
 async def open_db(app):
     """Initialize storage backend at app startup."""
