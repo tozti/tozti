@@ -90,16 +90,24 @@ def load_exts(app):
     return (includes, static_dirs, deps)
 
 
+class DependencyCycle(Exception):
+    pass
+
 def topo_sort_includes(includes, deps):
     """Given includes, a dictionnary of dependencies & includes for each extensions,
     will construct a list of includes file sorted so that dependencies are respected"""
 
     visited = set()
+    seen_traversal = set()
     def visit(node):
         visited.add(node)
+        seen_traversal.add(node)
         for dep in deps[node]:
+            if dep in seen_traversal:
+                raise DependencyCycle(dep, node)
             if not dep in visited:
                 yield from visit(dep)
+        seen_traversal.discard(node)
         yield from includes[node]
 
     for dep in deps:
@@ -129,7 +137,12 @@ def register(app, prefix, router=None, includes=(), _god_mode=None, dependencies
 def render_index(includes, deps, final = []):
     """Create the index.html file with the right things included."""
 
-    includes = list(topo_sort_includes(includes, deps)) + final
+    try:
+        includes = list(topo_sort_includes(includes, deps)) + final
+    except DependencyCycle as err:
+        logger.critical('Circular dependency detected between {} and {}'
+                        .format(err.args[0], err.args[1]))
+        sys.exit(1)
 
     context = {
         'styles': [{'src': u} for u in includes if u.split('.')[-1] == 'css'],
