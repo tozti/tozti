@@ -21,8 +21,10 @@ __all__ = ('UUID_RE', 'router', 'open_db', 'close_db', 'Store')
 
 from json import JSONDecodeError
 from uuid import UUID
+import logbook
 
 UUID_RE = '-'.join('[0-9a-fA-F]{%d}' % i for i in (8, 4, 4, 4, 12))
+logger = logbook.Logger('tozti.store')
 
 from tozti.utils import RouterDef, register_error, api_error, json_response
 from tozti.store.engine import Store

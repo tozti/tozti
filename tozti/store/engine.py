@@ -23,10 +23,8 @@ import jsonschema
 from jsonschema.exceptions import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from tozti import logger
-from tozti.store import UUID_RE
+from tozti.store import UUID_RE, logger
 from tozti.store.typecache import TypeCache
-
 
 #FIXME: how do we get the hostname? config file?
 RES_URL = lambda id: '/api/store/resources/%s' % id
