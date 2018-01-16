@@ -17,10 +17,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-#import os
-#import sys
-#sys.path.insert(0, os.path.abspath('../'))
-
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../'))
+"""
 def run_apidoc(_):
 	from sphinx.apidoc import main
 	import os
@@ -32,6 +32,8 @@ def run_apidoc(_):
 
 def setup(app):
 	app.connect('builder-inited', run_apidoc)
+"""
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
