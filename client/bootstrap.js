@@ -24,7 +24,10 @@ import store from './store'
 //       template: '<p>Thumbnail for thread {{resource.id}}</p>',
 //       props: ['resource'],
 //   };
-//
+
+// TODO(flupe): move this to a more appropriate place
+//              i mean, come on Lapin0t
+
 export function polymorphic_component(name, fallback) {
     let table = {fallback: fallback};
     Vue.component(name, {
@@ -39,16 +42,37 @@ export function polymorphic_component(name, fallback) {
     return table;
 }
 
-window.tozti = new Vue({
-  el: '#app',
+const tozti = window.tozti = {
   store,
 
-  router: new VueRouter({
-    routes: [
-      { path: '/', component: Dashboard },
-      { path: '/:workspace/:taxonomy*', component: Taxonomy }
-    ]
-  }),
+  // TODO(flupe): find a ES6-y way of making tozti components available to plugins
+  // I think this should be doable in an easy way
+  // probably just need to dive in the browserify documentation
+  components: { App, Dashboard, Taxonomy },
 
-  render: h => h(App)
-})
+  routes: [
+    { path: '/', component: Dashboard },
+    { path: '/:workspace/:taxonomy*',
+      component: Taxonomy,
+
+      // TODO(flupe):
+      //   - define the validation behavior
+      //     and how it should interact with tozti.store
+      //   - find a nice way to define this alongside the Taxonomy component
+      beforeEnter: (to, from, next) => {
+        // validation 1:
+        //   can we access this workspace?
+
+        // validation 2:
+        //   can we access this subpath?
+
+        // if everything is ok, then
+        next()
+      }
+    }
+  ],
+
+  postLaunchHooks: []
+}
+
+export default tozti

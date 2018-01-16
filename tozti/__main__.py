@@ -26,13 +26,18 @@ from aiohttp import web
 import logbook
 import pystache
 import toml
+import tozti
 
-from tozti import logger, store
+from tozti import store
+
+
+logger = logbook.Logger('tozti.main')
 
 
 # base path to the tozti distribution
 TOZTI_BASE = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 
+#Configuration dict loaded from the toml
 
 def load_exts(app):
     """Register the extensions found.
@@ -73,10 +78,10 @@ def load_exts(app):
             continue
 
         new_incs, new_deps = register(app, ext, **mod.MANIFEST)
-        
+
         # extensions always depend on the core
         new_deps.append('core')
-        
+
         includes[ext] = new_incs
         deps[ext] = new_deps
 
@@ -88,16 +93,24 @@ def load_exts(app):
     return (includes, static_dirs, deps)
 
 
+class DependencyCycle(Exception):
+    pass
+
 def topo_sort_includes(includes, deps):
     """Given includes, a dictionnary of dependencies & includes for each extensions,
     will construct a list of includes file sorted so that dependencies are respected"""
-   
+
     visited = set()
+    seen_traversal = set()
     def visit(node):
         visited.add(node)
+        seen_traversal.add(node)
         for dep in deps[node]:
+            if dep in seen_traversal:
+                raise DependencyCycle(dep, node)
             if not dep in visited:
                 yield from visit(dep)
+        seen_traversal.discard(node)
         yield from includes[node]
 
     for dep in deps:
@@ -118,16 +131,22 @@ def register(app, prefix, router=None, includes=(), _god_mode=None, dependencies
                 'on_shutdown'):
         if sig in kwargs:
             getattr(app, sig).append(kwargs[sig])
-            
+
     if _god_mode is not None:
         _god_mode(app)
     return ['/static/{}/{}'.format(prefix, incl) for incl in includes], dependencies
 
 
-def render_index(includes, deps):
+def render_index(includes, deps, final = []):
     """Create the index.html file with the right things included."""
 
-    includes = list(topo_sort_includes(includes, deps))
+    try:
+        includes = list(topo_sort_includes(includes, deps)) + final
+    except DependencyCycle as err:
+        logger.critical('Circular dependency detected between {} and {}'
+                        .format(err.args[0], err.args[1]))
+        sys.exit(1)
+
     context = {
         'styles': [{'src': u} for u in includes if u.split('.')[-1] == 'css'],
         'scripts': [{'src': u} for u in includes if u.split('.')[-1] == 'js']
@@ -153,6 +172,7 @@ def main():
 
     # logging handlers
     # FIXME: make things fancier and configurable (logrotate, etc)
+    logbook.compat.redirect_logging()
     if args.command == 'dev':
         handler = logbook.StreamHandler(sys.stdout)
         handler.push_application()
@@ -172,6 +192,9 @@ def main():
     app = web.Application()
     app['tozti-config'] = config
 
+    #share the configuration
+    tozti.CONFIG = config
+
     # initialize core api
     register(app, 'store', router=store.router, on_startup=store.open_db,
              on_cleanup=store.close_db)
@@ -185,7 +208,7 @@ def main():
 
     # adding core js dependency
     statics.append(('core', os.path.join(TOZTI_BASE, 'dist')))
-    includes['core'] = ['static/core/core.js']
+    includes['core'] = ['static/core/bootstrap.js']
     deps['core'] = []
 
     # deploy static files
@@ -198,7 +221,7 @@ def main():
         logger.info("ROUTE {}".format(resource))
     # render index.html
     logger.debug('Rendering index.html')
-    index_html = render_index(includes, deps)
+    index_html = render_index(includes, deps, ['/static/core/launch.js'])
     if args.command == 'dev':
         async def index_handler(req):
             return web.Response(text=index_html, content_type='text/html',

@@ -2,15 +2,19 @@ const path = require('path')
 const webpack = require('webpack')
 
 module.exports = {
-  entry: './client/index.js',
+  entry: {
+    bootstrap: './client/bootstrap.js',
+    launch: './client/launch.js'
+  },
+
   output: {
     path: path.resolve(__dirname, './dist'),
-    filename: 'core.js'
+    filename: '[name].js'
   },
+
   module: {
     rules: [
-      {
-        test: /\.vue$/,
+      { test: /\.vue$/,
         loader: 'vue-loader',
         options: {
           loaders: {
@@ -31,13 +35,13 @@ module.exports = {
           // other vue-loader options go here
         }
       },
-      {
-        test: /\.js$/,
+      { test: /\.js$/,
         loader: 'babel-loader',
         exclude: /node_modules/
       }
     ]
   },
+
   resolve: {
     alias: {
       'vue$': 'vue/dist/vue.esm.js'
