@@ -36,23 +36,46 @@ INVALID_UUID = UUID('00000000-0000-0000-0000-000000000000')
 
 
 # JSON-Schema for incoming data on resource creation.
-INPUT_SCHEMA = {
-    'type': 'object',
-    'properties': {
-        'type': { 'type': 'string', 'format': 'uri' },
-        'attributes': { 'type': 'object' },
-        'relationships': { 'type': 'object' },
-    },
-    'required': ['type', 'attributes'],
-}
-
-INPUT_REL_TO_ONE_SCHEMA = {
+POST_SCHEMA = {
     'type': 'object',
     'properties': {
         'data': {
             'type': 'object',
             'properties': {
-                'id': { 'type': 'string', 'pattern': UUID_RE },
+                'type': { 'type': 'string', 'format': 'uri' },
+                'attributes': { 'type': 'object' },
+                'relationships': { 'type': 'object' },
+            },
+            'required': ['type', 'attributes'],
+        },
+    },
+    'required': ['data'],
+}
+
+PATCH_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'data': {
+            'type': 'object',
+            'properties': {
+                'type': { 'type': 'string', 'format': 'uri' },
+                'id': { 'type': 'string', 'pattern': '^%s$' % UUID_RE },
+                'attributes': { 'type': 'object' },
+                'relationships': { 'type': 'object' },
+            },
+        },
+    },
+    'required': ['data'],
+}
+
+
+REL_TO_ONE_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'data': {
+            'type': 'object',
+            'properties': {
+                'id': { 'type': 'string', 'pattern': '^%s$' % UUID_RE },
                 'type': { 'type': 'string', 'format': 'uri' },
             },
             'required': ['id'],
@@ -62,7 +85,7 @@ INPUT_REL_TO_ONE_SCHEMA = {
 }
 
 
-INPUT_REL_TO_MANY_SCHEMA = {
+REL_TO_MANY_SCHEMA = {
     'type': 'object',
     'properties': {
         'data': {
@@ -70,7 +93,7 @@ INPUT_REL_TO_MANY_SCHEMA = {
             'items': {
                 'type': 'object',
                 'properties': {
-                    'id': { 'type': 'string', 'pattern': UUID_RE },
+                    'id': { 'type': 'string', 'pattern': '^%s$' % UUID_RE },
                     'type': { 'type': 'string', 'format': 'uri' },
                 },
                 'required': ['id'],
@@ -111,7 +134,7 @@ class Store:
         """Verify the relationship object and return the UUID of the target."""
 
         try:
-            jsonschema.validate(rel_obj, INPUT_REL_TO_ONE_SCHEMA)
+            jsonschema.validate(rel_obj, REL_TO_ONE_SCHEMA)
         except ValidationError as err:
             raise ValueError('invalid relationship object: %s' % err)
         rels[rel] = await self._sanitize_linkage(rel_obj['data'], types)
@@ -120,13 +143,22 @@ class Store:
         """Verify the relationship object and return the target UUID list."""
 
         try:
-            jsonschema.validate(rel_obj, INPUT_REL_TO_MANY_SCHEMA)
+            jsonschema.validate(rel_obj, REL_TO_MANY_SCHEMA)
         except ValidationError as err:
             raise ValueError('invalid relationship object: %s' % err)
         return [await self._sanitize_linkage(link, types)
                 for link in rel_obj['data']]
 
-    async def _sanitize(self, data):
+    async def _sanitize_attr(self, attr_obj, attr_schema):
+        """Verify an attribute value and return it's content."""
+
+        try:
+            jsonschema.validate(attr_obj, attr_schema)
+        except ValidationError as err:
+            raise ValueError('invalid attribute: %s' % err)
+        return attr_obj
+
+    async def _sanitize(self, raw):
         """Verify the content posted for entity creation.
 
         Returns a partial internal representation, that is a dictionary with
@@ -134,22 +166,19 @@ class Store:
         """
 
         try:
-            jsonschema.validate(data, INPUT_SCHEMA)
+            jsonschema.validate(raw, POST_SCHEMA)
         except ValidationError as err:
             raise ValueError('invalid data: %s' % err)
 
+        data = raw['data']
         schema = await self._typecache[data['type']]
 
         attrs = {}
         for (attr, attr_schema) in schema.attrs.items():
             if attr not in data['attributes']:
                 raise ValueError('attribute %s not found' % attr)
-            attr_obj = data['attributes'].pop(attr)
-            try:
-                jsonschema.validate(attr_obj, schema.attrs[attr])
-            except ValidationError as err:
-                raise ValueError('invalid attribute %s: %s' % (attr, err))
-            attrs[attr] = attr_obj
+            attrs[attr] = await self._sanitize_attr(
+                data['attributes'].pop(attr), attr_schema)
         if len(data['attributes']) > 0:
                 raise ValueError('unknown attribute %s' % data['attributes'].pop())
 
@@ -246,11 +275,11 @@ class Store:
                          async for hit in cursor]}
 
     async def create(self, data):
-        """Take python dict from http request and add it to the db."""
+        """Create a new resource and return it's ID.
 
-        logger.debug('incoming data: {}'.format(data))
-        if 'type' not in data:
-            raise ValueError('missing type property')
+        The passed data must be the content of the request as specified by
+        JSON API. See https://jsonapi.org/format/#crud-creating.
+        """
 
         sanitized = await self._sanitize(data)
 
@@ -259,41 +288,84 @@ class Store:
         sanitized['created'] = current_time
         sanitized['last-modified'] = current_time
 
-        ret = await self._resources.insert_one(sanitized)
+        await self._resources.insert_one(sanitized)
         return sanitized['_id']
 
     async def typeof(self, id):
+        """Return the type URL of a given resource.
+
+        `id` must be an instance of `uuid.UUID`. Raises `KeyError` if the
+        resource is not found.
+        """
+
         res = await self._resources.find_one({'_id': id}, {'type': 1})
         if res is None:
-            raise KeyError
+            raise KeyError(id)
         return res['type']
 
     async def get(self, id):
+        """Query the DB for a resource.
+
+        `id` must be an instance of `uuid.UUID`. Raises `KeyError` if the
+        resource is not found. The answer is a JSON API _resource object_.
+        See https://jsonapi.org/format/#document-resource-objects.
+        """
+
         logger.debug('querying DB for resource {}'.format(id))
         resp = await self._resources.find_one({'_id': id})
         if resp is None:
-            raise KeyError
+            raise KeyError(id)
         return await self._render(resp)
 
-    async def update(self, id, data):
-        resource_type = await self.typeof(id)
-        schema = await self._typecache[resource_type]
-        allowed_attributes = schema.attributes
-        for attr, value in data['attributes'].items():
-            schema = allowed_attributes.get(attr, None)
-            if schema is None:
-                raise ValueError("invalid attribute {}".format(attr))
-            jsonschema.validate(value, schema)
+    async def update(self, id, raw):
+        """Update a resource in the DB.
 
-        res = await self._resources.update_one({'_id': id}, { '$set': data})
+        `id` must be an instance of `uuid.UUID`. Raises `KeyError` if the
+        resource is not found. `raw` must be the content of the request as
+        specified by JSON API. See https://jsonapi.org/format/#crud-updating.
+        """
+
+        type_url = await self.typeof(id)
+        schema = await self._typecache[type_url]
+
+        try:
+            jsonschema.validate(raw, PATCH_SCHEMA)
+        except ValidationError as err:
+            raise ValueError('invalid data: %s' % err)
+        data = raw['data']
+
+        to_do = {}
+        for (attr, value) in data.get('attributes', {}).items():
+            if attr not in schema.attrs:
+                raise ValueError('invalid attribute %s' % attr)
+            san = await self._sanitize_attr(value, schema.attrs[attr])
+            to_do['attrs.%s' % attr] = san
+
+        rels = {}
+        for (rel, value) in data.get('relationships', {}).items():
+            if rel in schema.to_one:
+                san = await self._sanitize_to_one(value, schema.to_one[rel])
+            elif rel in schema.to_many:
+                san = await self._sanitize_to_many(value, schema.to_many[rel])
+            else:
+                raise ValueError('invalid relationship %s' % rel)
+            to_do['rels.%s' % rel] = san
+
+        res = await self._resources.update_one({'_id': id}, {'$set': to_do})
         if res.matched_count == 0:
-            raise KeyError
+            raise KeyError(id)
 
     async def remove(self, id):
+        """Remove a resource from the DB.
+
+        `id` must be an instance of `uuid.UUID`. Raises KeyError if the
+        resource is not found.
+        """
+
         logger.debug('deleting resource {} from the DB'.format(id))
         result = await self._resources.delete_one({'_id': id})
         if result.deleted_count == 0:
-            raise KeyError
+            raise KeyError(id)
 
     async def rel_get(self, id, rel):
         pass
@@ -305,4 +377,6 @@ class Store:
         pass
 
     async def close(self):
+        """Close the connection to the MongoDB server."""
+
         self._client.close()
