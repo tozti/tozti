@@ -26,29 +26,30 @@ API = 'http://127.0.0.1:8080/api'
 
 def check_call(meth, path, json=None):
     resp = requests.request(meth, API + path, json=json)
-    try:
-        ans = resp.json()
-    except Exception:
-        print('ERROR: something went wrong, response was:')
-        print(resp.text)
-        print()
-        return
-    if 'error' in ans or resp.status_code != 200:
-        print('ERROR: %s (status: %s)' % (ans['error']['code'], resp.status_code))
-        print(ans['error']['msg'])
-        print()
-        return
-    return ans
+    ans = resp.json()
+    if 'error' not in ans:
+        return ans
+    print('ERROR: %s (status: %s)' % (ans['error']['code'], resp.status_code))
+    print(ans['error']['msg'])
 
 def create_resource(**kwargs):
-    resource = check_call('post', '/store/resources', json=kwargs)['data']
-    pprint(resource)
-    print()
-    return resource['id']
+    ans = check_call('post', '/store/resources', json={'data': kwargs})
+    if ans is not None:
+        pprint(ans['data'])
+        return ans['data']['id']
 
 
 def get_resource(id):
-    return check_call('get', '/store/resources/%s' % id)['data']
+    ans = check_call('get', '/store/resources/%s' % id)
+    if ans is not None:
+        return ans['data']
+
+
+def update_resource(id, **kwargs):
+    ans = check_call('patch', '/store/resources/%s' % id,
+                             json={'data': kwargs})
+    if ans is not None:
+        pprint(ans['data'])
 
 
 def delete_resource(id):
