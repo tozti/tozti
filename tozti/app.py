@@ -38,13 +38,33 @@ class DependencyCycle(Exception):
 
 
 class Extension:
-    """
-    A tozti extension
+    """A tozti extension
+    Represents a Tozti extension
+
+    Attributes:
+        name (str): The name of the extension
+        includes (list): A list of files included by the extension
+        static_dir (str): Path of the static dir of the module
+        _god_mode (function): `god mode` function
+        on_response_prepare (function): A function to be executed when the hook
+            on_response_prepare is executed by aiohttp
+        on_cleanup (function): A function to be executed when the hook
+            on_cleanup is executed by aiohttp
+        on_startup (function): A function to be executed when the hook
+            on_response_prepare is executed by aiohttp
+        on_shutdown (function): A function to be executed when the hook
+            on_shutdown is executed by aiohttp
+        includes_after (list): list of files that must be included after every modules
+            have included their files. Note, this shouldn't be defined my extensions directly
     """
     def __init__(self, name, router=None, includes=(), static_dir=None,
                  dependencies=(), _god_mode=None, on_response_prepare=None,
                  on_startup=None, on_cleanup=None, on_shutdown=None,
                  **kwargs):
+        """ Build an extension from a list of its attributes (a MANIFEST for example).
+        (TODO) Put a warning if an attribute which is not necessary in an extension is 
+            passed as argument.
+        """
 
         self.name = name
 
@@ -60,13 +80,9 @@ class Extension:
         self.includes_after = ()
 
         if len(kwargs) > 0:
-            # do something here. If kwargs is not empty, that means the manifest 
+            # TODO do something here. If kwargs is not empty, that means the manifest 
             # contain an entry wich is not well defined
             pass
-
-    def add_dependency(self, dep):
-        if not dep in self.dependencies:
-            self.dependencies.append(dep)
 
     def set_static_dir_absolute(self, absolute_prefix):
         """
@@ -77,8 +93,12 @@ class Extension:
         # this is a function only so that writing tests is feasible
         self.static_dir = os.path.join(absolute_prefix, self.static_dir)
 
-    def check_sane(self, _includes_after=()):
-        # why his includes after here ?
+    def check_sane(self):
+        """Check if the extension is sane.
+        In other words, check if the every files it refers to exists
+
+        Raise a ValueError exception if one check failed.
+        """
         if self.static_dir is not None and not os.path.isdir(self.static_dir):
             raise ValueError('Static directory {} does not exist'.format(
                              self.static_dir, self.name))
@@ -97,33 +117,48 @@ class Extension:
 
 
 class DependencyGraph:
-    def __init__(self):
-        self.node_value = {}
-        self.dependencies = {}
+    """ Represents a dependency graph
 
-    def add_dependency(self, name, dependencies, value):
-        self.dependencies[name] = dependencies
-        self.node_value[name] = value
+    Tozti use this to compute an order in which includes are to be made so 
+    that extensions dependendants on other extensions are included after their
+    dependencies
+    """
+
+    def __init__(self):
+        self._node_value = {}
+        self._dependencies = {}
+
+    def add_node(self, name, dependencies, value):
+        """Add a node with its value and dependencies to the graph
+
+        Args:
+            name: the identifier of the new node
+            dependencies(iterable): The list of the id's of nodes on whom
+                the new node depends
+            value: the value of this node
+        """
+        self._dependencies[name] = dependencies
+        self._node_value[name] = value
 
     def toposort(self):
-        """Given includes, a dictionnary of dependencies & includes for each
-        extensions, will construct a list of includes file sorted so that
-        dependencies are respected.
+        """Compute a topological sort on the graph
+        Yield a list of node's values in topological order 
+        Given includes, a dictionnary of dependencies & includes for each
         """
         visited = set()
         seen_traversal = set()
         def visit(node):
             visited.add(node)
             seen_traversal.add(node)
-            for dep in self.dependencies[node]:
+            for dep in self._dependencies[node]:
                 if dep in seen_traversal:
                     raise DependencyCycle(dep, node)
                 if not dep in visited:
                     yield from visit(dep)
             seen_traversal.discard(node)
-            yield from self.node_value[node]
+            yield from self._node_value[node]
 
-        for dep in self.dependencies:
+        for dep in self._dependencies:
             if not dep in visited:
                 yield from visit(dep)
 
@@ -160,7 +195,7 @@ class App:
 
         
         inc_fmt = '/static/{}/{{}}'.format(extension.name)
-        self._dep_graph_includes.add_dependency(extension.name,extension.dependencies, 
+        self._dep_graph_includes.add_node(extension.name,extension.dependencies, 
                                               [inc_fmt.format(incl) for incl in extension.includes])
         self._includes_after.extend(inc_fmt.format(incl) for incl in extension.includes_after)
 
