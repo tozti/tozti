@@ -51,7 +51,7 @@ class Extension:
         self.router = router
         self.includes = includes
         self.static_dir = static_dir
-        self.dependencies = dependencies
+        self.dependencies = set(dependencies)
         self._god_mode = _god_mode
         self.on_response_prepare = on_response_prepare
         self.on_startup = on_startup
@@ -77,7 +77,7 @@ class Extension:
         # this is a function only so that writing tests is feasible
         self.static_dir = os.path.join(absolute_prefix, self.static_dir)
 
-    def is_sane(self, _includes_after=()):
+    def check_sane(self, _includes_after=()):
         # why his includes after here ?
         if self.static_dir is not None and not os.path.isdir(self.static_dir):
             raise ValueError('Static directory {} does not exist'.format(
@@ -89,7 +89,6 @@ class Extension:
                 raise ValueError('Included file {} does not exist in {}, did '
                                  'you execute `npm run build`?'
                                  .format(inc, self.static_dir))
-        return True
 
     def add_prefix_routes(self, prefix, append_name=True):
         if append_name:
@@ -147,8 +146,7 @@ class App:
 
         # some sanity checks
         # probably check for exceptions here
-        if not extension.is_sane():
-            return
+        extension.check_sane()
 
         # register new api routes
         if extension.router is not None:

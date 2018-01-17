@@ -116,7 +116,7 @@ def main():
     try:
         for extension in find_exts():
             # add dependency on the core
-            extension.add_dependency('core')
+            extension.dependencies.add('core')
             # make static_dir absolute and default to 'dist'
             if extension.static_dir is None:
                 extension.static_dir = 'dist'
