@@ -39,6 +39,7 @@ class DependencyCycle(Exception):
 
 class Extension:
     """A tozti extension
+
     Represents a Tozti extension
 
     Attributes:
@@ -46,16 +47,17 @@ class Extension:
         includes (list): A list of files included by the extension
         static_dir (str): Path of the static dir of the module
         _god_mode (function): `god mode` function
-        on_response_prepare (function): A function to be executed when the hook
+        on_response_prepare (function): A function to be executed when the hook\
             on_response_prepare is executed by aiohttp
-        on_cleanup (function): A function to be executed when the hook
+        on_cleanup (function): A function to be executed when the hook\
             on_cleanup is executed by aiohttp
-        on_startup (function): A function to be executed when the hook
+        on_startup (function): A function to be executed when the hook\
             on_response_prepare is executed by aiohttp
-        on_shutdown (function): A function to be executed when the hook
+        on_shutdown (function): A function to be executed when the hook\
             on_shutdown is executed by aiohttp
-        includes_after (list): list of files that must be included after every modules
+        includes_after (list): list of files that must be included after every modules\
             have included their files. Note, this shouldn't be defined my extensions directly
+
     """
     def __init__(self, name, router=None, includes=(), static_dir=None,
                  dependencies=(), _god_mode=None, on_response_prepare=None,
@@ -88,6 +90,9 @@ class Extension:
         """
         Set this extension static dir to be absolute.
         Check if this is feasible
+
+        Args:
+            absolute_prefix: the absolute path that will lead to static_path after transformation
         """
         # TODO check if the static dir isn't already absolute
         # this is a function only so that writing tests is feasible
@@ -97,7 +102,8 @@ class Extension:
         """Check if the extension is sane.
         In other words, check if the every files it refers to exists
 
-        Raise a ValueError exception if one check failed.
+        Raises:
+            ValueError exception if one check failed.
         """
         if self.static_dir is not None and not os.path.isdir(self.static_dir):
             raise ValueError('Static directory {} does not exist'.format(
@@ -117,10 +123,10 @@ class Extension:
 
 
 class DependencyGraph:
-    """ Represents a dependency graph
+    """Represents a dependency graph
 
-    Tozti use this to compute an order in which includes are to be made so 
-    that extensions dependendants on other extensions are included after their
+    Tozti uses this to compute an order in which extensions are to be included so 
+    that extensions depending on other extensions are included after their
     dependencies
     """
 
@@ -142,8 +148,9 @@ class DependencyGraph:
 
     def toposort(self):
         """Compute a topological sort on the graph
-        Yield a list of node's values in topological order 
-        Given includes, a dictionnary of dependencies & includes for each
+
+        Yields:
+            list: a list of node's values in topological order 
         """
         visited = set()
         seen_traversal = set()
@@ -168,9 +175,7 @@ class App:
 
     def __init__(self):
         self._app = web.Application()
-        self._includes = {}
         self._static_dirs = {}
-        self._dep_graph = {}
         self._includes_after = []
         self._dep_graph_includes = DependencyGraph()
 
