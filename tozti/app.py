@@ -16,7 +16,7 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__all__ = ('DependencyCycle', 'App')
+__all__ = ('DependencyCycle', 'App', 'Extension')
 
 
 import asyncio
@@ -37,6 +37,98 @@ class DependencyCycle(Exception):
     pass
 
 
+class Extension:
+    """
+    A tozti extension
+    """
+    def __init__(self, name, router=None, includes=(), static_dir=None,
+                 dependencies=(), _god_mode=None, on_response_prepare=None,
+                 on_startup=None, on_cleanup=None, on_shutdown=None,
+                 **kwargs):
+
+        self.name = name
+
+        self.router = router
+        self.includes = includes
+        self.static_dir = static_dir
+        self.dependencies = dependencies
+        self._god_mode = _god_mode
+        self.on_response_prepare = on_response_prepare
+        self.on_startup = on_startup
+        self.on_cleanup = on_cleanup
+        self.on_shutdown = on_shutdown
+        self.includes_after = ()
+
+        if len(kwargs) > 0:
+            # do something here. If kwargs is not empty, that means the manifest 
+            # contain an entry wich is not well defined
+            pass
+
+    def add_dependency(self, dep):
+        if not dep in self.dependencies:
+            self.dependencies.append(dep)
+
+    def set_static_dir_absolute(self, absolute_prefix):
+        """
+        Set this extension static dir to be absolute.
+        Check if this is feasible
+        """
+        # TODO check if the static dir isn't already absolute
+        # this is a function only so that writing tests is feasible
+        self.static_dir = os.path.join(absolute_prefix, self.static_dir)
+
+    def is_sane(self, _includes_after=()):
+        # why his includes after here ?
+        if self.static_dir is not None and not os.path.isdir(self.static_dir):
+            raise ValueError('Static directory {} does not exist'.format(
+                             self.static_dir, self.name))
+        if len(self.includes) + len(self.includes_after) > 0 and self.static_dir is None:
+            raise ValueError('Includes given but no static directory')
+        for inc in self.includes + self.includes_after:
+            if not os.path.isfile(os.path.join(self.static_dir, inc)):
+                raise ValueError('Included file {} does not exist in {}, did '
+                                 'you execute `npm run build`?'
+                                 .format(inc, self.static_dir))
+        return True
+
+    def add_prefix_routes(self, prefix, append_name=True):
+        if append_name:
+            prefix = "{}/{}".format(prefix, self.name)
+        self.router.add_prefix(prefix)
+
+
+class DependencyGraph:
+    def __init__(self):
+        self.node_value = {}
+        self.dependencies = {}
+
+    def add_dependency(self, name, dependencies, value):
+        self.dependencies[name] = dependencies
+        self.node_value[name] = value
+
+    def toposort(self):
+        """Given includes, a dictionnary of dependencies & includes for each
+        extensions, will construct a list of includes file sorted so that
+        dependencies are respected.
+        """
+        visited = set()
+        seen_traversal = set()
+        def visit(node):
+            visited.add(node)
+            seen_traversal.add(node)
+            for dep in self.dependencies[node]:
+                if dep in seen_traversal:
+                    raise DependencyCycle(dep, node)
+                if not dep in visited:
+                    yield from visit(dep)
+            seen_traversal.discard(node)
+            yield from self.node_value[node]
+
+        for dep in self.dependencies:
+            if not dep in visited:
+                yield from visit(dep)
+
+
 class App:
     """The Tozti server."""
 
@@ -46,80 +138,52 @@ class App:
         self._static_dirs = {}
         self._dep_graph = {}
         self._includes_after = []
+        self._dep_graph_includes = DependencyGraph()
 
-    def register(self, prefix, router=None, includes=(), static_dir=None,
-                 dependencies=(), _god_mode=None, on_response_prepare=None,
-                 on_startup=None, on_cleanup=None, on_shutdown=None,
-                 _includes_after=()):
+    def register(self, extension):
         """Register an extension."""
 
-        logger.info('Registrating extension {}'.format(prefix))
+        logger.info('Registrating extension {}'.format(extension.name))
 
         # some sanity checks
-        if static_dir is not None and not os.path.isdir(static_dir):
-            raise ValueError('Static directory {} does not exist'.format(
-                             static_dir, prefix))
-        if len(includes) + len(_includes_after) > 0 and static_dir is None:
-            raise ValueError('Includes given but no static directory')
-        for inc in includes + _includes_after:
-            if not os.path.isfile(os.path.join(static_dir, inc)):
-                raise ValueError('Included file {} does not exist in {}, did '
-                                 'you execute `npm run build`?'
-                                 .format(inc, static_dir))
+        # probably check for exceptions here
+        if not extension.is_sane():
+            return
 
         # register new api routes
-        if router is not None:
-            router.add_prefix('/api/{}'.format(prefix))
-            self._app.router.add_routes(router)
+        if extension.router is not None:
+            extension.add_prefix_routes("/api")
+            self._app.router.add_routes(extension.router)
 
         # js and static files stuff
-        if static_dir is not None:
-            self._static_dirs[prefix] = static_dir
-        inc_fmt = '/static/{}/{{}}'.format(prefix)
-        self._includes[prefix] = [inc_fmt.format(incl) for incl in includes]
-        self._dep_graph[prefix] = dependencies
-        self._includes_after.extend(inc_fmt.format(incl) for incl in _includes_after)
+        # TODO refactor
+        if extension.static_dir is not None:
+            self._static_dirs[extension.name] = extension.static_dir
+
+        
+        inc_fmt = '/static/{}/{{}}'.format(extension.name)
+        self._dep_graph_includes.add_dependency(extension.name,extension.dependencies, 
+                                              [inc_fmt.format(incl) for incl in extension.includes])
+        self._includes_after.extend(inc_fmt.format(incl) for incl in extension.includes_after)
 
         # signal handlers
-        if on_response_prepare is not None:
-            self._app.on_response_prepare.append(on_response_prepare)
-        if on_startup is not None:
-            self._app.on_startup.append(on_startup)
-        if on_cleanup is not None:
-            self._app.on_cleanup.append(on_cleanup)
-        if on_shutdown is not None:
-            self._app.on_shutdown.append(on_shutdown)
+        if extension.on_response_prepare is not None:
+            self._app.on_response_prepare.append(extension.on_response_prepare)
+        if extension.on_startup is not None:
+            self._app.on_startup.append(extension.on_startup)
+        if extension.on_cleanup is not None:
+            self._app.on_cleanup.append(extension.on_cleanup)
+        if extension.on_shutdown is not None:
+            self._app.on_shutdown.append(extension.on_shutdown)
 
         # last-resort hook to do whatever you want
-        if _god_mode is not None:
-            _god_mode(self._app)
+        if extension._god_mode is not None:
+            extension._god_mode(self._app)
 
-    def _toposort_includes(self):
-        """Given includes, a dictionnary of dependencies & includes for each
-        extensions, will construct a list of includes file sorted so that
-        dependencies are respected.
-        """
-
-        visited = set()
-        seen_traversal = set()
-        def visit(node):
-            visited.add(node)
-            seen_traversal.add(node)
-            for dep in self._dep_graph[node]:
-                if dep in seen_traversal:
-                    raise DependencyCycle(dep, node)
-                if not dep in visited:
-                    yield from visit(dep)
-            seen_traversal.discard(node)
-            yield from self._includes[node]
-
-        for dep in self._dep_graph:
-            if not dep in visited:
-                yield from visit(dep)
 
     def _render_index(self):
         logger.debug('Rendering index.html')
-        incs = list(self._toposort_includes()) + self._includes_after
+        incs = list(self._dep_graph_includes.toposort()) + self._includes_after
 
         context = {
             'styles': [{'src': u} for u in incs if u.split('.')[-1] == 'css'],

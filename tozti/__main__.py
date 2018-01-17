@@ -41,10 +41,6 @@ def find_exts():
     .. docs: https://tozti.readthedocs.io/en/latest/dev/arch.html#extensions
     """
 
-    includes = {}
-    deps = {}
-    static_dirs = []
-
     for ext in os.listdir(os.path.join(tozti.TOZTI_BASE, 'extensions')):
         extpath = os.path.join(tozti.TOZTI_BASE, 'extensions', ext)
         if not os.path.isdir(extpath):
@@ -72,7 +68,9 @@ def find_exts():
 
         try:
             #FIXME: validate the manifest format
-            yield (ext, mod.MANIFEST)
+            # the manifest format is more or less validated inside of the constructor, 
+            # but I agree, it has to be done
+            yield tozti.app.Extension(ext, **mod.MANIFEST)
         except AttributeError:
             logger.exception('Error while loading extension {}, skipping: no '
                              'MANIFEST found'.format(ext))
@@ -113,30 +111,38 @@ def main():
     app = tozti.app.App()
 
     # load and register extensions
+    # ISSUE
+    # Now every extension is forced to have a dist folder 
     try:
-        for (prefix, man) in find_exts():
+        for extension in find_exts():
             # add dependency on the core
-            if 'dependencies' in man and 'core' not in man['dependencies']:
-                man['dependencies'].append('core')
-            else:
-                man['dependencies'] = ['core']
+            extension.add_dependency('core')
             # make static_dir absolute and default to 'dist'
-            if 'static_dir' not in man:
-                man['static_dir'] = 'dist'
-            man['static_dir'] = os.path.join(tozti.TOZTI_BASE, 'extensions',
-                prefix, man['static_dir'])
-            app.register(prefix, **man)
+            if extension.static_dir is None:
+                extension.static_dir = 'dist'
+            extension.set_static_dir_absolute(
+                    os.path.join(tozti.TOZTI_BASE, 'extensions', extension.name))
+            app.register(extension)
     except Exception as err:
-        logger.critical('Error while loading extensions {}: {}'.format(prefix, err))
+        logger.critical('Error while loading extensions {}: {}'.format(extension.name, err))
         sys.exit(1)
 
     # register core api
     try:
-        app.register('store', router=tozti.store.router,
-                     on_startup=tozti.store.open_db,
-                     on_shutdown=tozti.store.close_db)
-        app.register('core', static_dir=os.path.join(tozti.TOZTI_BASE, 'dist'),
-                     includes=['bootstrap.js'], _includes_after=['launch.js'])
+        # perhaps load these extensions thanks to a manifest directly ?
+        store_ext = tozti.app.Extension('store', 
+                              router=tozti.store.router,
+                              on_startup=tozti.store.open_db,
+                              on_shutdown=tozti.store.close_db)
+        core_ext = tozti.app.Extension('core',
+                             static_dir=os.path.join(tozti.TOZTI_BASE, 'dist'),
+                             includes=['bootstrap.js'])
+        # this next line is here to set includes_after for the core
+        # this isn't doable in the constructor because in theory extensions 
+        # shouldn't be able to define it
+        core_ext.includes_after = ['launch.js']
+        app.register(store_ext)
+        app.register(core_ext)
     except Exception as err:
         logger.critical('Error while loading core: {}'.format(err))
         sys.exit(1)
