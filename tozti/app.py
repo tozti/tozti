@@ -47,36 +47,40 @@ class App:
         self._dep_graph = {}
         self._includes_after = []
 
-    def register(self, prefix, router=None, includes=None, static_dir=None,
-                 dependencies=None, _god_mode=None, on_response_prepare=None,
+    def register(self, prefix, router=None, includes=(), static_dir=None,
+                 dependencies=(), _god_mode=None, on_response_prepare=None,
                  on_startup=None, on_cleanup=None, on_shutdown=None,
-                 _includes_after=None):
+                 _includes_after=()):
         """Register an extension."""
 
         logger.info('Registrating extension {}'.format(prefix))
 
+        # some sanity checks
+        if static_dir is not None and not os.path.isdir(static_dir):
+            raise ValueError('Static directory {} does not exist'.format(
+                             static_dir, prefix))
+        if len(includes) + len(_includes_after) > 0 and static_dir is None:
+            raise ValueError('Includes given but no static directory')
+        for inc in includes + _includes_after:
+            if not os.path.isfile(os.path.join(static_dir, inc)):
+                raise ValueError('Included file {} does not exist in {}, did '
+                                 'you execute `npm run build`?'
+                                 .format(inc, static_dir))
+
+        # register new api routes
         if router is not None:
             router.add_prefix('/api/{}'.format(prefix))
             self._app.router.add_routes(router)
 
+        # js and static files stuff
         if static_dir is not None:
             self._static_dirs[prefix] = static_dir
+        inc_fmt = '/static/{}/{{}}'.format(prefix)
+        self._includes[prefix] = [inc_fmt.format(incl) for incl in includes]
+        self._dep_graph[prefix] = dependencies
+        self._includes_after.extend(inc_fmt.format(incl) for incl in _includes_after)
 
-        if includes is not None:
-            self._includes[prefix] = ['/static/{}/{}'.format(prefix, incl)
-                                      for incl in includes]
-        else:
-            self._includes[prefix] = []
-
-        if dependencies is not None:
-            self._dep_graph[prefix] = dependencies
-        else:
-            self._dep_graph[prefix] = []
-
-        if _includes_after is not None:
-            self._includes_after.extend('/static/{}/{}'.format(prefix, incl)
-                                        for incl in _includes_after)
-
+        # signal handlers
         if on_response_prepare is not None:
             self._app.on_response_prepare.append(on_response_prepare)
         if on_startup is not None:
@@ -86,6 +90,7 @@ class App:
         if on_shutdown is not None:
             self._app.on_shutdown.append(on_shutdown)
 
+        # last-resort hook to do whatever you want
         if _god_mode is not None:
             _god_mode(self._app)
 

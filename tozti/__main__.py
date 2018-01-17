@@ -127,14 +127,19 @@ def main():
                 prefix, man['static_dir'])
             app.register(prefix, **man)
     except Exception as err:
-        logger.critical('Error while loading extensions: {}'.format(err))
+        logger.critical('Error while loading extensions {}: {}'.format(prefix, err))
         sys.exit(1)
 
     # register core api
-    app.register('store', router=tozti.store.router,
-                 on_startup=tozti.store.open_db, on_shutdown=tozti.store.close_db)
-    app.register('core', static_dir=os.path.join(tozti.TOZTI_BASE, 'dist'),
-                 includes=['bootstrap.js'], _includes_after=['launch.js'])
+    try:
+        app.register('store', router=tozti.store.router,
+                     on_startup=tozti.store.open_db,
+                     on_shutdown=tozti.store.close_db)
+        app.register('core', static_dir=os.path.join(tozti.TOZTI_BASE, 'dist'),
+                     includes=['bootstrap.js'], _includes_after=['launch.js'])
+    except Exception as err:
+        logger.critical('Error while loading core: {}'.format(err))
+        sys.exit(1)
 
     try:
         app.main(production=args.command=='prod')
