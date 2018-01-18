@@ -130,7 +130,7 @@ def main():
                     os.path.join(tozti.TOZTI_BASE, 'extensions', extension.name))
             app.register(extension)
     except Exception as err:
-        logger.critical('Error while loading extensions {}: {}'.format(extension.name, err))
+        logger.critical('Error while loading extensions: {}'.format(err))
         sys.exit(1)
 
     # register core api
