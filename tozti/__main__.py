@@ -117,10 +117,12 @@ def main():
         for extension in find_exts():
             # add dependency on the core
             extension.dependencies.add('core')
-            # make static_dir absolute and default to 'dist'
-            if extension.static_dir is None:
-                extension.static_dir = 'dist'
-            extension.set_static_dir_absolute(
+            # static dir is only important if some files are included by the extension
+            if len(extension.includes) + len(extension.includes_after) > 0:
+                # make static_dir absolute and default to 'dist' if some files are included
+                if extension.static_dir is None :
+                    extension.static_dir = 'dist'
+                extension.set_static_dir_absolute(
                     os.path.join(tozti.TOZTI_BASE, 'extensions', extension.name))
             app.register(extension)
     except Exception as err:
