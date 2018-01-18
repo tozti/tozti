@@ -155,4 +155,5 @@ def main():
         logger.critical('Found dependency cycle between extensions {} and {}'
                         .format(err.args[0], err.args[1]))
 
-main()
+if __name__ == "__main__":
+    main()
