@@ -6,6 +6,7 @@ install:
     - npm install
 script:
     - npm run build
+    - pytest tests/
 
 cache:
     directories:
