@@ -63,22 +63,17 @@ def test_find_exts(empty_extensions_entry_leave, extensions):
         server_file.write("\n")
         server_file.close()
 
-    # if one extension has a bad format, then the function raises something
-    if any(e == Ext_format.BAD_FORMAT for _, e, _ in extensions):
-        with pytest.raises(ValueError):
-            list(tozti.__main__.find_exts())
-    else:
-        # get the outputted result and the expected result
-        output = list(tozti.__main__.find_exts())
-        expected = [tozti.app.Extension(name, **manifest) \
-                for name, _, manifest in extensions   \
-                if manifest is not None]
+    # get the outputed result and the expected result
+    output = list(tozti.__main__.find_exts())
+    expected = [tozti.app.Extension(name, **manifest) \
+            for name, ext_format, manifest in extensions   \
+            if not (manifest is None or ext_format == Ext_format.BAD_FORMAT)]
 
-        # special equality function, we want the result to be the
-        # same for __dict__ equality
-        assert(len(output) == len(expected))
-        for ext in output:
-            exist_corresponding = False
-            for ext2 in expected:
-                exist_corresponding |= (ext.__dict__ == ext2.__dict__)
-            assert(exist_corresponding)
+    # special equality function, we want the result to be the
+    # same for __dict__ equality
+    assert(len(output) == len(expected))
+    for ext in output:
+        exist_corresponding = False
+        for ext2 in expected:
+            exist_corresponding |= (ext.__dict__ == ext2.__dict__)
+        assert(exist_corresponding)

@@ -57,7 +57,10 @@ def find_exts():
             spec = spec_from_file_location(ext, pkg_path)
         else:
             msg = 'Could not find python file for extension {}'
-            raise ValueError(msg.format(ext))
+            # could not use logger.exception as we do not have any exceptions
+            # instead we use logger.error
+            logger.error(msg.format(ext))
+            continue
 
         mod = module_from_spec(spec)
         try:
