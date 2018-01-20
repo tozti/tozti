@@ -71,7 +71,7 @@ class Extension:
         self.name = name
 
         self.router = router
-        self.includes = includes
+        self.includes = includes if isinstance(includes, list) else list(includes) 
         self.static_dir = static_dir
         self.dependencies = set(dependencies)
         self._god_mode = _god_mode
@@ -79,7 +79,7 @@ class Extension:
         self.on_startup = on_startup
         self.on_cleanup = on_cleanup
         self.on_shutdown = on_shutdown
-        self.includes_after = ()
+        self.includes_after = []
 
         if len(kwargs) > 0:
             # TODO do something here. If kwargs is not empty, that means the manifest 
