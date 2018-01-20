@@ -238,6 +238,8 @@ class App:
 
         index_html = self._render_index()
 
+        self._app['tozti-config'] = tozti.CONFIG
+
         if production:
             #FIXME: deploy static files and index.html
             pass

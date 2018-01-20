@@ -1,0 +1,15 @@
+{
+    "attributes": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "login": { "type": "string" }
+    },
+    "relationships": {
+        "groups": {
+            "reverse-of": {
+                "type": "http://127.0.0.1:8080/static/core/types/group.json",
+                "path": "members"
+            }
+        }
+    }
+}
