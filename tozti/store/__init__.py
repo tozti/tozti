@@ -104,24 +104,61 @@ async def relationship_get(req):
     id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
     try:
-        res = await req.app['tozti-store'].get(id)
-        return json_response(res['relationship'][rel])
+        return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
     except KeyError:
         return api_error('RESOURCE_NOT_FOUND', id=id)
+    except ValueError as err:
+        return api_error('INVALID_DATA', err=err)
 
 
 @relationship.put
 async def relationship_put(req):
     """Request handler for ``PUT /api/store/resources/{id}/{rel}``."""
 
-    pass
+    if req.content_type != 'application/json':
+        return api_error('NOT_JSON')
+    try:
+        data = await req.json()
+    except JSONDecodeError:
+        return api_error('BAD_JSON')
+    
+    id = UUID(req.match_info['id'])
+    rel = req.match_info['rel']
+    data = await req.json()
+
+    try:
+        await req.app['tozti-store'].rel_replace(id, rel, data)
+    except ValueError as err:
+        return api_error('INVALID_DATA', err=err)
+    except KeyError:
+        return api_error('RESOURCE_NOT_FOUND', id=id)
+
+    return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
 
 
 @relationship.post
 async def relationship_post(req):
     """Request handler for ``POST /api/store/resources/{id}/{rel}``."""
+    
+    if req.content_type != 'application/json':
+        return api_error('NOT_JSON')
+    try:
+        data = await req.json()
+    except JSONDecodeError:
+        return api_error('BAD_JSON')
+    
+    id = UUID(req.match_info['id'])
+    rel = req.match_info['rel']
+    data = await req.json()
 
-    pass
+    try:
+        await req.app['tozti-store'].rel_append(id, rel, data)
+    except ValueError as err:
+        return api_error('INVALID_DATA', err=err)
+    except KeyError:
+        return api_error('RESOURCE_NOT_FOUND', id=id)
+
+    return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
 
 
 async def open_db(app):

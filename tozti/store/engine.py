@@ -200,6 +200,36 @@ class Store:
                              % data['relationships'].pop())
 
         return {'type': data['type'], 'attrs': attrs, 'rels': rels}
+    
+    async def _render_relationship(self, id, rel, type_hint = None):
+        """Renders the relationship `rel` belonging to resource with given id. 
+
+        An optional argument `type_hint` can be given in order to avoid querying
+        the database for the resource type. Raises a `KeyError` if the resource
+        is not found, and a `ValueError` if the relationship is invalid for the
+        type of the given resource.
+        """
+        if type_hint is None:
+            rep = self.find_one(id)
+            resource_type = rep['type']
+        else:
+            rep = None
+            resource_type = type_hint
+        schema = self._typecache[resource_type]
+
+        if rel in schema.autos:
+            return await self._render_auto(id, rel, *schema.autos[rel])
+        else:
+            if rep is None:
+                rep = self.find_one(id)
+            rel_obj = rep['rels'][rel]
+            if rel in schema.to_one:
+                return await self._render_to_one(id, rel, rel_obj)
+            elif rel in schema.to_many:
+                return await self._render_to_many(id, rel, rel_obj)
+            else:
+                raise ValueError("unknown relationship: %s" % rel)
+            
 
     async def _render(self, rep):
         """Render a resource object given it's internal representation.
@@ -288,6 +318,17 @@ class Store:
 
         await self._resources.insert_one(sanitized)
         return sanitized['_id']
+    
+    async def find_one(self, id):
+        """Returns the resource with given id.
+        
+        `id` must be an instance of `uuid.UUID`. Raises `KeyError` if the
+        resource is not found.
+        """
+        resp = await self._resources.find_one(query, {'_id': id})
+        if res is None:
+            raise KeyError(id)
+        return resp
 
     async def typeof(self, id):
         """Return the type URL of a given resource.
@@ -296,11 +337,9 @@ class Store:
         resource is not found.
         """
 
-        res = await self._resources.find_one({'_id': id}, {'type': 1})
-        if res is None:
-            raise KeyError(id)
+        res = await self.find_one(id)
         return res['type']
-
+        
     async def get(self, id):
         """Query the DB for a resource.
 
@@ -310,9 +349,7 @@ class Store:
         """
 
         logger.debug('querying DB for resource {}'.format(id))
-        resp = await self._resources.find_one({'_id': id})
-        if resp is None:
-            raise KeyError(id)
+        resp = await self.find_one(id)
         return await self._render(resp)
 
     async def update(self, id, raw):
@@ -366,13 +403,44 @@ class Store:
             raise KeyError(id)
 
     async def rel_get(self, id, rel):
-        pass
+        return self._render_relationship(id, rel)
 
-    async def rel_update(self, id, rel, data):
-        pass
+    async def rel_replace(self, id, rel, data):
+        resource_type = await self.typeof(id)
+        schema = await self._typecache[resource_type]
+
+        if rel in schema.to_one:
+            rel_obj = self._sanitize_to_one(data)
+        elif rel in schema.to_many:
+            rel_obj = self._sanitize_to_many(data)
+        elif rel in schema.autos:
+            raise ValueError('can not update auto relationship %s' % rel)
+        else:
+            raise ValueError('invalid relationship %s' % rel)
+
+        res = await self._resources.update_one({'_id': id}, {'$set': {'rels.%s' %rel : rel_obj }})
+        if res.matched_count != 1:
+            raise KeyError(id)
 
     async def rel_append(self, id, rel, data):
-        pass
+        resource_type = await self.typeof(id)
+        schema = await self._typecache[resource_type]
+
+        if rel in schema.to_many:
+            rel_obj = self._sanitize_to_many(data)
+        else:
+            raise ValueError('only to_many relationships can be updated')
+
+        res = await self._resources.update_one(
+            {'_id': id}, 
+            {'$addToSet': {
+                'rels.%s.' % rel: {
+                    '$each': rel_obj
+                    }
+                }
+            })
+        if res.matched_count != 1:
+            raise KeyError(id)
 
     async def close(self):
         """Close the connection to the MongoDB server."""
