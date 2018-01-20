@@ -77,3 +77,4 @@ def test_find_exts(empty_extensions_entry_leave, extensions):
         for ext2 in expected:
             exist_corresponding |= (ext.__dict__ == ext2.__dict__)
         assert(exist_corresponding)
+

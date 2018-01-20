@@ -141,7 +141,7 @@ class DependencyGraph:
             name: the identifier of the new node
             dependencies(iterable): The list of the id's of nodes on whom
                 the new node depends
-            value: the value of this node
+            value(iterable): the value of this node. Must be an iterable
         """
         self._dependencies[name] = dependencies
         self._node_value[name] = value
