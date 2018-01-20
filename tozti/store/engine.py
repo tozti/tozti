@@ -125,7 +125,7 @@ class Store:
                              'given: %s, real: %s' % (id, link['type'], type_url))
         if types is not None and type_url not in types:
             raise ValueError('unallowed type %s for linked resource %s' % (
-                             id, type_url))
+                             type_url, id))
         return id
 
     async def _sanitize_to_one(self, rel_obj, types):
@@ -201,7 +201,7 @@ class Store:
 
         return {'type': data['type'], 'attrs': attrs, 'rels': rels}
     
-    async def _render_relationship(self, id, rel, type_hint = None):
+    async def _render_relationship(self, id, rel, type_hint=None):
         """Renders the relationship `rel` belonging to resource with given id. 
 
         An optional argument `type_hint` can be given in order to avoid querying
@@ -209,19 +209,20 @@ class Store:
         is not found, and a `ValueError` if the relationship is invalid for the
         type of the given resource.
         """
+
         if type_hint is None:
-            rep = self.find_one(id)
+            rep = await self.find_one(id)
             resource_type = rep['type']
         else:
             rep = None
             resource_type = type_hint
-        schema = self._typecache[resource_type]
+        schema = await self._typecache[resource_type]
 
         if rel in schema.autos:
             return await self._render_auto(id, rel, *schema.autos[rel])
         else:
             if rep is None:
-                rep = self.find_one(id)
+                rep = await self.find_one(id)
             rel_obj = rep['rels'][rel]
             if rel in schema.to_one:
                 return await self._render_to_one(id, rel, rel_obj)
@@ -229,7 +230,6 @@ class Store:
                 return await self._render_to_many(id, rel, rel_obj)
             else:
                 raise ValueError("unknown relationship: %s" % rel)
-            
 
     async def _render(self, rep):
         """Render a resource object given it's internal representation.
@@ -321,14 +321,15 @@ class Store:
     
     async def find_one(self, id):
         """Returns the resource with given id.
-        
+
         `id` must be an instance of `uuid.UUID`. Raises `KeyError` if the
         resource is not found.
         """
-        resp = await self._resources.find_one(query, {'_id': id})
+
+        res = await self._resources.find_one({'_id': id})
         if res is None:
             raise KeyError(id)
-        return resp
+        return res
 
     async def typeof(self, id):
         """Return the type URL of a given resource.
@@ -403,22 +404,22 @@ class Store:
             raise KeyError(id)
 
     async def rel_get(self, id, rel):
-        return self._render_relationship(id, rel)
+        return await self._render_relationship(id, rel)
 
     async def rel_replace(self, id, rel, data):
         resource_type = await self.typeof(id)
         schema = await self._typecache[resource_type]
 
         if rel in schema.to_one:
-            rel_obj = self._sanitize_to_one(data)
+            rel_obj = await self._sanitize_to_one(data, schema.to_one[rel])
         elif rel in schema.to_many:
-            rel_obj = self._sanitize_to_many(data)
+            rel_obj = await self._sanitize_to_many(data, schema.to_many[rel])
         elif rel in schema.autos:
             raise ValueError('can not update auto relationship %s' % rel)
         else:
             raise ValueError('invalid relationship %s' % rel)
 
-        res = await self._resources.update_one({'_id': id}, {'$set': {'rels.%s' %rel : rel_obj }})
+        res = await self._resources.update_one({'_id': id}, {'$set': {'rels.%s' % rel: rel_obj }})
         if res.matched_count != 1:
             raise KeyError(id)
 
@@ -427,14 +428,14 @@ class Store:
         schema = await self._typecache[resource_type]
 
         if rel in schema.to_many:
-            rel_obj = self._sanitize_to_many(data)
+            rel_obj = await self._sanitize_to_many(data, schema.to_many[rel])
         else:
             raise ValueError('only to_many relationships can be updated')
 
         res = await self._resources.update_one(
             {'_id': id}, 
             {'$addToSet': {
-                'rels.%s.' % rel: {
+                'rels.%s' % rel: {
                     '$each': rel_obj
                     }
                 }
