@@ -17,6 +17,7 @@
 
 
 import argparse
+import asyncio
 from importlib.util import spec_from_file_location, module_from_spec
 import os
 import sys
@@ -79,6 +80,9 @@ def find_exts():
 
 def main():
     """Entry point for server startup."""
+
+    # Fix for some Python implementations that do not create a default event loop (?!)
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
     parser = argparse.ArgumentParser('tozti')
     parser.add_argument(
