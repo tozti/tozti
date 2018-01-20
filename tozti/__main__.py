@@ -22,24 +22,18 @@ from importlib.util import spec_from_file_location, module_from_spec
 import os
 import sys
 
-from aiohttp import web
 import logbook
-import pystache
 import toml
-import tozti
 
-from tozti import store
+import tozti
+import tozti.store
+import tozti.app
 
 
 logger = logbook.Logger('tozti.main')
 
 
-# base path to the tozti distribution
-TOZTI_BASE = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
-
-#Configuration dict loaded from the toml
-
-def load_exts(app):
+def find_exts():
     """Register the extensions found.
 
     Returns the list of includes and the list of static directories. See
@@ -48,12 +42,8 @@ def load_exts(app):
     .. docs: https://tozti.readthedocs.io/en/latest/dev/arch.html#extensions
     """
 
-    includes = {}
-    deps = {}
-    static_dirs = []
-
-    for ext in os.listdir(os.path.join(TOZTI_BASE, 'extensions')):
-        extpath = os.path.join(TOZTI_BASE, 'extensions', ext)
+    for ext in os.listdir(os.path.join(tozti.TOZTI_BASE, 'extensions')):
+        extpath = os.path.join(tozti.TOZTI_BASE, 'extensions', ext)
         if not os.path.isdir(extpath):
             continue
 
@@ -77,84 +67,15 @@ def load_exts(app):
             logger.exception(msg.format(ext, err))
             continue
 
-        new_incs, new_deps = register(app, ext, **mod.MANIFEST)
-
-        # extensions always depend on the core
-        new_deps.append('core')
-
-        includes[ext] = new_incs
-        deps[ext] = new_deps
-
-        static_dir = os.path.join(extpath, 'dist')
-        if os.path.isdir(static_dir):
-            static_dirs.append((ext, static_dir))
-
-    logger.info("{}".format(static_dirs))
-    return (includes, static_dirs, deps)
-
-
-class DependencyCycle(Exception):
-    pass
-
-def topo_sort_includes(includes, deps):
-    """Given includes, a dictionnary of dependencies & includes for each extensions,
-    will construct a list of includes file sorted so that dependencies are respected"""
-
-    visited = set()
-    seen_traversal = set()
-    def visit(node):
-        visited.add(node)
-        seen_traversal.add(node)
-        for dep in deps[node]:
-            if dep in seen_traversal:
-                raise DependencyCycle(dep, node)
-            if not dep in visited:
-                yield from visit(dep)
-        seen_traversal.discard(node)
-        yield from includes[node]
-
-    for dep in deps:
-        if not dep in visited:
-            yield from visit(dep)
-
-
-def register(app, prefix, router=None, includes=(), _god_mode=None, dependencies=[], **kwargs):
-    """Register routes and run `_god_mode` hook, returns files to include and dependencies."""
-
-    if router is not None:
-        logger.debug('Registering routes `/api/{}/...`'.format(prefix))
-        router.add_prefix('/api/{}'.format(prefix))
-        app.router.add_routes(router)
-
-    # register handlers
-    for sig in ('on_response_prepare', 'on_startup', 'on_cleanup',
-                'on_shutdown'):
-        if sig in kwargs:
-            getattr(app, sig).append(kwargs[sig])
-
-    if _god_mode is not None:
-        _god_mode(app)
-    return ['/static/{}/{}'.format(prefix, incl) for incl in includes], dependencies
-
-
-def render_index(includes, deps, final = []):
-    """Create the index.html file with the right things included."""
-
-    try:
-        includes = list(topo_sort_includes(includes, deps)) + final
-    except DependencyCycle as err:
-        logger.critical('Circular dependency detected between {} and {}'
-                        .format(err.args[0], err.args[1]))
-        sys.exit(1)
-
-    context = {
-        'styles': [{'src': u} for u in includes if u.split('.')[-1] == 'css'],
-        'scripts': [{'src': u} for u in includes if u.split('.')[-1] == 'js']
-    }
-
-    template = os.path.join(TOZTI_BASE, 'tozti', 'templates', 'index.html')
-    with open(template) as t:
-        return pystache.render(t.read(), context)
+        try:
+            #FIXME: validate the manifest format
+            # the manifest format is more or less validated inside of the constructor, 
+            # but I agree, it has to be done
+            yield tozti.app.Extension(ext, **mod.MANIFEST)
+        except AttributeError:
+            logger.exception('Error while loading extension {}, skipping: no '
+                             'MANIFEST found'.format(ext))
+            continue
 
 
 def main():
@@ -165,7 +86,7 @@ def main():
 
     parser = argparse.ArgumentParser('tozti')
     parser.add_argument(
-        '-c', '--config', default=os.path.join(TOZTI_BASE, 'config.toml'),
+        '-c', '--config', default=os.path.join(tozti.TOZTI_BASE, 'config.toml'),
         help='configuration file (default: `TOZTI/config.toml`)')
     parser.add_argument('command', choices=('dev',))  # FIXME: handle `prod` mode
     args = parser.parse_args()
@@ -186,69 +107,57 @@ def main():
     except Exception as err:
         logger.critical('Error while loading configuration: {}'.format(err))
         sys.exit(1)
+    tozti.CONFIG = config
+
 
     # initialize app
     logger.debug('Initializing app')
-    app = web.Application()
-    app['tozti-config'] = config
+    app = tozti.app.App()
 
-    #share the configuration
-    tozti.CONFIG = config
-
-    # initialize core api
-    register(app, 'store', router=store.router, on_startup=store.open_db,
-             on_cleanup=store.close_db)
-
-    # load extensions
+    # load and register extensions
+    # ISSUE
+    # Now every extension is forced to have a dist folder 
     try:
-        includes, statics, deps = load_exts(app)
+        for extension in find_exts():
+            # add dependency on the core
+            extension.dependencies.add('core')
+            # static dir is only important if some files are included by the extension
+            if len(extension.includes) + len(extension.includes_after) > 0:
+                # make static_dir absolute and default to 'dist' if some files are included
+                if extension.static_dir is None :
+                    extension.static_dir = 'dist'
+                extension.set_static_dir_absolute(
+                    os.path.join(tozti.TOZTI_BASE, 'extensions', extension.name))
+            app.register(extension)
     except Exception as err:
-        logger.critical('Error during initialization: {}'.format(err))
+        logger.critical('Error while loading extensions {}: {}'.format(extension.name, err))
         sys.exit(1)
 
-    # adding core js dependency
-    statics.append(('core', os.path.join(TOZTI_BASE, 'dist')))
-    includes['core'] = ['static/core/bootstrap.js']
-    deps['core'] = []
-
-    # deploy static files
-    if args.command == 'dev':
-        for (name, dir) in statics:
-            logger.info("STATIC {} {}".format(name, dir))
-            app.router.add_static('/static/{}'.format(name), dir)
-
-    for resource in app.router.resources():
-        logger.info("ROUTE {}".format(resource))
-    # render index.html
-    logger.debug('Rendering index.html')
-    index_html = render_index(includes, deps, ['/static/core/launch.js'])
-    if args.command == 'dev':
-        async def index_handler(req):
-            return web.Response(text=index_html, content_type='text/html',
-                                charset='utf-8')
-        app.router.add_get('/{_:(?!api|static).*}', index_handler)
-
-    # start up
-    logger.debug('Setting up asyncio')
-    loop = asyncio.get_event_loop()
-    handler = app.make_handler()
-    srv = loop.run_until_complete(loop.create_server(
-        handler, **config['http']))
-    logger.info('Listening on {host}:{port}'.format(**config['http']))
+    # register core api
+    try:
+        # perhaps load these extensions thanks to a manifest directly ?
+        store_ext = tozti.app.Extension('store', 
+                              router=tozti.store.router,
+                              on_startup=tozti.store.open_db,
+                              on_shutdown=tozti.store.close_db)
+        core_ext = tozti.app.Extension('core',
+                             static_dir=os.path.join(tozti.TOZTI_BASE, 'dist'),
+                             includes=['bootstrap.js'])
+        # this next line is here to set includes_after for the core
+        # this isn't doable in the constructor because in theory extensions 
+        # shouldn't be able to define it
+        core_ext.includes_after = ['launch.js']
+        app.register(store_ext)
+        app.register(core_ext)
+    except Exception as err:
+        logger.critical('Error while loading core: {}'.format(err))
+        sys.exit(1)
 
     try:
-        loop.run_until_complete(app.startup())
-        loop.run_forever()
-    except KeyboardInterrupt:
-        logger.info('Received SIGINT, initiating shutdown')
-    finally:
-        srv.close()
-        loop.run_until_complete(srv.wait_closed())
-        loop.run_until_complete(app.shutdown())
-        loop.run_until_complete(handler.shutdown(60.0))
-        loop.run_until_complete(app.cleanup())
-        logger.info('Shutdown complete, goodbye')
-    loop.close()
+        app.main(production=args.command=='prod')
+    except tozti.app.DependencyCycle as err:
+        logger.critical('Found dependency cycle between extensions {} and {}'
+                        .format(err.args[0], err.args[1]))
 
-
-main()
+if __name__ == "__main__":
+    main()

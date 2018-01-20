@@ -13,3 +13,9 @@ API Reference
 
 .. automodule:: tozti.store
    :members:
+
+:mod:`tozti.app`
+================
+
+.. automodule:: tozti.app
+   :members:

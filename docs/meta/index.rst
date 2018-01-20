@@ -16,4 +16,5 @@ the *software project* course than the content of the project itself.
 
    orga
    tutorials
+   sallemachine
    weekly
