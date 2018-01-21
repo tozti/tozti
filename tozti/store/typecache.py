@@ -23,6 +23,7 @@ import jsonschema
 import aiohttp
 from jsonschema.exceptions import ValidationError
 
+from tozti.utils import BadDataError
 from tozti.store import UUID_RE
 
 
@@ -116,13 +117,14 @@ class TypeCache:
                 async with session.get(type_url) as resp:
                     assert resp.status == 200
                     raw_schema = await resp.json()
-        except ValueError as err:
-            raise ValueError('error while retrieving type schema: {}'.format(err))
+        except Exception as err:
+            raise BadDataError('error while retrieving type schema for %s: %s' % (
+                               type_url, err.args[0]))
 
         try:
             jsonschema.validate(raw_schema, META_SCHEMA)
         except ValidationError as err:
-            raise ValueError('invalid schema: %s' % err.message)
+            raise BadDataError('invalid schema: %s' % err.message)
 
         schema = self.compile_schema(raw_schema, type_url)
         self._cache[type_url] = schema
