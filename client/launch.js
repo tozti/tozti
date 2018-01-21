@@ -4,6 +4,7 @@ const app = window.app = new Vue({
   store: tozti.store,
 
   router: new VueRouter({
+    mode: "history",
     routes: tozti.routes
   }),
 
