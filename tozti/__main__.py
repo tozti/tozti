@@ -88,8 +88,10 @@ def main():
     parser.add_argument(
         '-c', '--config', default=os.path.join(tozti.TOZTI_BASE, 'config.toml'),
         help='configuration file (default: `TOZTI/config.toml`)')
-    parser.add_argument('command', choices=('dev',))  # FIXME: handle `prod` mode
+    parser.add_argument('command', choices=('dev', 'prod'))
     args = parser.parse_args()
+
+    tozti.PRODUCTION = args.command == 'prod'
 
     # logging handlers
     # FIXME: make things fancier and configurable (logrotate, etc)
@@ -154,7 +156,7 @@ def main():
         sys.exit(1)
 
     try:
-        app.main(production=args.command=='prod')
+        app.main()
     except tozti.app.DependencyCycle as err:
         logger.critical('Found dependency cycle between extensions {} and {}'
                         .format(err.args[0], err.args[1]))

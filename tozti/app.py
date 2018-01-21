@@ -21,12 +21,14 @@ __all__ = ('DependencyCycle', 'App', 'Extension')
 
 import asyncio
 import os
+import traceback
 
 import logbook
 import pystache
 from aiohttp import web
 
 import tozti
+from tozti.utils import APIError, json_response
 
 
 logger = logbook.Logger('tozti.app')
@@ -170,11 +172,31 @@ class DependencyGraph:
                 yield from visit(dep)
 
 
+@web.middleware
+async def error_handler(req, handler):
+    try:
+        return await handler(req)
+    except APIError as exc:
+        logger.info(exc)
+        return exc.to_response()
+    except web.HTTPException as exc:
+        # just pass thru, will be rendered accordingly
+        raise exc
+    except Exception as exc:
+        logger.exception(exc)
+        err = {'code': 'INTERNAL_ERROR',
+               'title': 'the server could not handle the request',
+               'status': '500'}
+        if not tozti.PRODUCTION:
+            err['detail'] = str(exc)
+            err['traceback'] = traceback.format_exc()
+        return json_response({'errors': [err]}, status=500)
+
 class App:
     """The Tozti server."""
 
     def __init__(self):
-        self._app = web.Application()
+        self._app = web.Application(middlewares=[error_handler])
         self._static_dirs = {}
         self._includes_after = []
         self._dep_graph_includes = DependencyGraph()
@@ -233,14 +255,12 @@ class App:
         with open(template) as t:
             return pystache.render(t.read(), context)
 
-    def main(self, production=True, loop=None):
+    def main(self, loop=None):
         """Start the server."""
 
         index_html = self._render_index()
 
-        self._app['tozti-config'] = tozti.CONFIG
-
-        if production:
+        if tozti.PRODUCTION:
             #FIXME: deploy static files and index.html
             pass
         else:
