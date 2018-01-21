@@ -41,7 +41,6 @@ def find_exts():
 
     .. docs: https://tozti.readthedocs.io/en/latest/dev/arch.html#extensions
     """
-
     for ext in os.listdir(os.path.join(tozti.TOZTI_BASE, 'extensions')):
         extpath = os.path.join(tozti.TOZTI_BASE, 'extensions', ext)
         if not os.path.isdir(extpath):

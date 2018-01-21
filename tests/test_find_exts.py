@@ -6,6 +6,7 @@ import tozti.__main__
 import tozti.app
 
 from enum import Enum
+import tests.commons as commons
 
 class Ext_format(Enum):
     SERVER_FILE = 0
@@ -19,12 +20,8 @@ def empty_extensions_entry_leave(request):
     Fixture that enable to clean `extensions/` folder before
     and after executing the test
     """
-    def rmtree():
-        for f in os.listdir("extensions/"):
-            if f != ".gitkeep":
-                shutil.rmtree(os.path.join("extensions", f))
-    rmtree()
-    request.addfinalizer(rmtree)
+    commons.empty_extensions_list()
+    request.addfinalizer(commons.empty_extensions_list)
 
 
 @pytest.mark.parametrize("extensions",
