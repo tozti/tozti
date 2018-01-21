@@ -31,7 +31,7 @@ some modules::
 
     from tozti.utils import RouterDef
     from aiohttp import web
-    from tozti import logger
+    import logging
 
 * ``RouterDef`` allows us to define a new router and therefore new request
   handlers.
@@ -40,6 +40,10 @@ some modules::
 * ``logger`` is a simple utility to pretty print information in the server
   logs.
 
+We define a logger, which will enable us to log informations::
+    
+    logger = logbook.Logger("tozti-routing")
+
 Then, we create an empty router::
 
     router = RouterDef()
@@ -47,7 +51,7 @@ Then, we create an empty router::
 And we add one endpoint to it. We call it ``hello_world``, and make it
 accessible from the URL ``<tozti>/api/extension-name/hello_world``::
 
-    hello_world = router.add_resource('/hello_world')
+    hello_world = router.add_route('/hello_world')
 
 Finally, we define how our extension should behave when this endpoint is
 requested. In this example, we respond to ``GET`` requests on this endpoint
