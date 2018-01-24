@@ -1,13 +1,19 @@
 language: python
 python:
     - "3.6"
+before_install:
+    - export GECKODRIVER_DOWNLOAD=`curl -s 'https://api.github.com/repos/mozilla/geckodriver/releases/latest' | python -c "import sys, json; r = json.load(sys.stdin); print([a for a in r['assets'] if 'linux64' in a['name']][0]['browser_download_url']);"`
+    - curl -L -o /tmp/geckodriver.tar.gz $GECKODRIVER_DOWNLOAD
+    - mkdir $HOME/geckodriver && tar xvf /tmp/geckodriver.tar.gz -C $HOME/geckodriver
+    - export PATH=$HOME/geckodriver:$PATH
+    - geckodriver --version
 install:
     - pip install -r requirements.txt
     - pip install -r requirements-dev.txt
     - npm install
 script:
     - npm run build
-    - pytest tests/
+    - pytest tests/ --driver Firefox
 
 cache:
     directories:

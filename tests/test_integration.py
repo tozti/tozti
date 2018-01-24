@@ -58,3 +58,16 @@ def test_tozti_routing(tozti):
     assert(answer.text == "foo")
     assert(tozti.poll() is None)
 
+
+
+# test using headerless browser
+@pytest.fixture
+def firefox_options(firefox_options):
+    firefox_options.add_argument("-headless")
+    return firefox_options
+
+# vue routing
+@pytest.mark.extensions("vue-routing01")
+def test_tozti_vue_routing(selenium, tozti):
+    selenium.get("http://0.0.0.0:8080/counter")
+    assert("test success" in selenium.page_source)
