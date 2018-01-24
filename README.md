@@ -50,3 +50,21 @@ To install an extension, simply copy the extension folder inside `extensions/`.
 
 The documentation for **tozti** is available online on [tozti.readthedocs.io](https://tozti.readthedocs.io).
 The repository for this documentation is https://github.com/tozti/docs.
+
+## Tests
+
+### Launching tests
+
+Tozti contains some tests. For them to be run, you need/
+- to have installed the dependencies in `requirements-dev.txt`: `pip install -r requirements-dev.txt`
+- to have either installed `chrome-driver` or `geckodriver` (for headerless web browser testing)
+
+The test suite can be launched as:
+```
+pytest tests/ -driver [Chrome|Firefox]
+```
+If you are using `geckodriver`, user `Firefox` driver. Otherwise use `Chrome`
+
+### Adding tests:
+
+You can put extensions that are part of your testsuits inside `tests/extensions`. Not that you must add the build results inside them, so that travis doesn't have to rebuild the extensions everytime. Note that adding an extension inside this folder doesn't mean it will be tester: you must write the logic of the test inside a python script in `tests/`.
