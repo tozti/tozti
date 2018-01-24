@@ -48,8 +48,8 @@ To install an extension, simply copy the extension folder inside `extensions/`.
 
 ## Documentation
 
-The documentation for **tozti** is available online on [tozti.readthedocs.io](https://tozti.readthedocs.io).
-The repository for this documentation is https://github.com/tozti/docs.
+The documentation for **tozti** is available online on [tozti.readthedocs.io](https://tozti.readthedocs.io). 
+It is generated from the files contained inside `docs`.
 
 ## Tests
 
