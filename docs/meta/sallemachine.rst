@@ -24,7 +24,7 @@ The javascript part
 
 We need to install node and npm locally. Type the following command in your terminal::
 
-    https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
+    curl https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
 `
 
 Restart your terminal and install node::
@@ -44,4 +44,4 @@ Launching tozti
 
 To run tozti it's the same as usual::
 
-    python -m tozti dev
+    python3 -m tozti dev
