@@ -2,7 +2,7 @@ language: python
 python:
     - "3.6"
 before_install:
-    - export GECKODRIVER_DOWNLOAD=`curl -s 'https://api.github.com/repos/mozilla/geckodriver/releases/latest' | python -c "import sys, json; r = json.load(sys.stdin); print([a for a in r['assets'] if 'linux64' in a['name']][0]['browser_download_url']);"`
+    - export GECKODRIVER_DOWNLOAD='https://github.com/mozilla/geckodriver/releases/download/v0.19.1/geckodriver-v0.19.1-linux64.tar.gz'
     - curl -L -o /tmp/geckodriver.tar.gz $GECKODRIVER_DOWNLOAD
     - mkdir $HOME/geckodriver && tar xvf /tmp/geckodriver.tar.gz -C $HOME/geckodriver
     - export PATH=$HOME/geckodriver:$PATH
