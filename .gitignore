@@ -9,3 +9,5 @@ package-lock.json
 .vscode
 docs/_build
 extensions/*
+
+!tests/extensions/*/dist/
