@@ -13,46 +13,35 @@ Tozti is divided in two parts:
 
 For convenience, we use virtualenv to install the dependencies. But doing `python3 -m venv .venv` doesn't work in the computer rooms. However, `virtualenv` is installed.
 
-Hence, the python's part of tozti's setup becomes:
+Hence, the python's part of tozti's setup becomes::
 
-```
-virtualenv -p python3 .venv
-. .venv/bin/activate
-pip3 install -r requirements.txt
-```
+    virtualenv -p python3 .venv
+    . .venv/bin/activate
+    pip3 install -r requirements.txt
 
 The javascript part
 ===================
 
-We need to install node and npm locally. Type the following command in your terminal:
+We need to install node and npm locally. Type the following command in your terminal::
 
-```
-https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
-```
+    https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
+`
 
-Restart your terminal and install node:
+Restart your terminal and install node::
 
-```
-nvm install node
-```
+    nvm install node
 
-Then go back to tozti's folder to install the js dependencies:
+Then go back to tozti's folder to install the js dependencies::
 
-```
-npm install
-```
+    npm install
 
-And finally build tozti's js parts:
+And finally build tozti's js parts::
 
-```
-npm run build
-```
+    npm run build
 
 Launching tozti
 ===============
 
-To run tozti it's the same as usual
+To run tozti it's the same as usual::
 
-```
-python -m tozti dev
-```
+    python -m tozti dev
