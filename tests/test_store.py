@@ -14,7 +14,7 @@ USER_TYPE = "http://127.0.0.1:8080/static/core/types/user.json"
 def tozti(request):
     tozti = launch_tozti()
     if tozti is None:
-        assert(False)
+        assert False
 
     yield tozti
 
@@ -42,6 +42,7 @@ def check_call(meth, path, json=None):
     ans = resp.json()
     return 'errors' in ans
 
+
 @pytest.mark.parametrize("json, expected", [
     ({"type": USER_TYPE,
          "attributes": {"name": "f", "email": "a@a.com", "login": "bjr"}}, True),
@@ -51,12 +52,13 @@ def check_call(meth, path, json=None):
 def test_storage_post_request(tozti, db, json, expected):
     ret_val = check_call("POST", '/store/resources', json={"data": json})
     if not ret_val and expected:
-        assert(True)
+        assert True
     if db.count() != 1:
-        assert(not expected)
+        assert not expected
     for obj in db.find():
         if obj["attrs"] != json["attributes"]:
-            assert(not expected)
+            assert not expected
+
 
 @pytest.mark.parametrize("json", [
     {"type": USER_TYPE,
@@ -68,13 +70,38 @@ def test_storage_delete_object(tozti, db, json):
         uid = ret_val['data']['id']
         c = db.count()
         make_call("DELETE", "/store/resources/{}".format(uid))
-        assert(c > db.count())
+        assert c > db.count()
     except:
-        assert(False)
+        assert False
+
 
 def test_storage_delete_object_fail_not_uuid(tozti, db):
-    assert make_call("DELETE", "/store/resources/{}".format("foo"), json=None).status_code == 404
+    assert make_call("DELETE", "/store/resources/foo").status_code == 404
+
 
 def test_storage_delete_object_fail_uuid(tozti, db):
     assert make_call("DELETE", "/store/resources/00000000-0000-0000-0000-000000000000").status_code == 404
 
+
+@pytest.mark.parametrize("json", [
+    {"type": USER_TYPE,
+         "attributes": {"name": "f", "email": "a@a.com", "login": "bjr"}},
+    ])
+def test_storage_get_object(tozti, db, json):
+    try:
+        ret_val = make_call("POST", '/store/resources', json={"data": json}).json()
+        uid = ret_val['data']['id']
+        result = make_call("GET", "/store/resources/{}".format(uid)).json()["data"]
+        expected = json
+        expected["id"] = uid
+        assert uid == result["id"] and json["attributes"] == result["attributes"]
+    except:
+        assert False
+
+
+def test_storage_get_object_fail_not_uuid(tozti, db):
+    assert make_call("GET", "/store/resources/foo").status_code == 404
+
+
+def test_storage_get_object_fail_uuid(tozti, db):
+    assert make_call("GET", "/store/resources/00000000-0000-0000-0000-000000000000").status_code == 404
