@@ -1,11 +1,21 @@
 language: python
 python:
     - "3.6"
+services:
+    - mongodb
+before_install:
+    - export GECKODRIVER_DOWNLOAD='https://github.com/mozilla/geckodriver/releases/download/v0.19.1/geckodriver-v0.19.1-linux64.tar.gz'
+    - curl -L -o /tmp/geckodriver.tar.gz $GECKODRIVER_DOWNLOAD
+    - mkdir $HOME/geckodriver && tar xvf /tmp/geckodriver.tar.gz -C $HOME/geckodriver
+    - export PATH=$HOME/geckodriver:$PATH
+    - geckodriver --version
 install:
     - pip install -r requirements.txt
+    - pip install -r requirements-dev.txt
     - npm install
 script:
     - npm run build
+    - pytest tests/ 
 
 cache:
     directories:
