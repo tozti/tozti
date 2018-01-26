@@ -26,14 +26,38 @@ import logbook
 UUID_RE = '-'.join('[0-9a-fA-F]{%d}' % i for i in (8, 4, 4, 4, 12))
 logger = logbook.Logger('tozti.store')
 
-from tozti.utils import RouterDef, register_error, api_error, json_response
+import tozti
+from tozti.utils import (RouterDef, APIError, NotJsonError, BadJsonError,
+                         BadDataError, json_response)
+from tozti.store.type_schema import Schema
+
+
+class NoResourceError(APIError):
+    code = 'NO_RESOURCE'
+    title = 'resource not found'
+    status = 404
+    template = 'resource {id} not found'
+
+
+class BadAttrError(APIError):
+    code = 'BAD_ATTRIBUTE'
+    title = 'an attribute is invalid'
+    status = 400
+
+
+class NoRelError(APIError):
+    code = 'BAD_RELATIONSHIP'
+    title = 'a relationship is invalid'
+    status = 400
+
+
+class BadRelError(APIError):
+    code = 'BAD_RELATIONSHIP'
+    title = 'a relationship is invalid'
+    status = 400
+
+
 from tozti.store.engine import Store
-
-
-register_error('RESOURCE_NOT_FOUND', 'resource {id} not found', 404)
-register_error('NOT_JSON', 'expected json data', 406)
-register_error('BAD_JSON', 'malformated json data', 400)
-register_error('INVALID_DATA', 'invalid submission: {err}', 400)
 
 
 router = RouterDef()
@@ -47,15 +71,12 @@ async def resources_post(req):
     """Request handler for ``POST /api/store/resources``."""
 
     if req.content_type != 'application/json':
-        return api_error('NOT_JSON')
+        raise NotJsonError()
     try:
         data = await req.json()
     except JSONDecodeError:
-        return api_error('BAD_JSON')
-    try:
-        id = await req.app['tozti-store'].create(data)
-    except ValueError as err:
-        return api_error('INVALID_DATA', err=err)
+        raise BadJsonError()
+    id = await req.app['tozti-store'].create(data)
     return json_response({'data': await req.app['tozti-store'].get(id)})
 
 
@@ -64,10 +85,7 @@ async def resources_get(req):
     """Request handler for ``GET /api/store/resources/{id}``."""
 
     id = UUID(req.match_info['id'])
-    try:
-        return json_response({'data': await req.app['tozti-store'].get(id)})
-    except KeyError:
-        return api_error('RESOURCE_NOT_FOUND', id=id)
+    return json_response({'data': await req.app['tozti-store'].get(id)})
 
 
 @resources_single.patch
@@ -75,14 +93,9 @@ async def resources_patch(req):
     """Request handler for ``PATCH /api/store/resources/{id}``."""
 
     id = UUID(req.match_info['id'])
-    try:
-        data = await req.json()
-        await req.app['tozti-store'].update(id, data)
-        return json_response({'data': await req.app['tozti-store'].get(id)})
-    except KeyError:
-        return api_error('RESOURCE_NOT_FOUND', id=id)
-    except ValueError as err:
-        return api_error('INVALID_DATA', err=err)
+    data = await req.json()
+    await req.app['tozti-store'].update(id, data)
+    return json_response({'data': await req.app['tozti-store'].get(id)})
 
 
 @resources_single.delete
@@ -90,11 +103,8 @@ async def resources_delete(req):
     """Request handler for ``DELETE /api/store/resources/{id}``."""
 
     id = UUID(req.match_info['id'])
-    try:
-        await req.app['tozti-store'].remove(id)
-        return json_response({})
-    except KeyError:
-        return api_error('RESOURCE_NOT_FOUND', id=id)
+    await req.app['tozti-store'].remove(id)
+    return json_response({})
 
 
 @relationship.get
@@ -103,12 +113,7 @@ async def relationship_get(req):
 
     id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
-    try:
-        return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
-    except KeyError:
-        return api_error('RESOURCE_NOT_FOUND', id=id)
-    except ValueError as err:
-        return api_error('INVALID_DATA', err=err)
+    return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
 
 
 @relationship.put
@@ -116,23 +121,17 @@ async def relationship_put(req):
     """Request handler for ``PUT /api/store/resources/{id}/{rel}``."""
 
     if req.content_type != 'application/json':
-        return api_error('NOT_JSON')
+        raise NotJsonError()
     try:
         data = await req.json()
     except JSONDecodeError:
-        return api_error('BAD_JSON')
+        raise BadJsonError()
     
     id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
     data = await req.json()
 
-    try:
-        await req.app['tozti-store'].rel_replace(id, rel, data)
-    except ValueError as err:
-        return api_error('INVALID_DATA', err=err)
-    except KeyError:
-        return api_error('RESOURCE_NOT_FOUND', id=id)
-
+    await req.app['tozti-store'].rel_replace(id, rel, data)
     return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
 
 
@@ -141,30 +140,24 @@ async def relationship_post(req):
     """Request handler for ``POST /api/store/resources/{id}/{rel}``."""
     
     if req.content_type != 'application/json':
-        return api_error('NOT_JSON')
+        raise NotJsonError()
     try:
         data = await req.json()
     except JSONDecodeError:
-        return api_error('BAD_JSON')
+        raise BadJsonError()
     
     id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
     data = await req.json()
 
-    try:
-        await req.app['tozti-store'].rel_append(id, rel, data)
-    except ValueError as err:
-        return api_error('INVALID_DATA', err=err)
-    except KeyError:
-        return api_error('RESOURCE_NOT_FOUND', id=id)
-
+    await req.app['tozti-store'].rel_append(id, rel, data)
     return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
 
 
-async def open_db(app):
+async def open_db(app, types):
     """Initialize storage backend at app startup."""
 
-    app['tozti-store'] = Store(**app['tozti-config']['mongodb'])
+    app['tozti-store'] = Store(types, **tozti.CONFIG['mongodb'])
 
 
 async def close_db(app):

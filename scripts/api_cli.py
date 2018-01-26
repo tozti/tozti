@@ -27,10 +27,10 @@ API = 'http://127.0.0.1:8080/api'
 def check_call(meth, path, json=None):
     resp = requests.request(meth, API + path, json=json)
     ans = resp.json()
-    if 'error' not in ans:
+    if 'errors' not in ans:
         return ans
-    print('ERROR: %s (status: %s)' % (ans['error']['code'], resp.status_code))
-    print(ans['error']['msg'])
+    print('ERROR: %s (status: %s)' % (ans['errors'][0]['code'], resp.status_code))
+    print(ans['errors'][0]['detail'])
 
 def create_resource(**kwargs):
     ans = check_call('post', '/store/resources', json={'data': kwargs})

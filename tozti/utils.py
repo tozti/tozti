@@ -16,10 +16,11 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from aiohttp.web import json_response as original_json_response
+from aiohttp.web import json_response as _json_response
 from json import JSONEncoder, dumps
 from datetime import datetime
 from uuid import UUID
+
 
 class RouteDef:
     """Definition of a route.
@@ -140,23 +141,9 @@ class RouterDef:
         return iter(self._routes)
 
 
-API_ERRORS = {}
-
-def register_error(name, fmt, status):
-    if name in API_ERRORS:
-        raise ValueError('error %s already defined' % name)
-    API_ERRORS[name] = (len(API_ERRORS), fmt, status)
-
-def api_error(name, **vars):
-    code, fmt, status = API_ERRORS[name]
-    return json_response({'error': {'code': name, 'msg': fmt.format(**vars)}},
-                         status=status)
-
-def json_response(data, **kwargs):
-    fancy_dumps = lambda obj: dumps(obj, cls=ExtendedJSONEncoder)
-    return original_json_response(data, dumps=fancy_dumps, **kwargs)
-
 class ExtendedJSONEncoder(JSONEncoder):
+    """JSON encoder handling `datetime.datetime` and `uuid.UUID`."""
+
     def default(self, obj):
         if isinstance(obj, datetime):
             return obj.isoformat()
@@ -164,3 +151,59 @@ class ExtendedJSONEncoder(JSONEncoder):
             return str(obj)
         else:
             super().default(obj)
+
+
+def json_response(data, **kwargs):
+    """Wrapper for `aiohttp.web.json_response` with extended JSON encoder."""
+
+    fancy_dumps = lambda obj: dumps(obj, cls=ExtendedJSONEncoder)
+    return _json_response(data, dumps=fancy_dumps, **kwargs)
+
+
+class APIError(Exception):
+    """Base class for API errors."""
+
+    code = 'MISC_ERROR'
+    title = 'error'
+    status = 400
+
+    def __init__(self, msg=None, status=None, **kwargs):
+        if msg is not None:
+            args = (msg,)
+        elif hasattr(self, 'template'):
+            args = (self.template.format(**kwargs),)
+        else:
+            args = ()
+
+        super().__init__(*args)
+
+        if status is not None:
+            self.status = status
+
+    def to_response(self):
+        """Create an `aiohttp.web.Response` signifiying the error."""
+
+        error = {'code': self.code, 'title': self.title,
+                 'status': str(self.status)}
+        if len(self.args) > 0:
+            error['detail'] = self.args[0]
+
+        return json_response({'errors': [error]}, status=self.status)
+
+
+class NotJsonError(APIError):
+    code = 'NOT_JSON'
+    title = "content type is not `application/json`"
+    status = 400
+
+
+class BadJsonError(APIError):
+    code = 'BAD_JSON'
+    title = 'json data is malformated'
+    status = 400
+
+
+class BadDataError(APIError):
+    code = 'Bad_DATA'
+    title = 'submitted data is invalid'
+    status = 400

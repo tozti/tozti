@@ -23,8 +23,10 @@ import jsonschema
 from jsonschema.exceptions import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from tozti.store import UUID_RE, logger
-from tozti.store.typecache import TypeCache
+from tozti.store import (UUID_RE, logger, NoResourceError, BadAttrError,
+                         NoRelError, BadRelError)
+from tozti.utils import BadDataError
+import asyncio
 
 #FIXME: how do we get the hostname? config file?
 RES_URL = lambda id: '/api/store/resources/%s' % id
@@ -103,10 +105,10 @@ REL_TO_MANY_SCHEMA = {
 
 
 class Store:
-    def __init__(self, **kwargs):
+    def __init__(self, types, **kwargs):
         self._client = AsyncIOMotorClient(**kwargs)
         self._resources = self._client.tozti.resources
-        self._typecache = TypeCache()
+        self._typecache = types
 
     async def _sanitize_linkage(self, link, types):
         """Verify that a given linkage is valid.
@@ -118,14 +120,16 @@ class Store:
         id = UUID(link['id'])
         try:
             type_url = await self.typeof(id)
-        except KeyError:
-            raise ValueError('linked resource %s does not exist' % id)
+        except NoResourceError:
+            raise BadRelError('linked resource %s does not exist' % id)
+        #FIXME: this error leaks type information, check if user can read
+        # linked resource first
         if 'type' in link and link['type'] != type_url:
-            raise ValueError('mismatched type for linked resource %s: '
-                             'given: %s, real: %s' % (id, link['type'], type_url))
+            raise BadRelError('mismatched type for linked resource %s: '
+                              'given: %s, real: %s' % (id, link['type'], type_url))
         if types is not None and type_url not in types:
-            raise ValueError('unallowed type %s for linked resource %s' % (
-                             id, type_url))
+            raise BadRelError('unallowed type %s for linked resource %s' % (
+                              type_url, id))
         return id
 
     async def _sanitize_to_one(self, rel_obj, types):
@@ -134,7 +138,7 @@ class Store:
         try:
             jsonschema.validate(rel_obj, REL_TO_ONE_SCHEMA)
         except ValidationError as err:
-            raise ValueError('invalid relationship object: %s' % err)
+            raise BadRelData('invalid relationship object: %s' % err.message)
         rels[rel] = await self._sanitize_linkage(rel_obj['data'], types)
 
     async def _sanitize_to_many(self, rel_obj, types):
@@ -143,9 +147,12 @@ class Store:
         try:
             jsonschema.validate(rel_obj, REL_TO_MANY_SCHEMA)
         except ValidationError as err:
-            raise ValueError('invalid relationship object: %s' % err)
-        return [await self._sanitize_linkage(link, types)
-                for link in rel_obj['data']]
+            raise BadRelError('invalid relationship object: %s' % err.message)
+
+        return_value = []
+        for link in rel_obj['data']:
+            return_value.append(await self._sanitize_linkage(link, types))
+        return return_value
 
     async def _sanitize_attr(self, attr_obj, attr_schema):
         """Verify an attribute value and return it's content."""
@@ -153,7 +160,7 @@ class Store:
         try:
             jsonschema.validate(attr_obj, attr_schema)
         except ValidationError as err:
-            raise ValueError('invalid attribute: %s' % err)
+            raise BadAttrError('invalid attribute: %s' % err.message)
         return attr_obj
 
     async def _sanitize(self, raw):
@@ -166,19 +173,19 @@ class Store:
         try:
             jsonschema.validate(raw, POST_SCHEMA)
         except ValidationError as err:
-            raise ValueError('invalid data: %s' % err)
+            raise BadDataError('invalid data: %s' % err.message)
 
         data = raw['data']
-        schema = await self._typecache[data['type']]
+        schema = self._typecache[data['type']]
 
         attrs = {}
         for (attr, attr_schema) in schema.attrs.items():
             if attr not in data['attributes']:
-                raise ValueError('attribute %s not found' % attr)
+                raise BadAttrError('attribute not found: %s' % attr)
             attrs[attr] = await self._sanitize_attr(
                 data['attributes'].pop(attr), attr_schema)
         if len(data['attributes']) > 0:
-                raise ValueError('unknown attribute %s' % data['attributes'].pop())
+                raise BadAttrError('unknown attribute: %s' % data['attributes'].pop())
 
         rels = {}
         for (rel, types) in schema.to_one.items():
@@ -196,12 +203,12 @@ class Store:
                 data['relationships'].pop(rel), types)
 
         if 'relationships' in data and len(data['relationships']) > 0:
-            raise ValueError('unknown relationship: %s'
+            raise NoRelError('unknown relationship: %s'
                              % data['relationships'].pop())
 
         return {'type': data['type'], 'attrs': attrs, 'rels': rels}
     
-    async def _render_relationship(self, id, rel, type_hint = None):
+    async def _render_relationship(self, id, rel, type_hint=None):
         """Renders the relationship `rel` belonging to resource with given id. 
 
         An optional argument `type_hint` can be given in order to avoid querying
@@ -209,27 +216,27 @@ class Store:
         is not found, and a `ValueError` if the relationship is invalid for the
         type of the given resource.
         """
+
         if type_hint is None:
-            rep = self.find_one(id)
-            resource_type = rep['type']
+            rep = await self.find_one(id)
+            type_id = rep['type']
         else:
             rep = None
-            resource_type = type_hint
-        schema = self._typecache[resource_type]
+            type_id = type_hint
+        schema = self._typecache[type_id]
 
         if rel in schema.autos:
             return await self._render_auto(id, rel, *schema.autos[rel])
         else:
             if rep is None:
-                rep = self.find_one(id)
+                rep = await self.find_one(id)
             rel_obj = rep['rels'][rel]
             if rel in schema.to_one:
                 return await self._render_to_one(id, rel, rel_obj)
             elif rel in schema.to_many:
                 return await self._render_to_many(id, rel, rel_obj)
             else:
-                raise ValueError("unknown relationship: %s" % rel)
-            
+                raise NoRelError('unknown relationship: %s' % rel)
 
     async def _render(self, rep):
         """Render a resource object given it's internal representation.
@@ -247,7 +254,7 @@ class Store:
             else:
                 rels[rel] = await self._render_to_many(id, rel, rel_obj)
 
-        schema = await self._typecache[rep['type']]
+        schema = self._typecache[rep['type']]
         for (rel, auto_def) in schema.autos.items():
             rels[rel] = await self._render_auto(id, rel, *auto_def)
 
@@ -287,20 +294,28 @@ class Store:
         See https://jsonapi.org/format/#document-resource-object-relationships.
         """
 
-        return {'self': REL_URL(id, rel),
-                'data': [await self._render_linkage(t) for t in targets]}
+        return_value = {'self': REL_URL(id, rel),
+                        'data': []}
+        for t in targets:
+            return_value['data'].append(await self._render_linkage(t))
+        return return_value
 
-    async def _render_auto(self, id, rel, type_url, path):
+    @asyncio.coroutine
+    def _render_auto(self, id, rel, type_url, path):
         """Render a `reverse-of` to-many relationship object."""
 
         cursor = self._resources.find({'type': type_url,
                                        'rels.%s' % path: id},
                                       {'_id': 1, 'type': 1})
-        return {'self': REL_URL(id, rel),
-                'data': [{'id': hit['_id'],
-                          'type': hit['type'],
-                          'href': RES_URL(hit['_id'])}
-                         async for hit in cursor]}
+        return_value = {'self': REL_URL(id, rel),
+                        'data': []}
+        while (yield from cursor.fetch_next):
+            hit = cursor.next_object() 
+            return_value['data'].append({'id': hit['_id'],
+                                         'type': hit['type'],
+                                         'href': RES_URL(hit['_id'])})
+
+        return return_value
 
     async def create(self, data):
         """Create a new resource and return it's ID.
@@ -321,14 +336,15 @@ class Store:
     
     async def find_one(self, id):
         """Returns the resource with given id.
-        
+
         `id` must be an instance of `uuid.UUID`. Raises `KeyError` if the
         resource is not found.
         """
-        resp = await self._resources.find_one(query, {'_id': id})
+
+        res = await self._resources.find_one({'_id': id})
         if res is None:
-            raise KeyError(id)
-        return resp
+            raise NoResourceError(id=id)
+        return res
 
     async def typeof(self, id):
         """Return the type URL of a given resource.
@@ -360,19 +376,19 @@ class Store:
         specified by JSON API. See https://jsonapi.org/format/#crud-updating.
         """
 
-        type_url = await self.typeof(id)
-        schema = await self._typecache[type_url]
+        type_id = await self.typeof(id)
+        schema = self._typecache[type_id]
 
         try:
             jsonschema.validate(raw, PATCH_SCHEMA)
         except ValidationError as err:
-            raise ValueError('invalid data: %s' % err)
+            raise BadDataError('invalid data: %s' % err.message)
         data = raw['data']
 
         to_do = {}
         for (attr, value) in data.get('attributes', {}).items():
             if attr not in schema.attrs:
-                raise ValueError('invalid attribute %s' % attr)
+                raise BadAttrError('unknown attribute: %s' % attr)
             san = await self._sanitize_attr(value, schema.attrs[attr])
             to_do['attrs.%s' % attr] = san
 
@@ -382,13 +398,16 @@ class Store:
                 san = await self._sanitize_to_one(value, schema.to_one[rel])
             elif rel in schema.to_many:
                 san = await self._sanitize_to_many(value, schema.to_many[rel])
+            elif rel in schema.autos:
+                raise BadRelError('cannot update auto relationship: %s' % rel)
             else:
-                raise ValueError('invalid relationship %s' % rel)
+                raise BadRelError('unknown relationship: %s' % rel)
             to_do['rels.%s' % rel] = san
 
         res = await self._resources.update_one({'_id': id}, {'$set': to_do})
         if res.matched_count == 0:
-            raise KeyError(id)
+            # this should never happen
+            raise NoResourceError(id=id)
 
     async def remove(self, id):
         """Remove a resource from the DB.
@@ -400,47 +419,57 @@ class Store:
         logger.debug('deleting resource {} from the DB'.format(id))
         result = await self._resources.delete_one({'_id': id})
         if result.deleted_count == 0:
-            raise KeyError(id)
+            raise NoResourceError(id=id)
 
     async def rel_get(self, id, rel):
-        return self._render_relationship(id, rel)
+        try:
+            return await self._render_relationship(id, rel)
+        except NoRelError as err:
+            err.status = 404
+            raise err
 
     async def rel_replace(self, id, rel, data):
-        resource_type = await self.typeof(id)
-        schema = await self._typecache[resource_type]
+        type_id = await self.typeof(id)
+        schema = self._typecache[type_id]
 
         if rel in schema.to_one:
-            rel_obj = self._sanitize_to_one(data)
+            rel_obj = await self._sanitize_to_one(data, schema.to_one[rel])
         elif rel in schema.to_many:
-            rel_obj = self._sanitize_to_many(data)
+            rel_obj = await self._sanitize_to_many(data, schema.to_many[rel])
         elif rel in schema.autos:
-            raise ValueError('can not update auto relationship %s' % rel)
+            raise BadRelError('cannot update auto relationship: %s' % rel,
+                              status=404)
         else:
-            raise ValueError('invalid relationship %s' % rel)
+            raise BadRelError('unknown relationship: %s' % rel, status=404)
 
-        res = await self._resources.update_one({'_id': id}, {'$set': {'rels.%s' %rel : rel_obj }})
+        res = await self._resources.update_one({'_id': id}, {'$set': {'rels.%s' % rel: rel_obj }})
         if res.matched_count != 1:
-            raise KeyError(id)
+            raise NoResourceError(id=id)
 
     async def rel_append(self, id, rel, data):
-        resource_type = await self.typeof(id)
-        schema = await self._typecache[resource_type]
+        type_id = await self.typeof(id)
+        schema = self._typecache[type_id]
 
         if rel in schema.to_many:
-            rel_obj = self._sanitize_to_many(data)
+            rel_obj = await self._sanitize_to_many(data, schema.to_many[rel])
+        elif rel in schema.to_one:
+            raise BadRelError('to-one relationships cannot be posted to', status=403)
+        elif rel in schema.to_many:
+            raise BadRelError('auto relationships cannot be modified', status=403)
         else:
-            raise ValueError('only to_many relationships can be updated')
+            raise BadRelError('unknown relationship: %s' % rel, status=404)
 
         res = await self._resources.update_one(
             {'_id': id}, 
             {'$addToSet': {
-                'rels.%s.' % rel: {
+                'rels.%s' % rel: {
                     '$each': rel_obj
                     }
                 }
             })
         if res.matched_count != 1:
-            raise KeyError(id)
+            # this should never happen
+            raise NoResourceError(id=id)
 
     async def close(self):
         """Close the connection to the MongoDB server."""
