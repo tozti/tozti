@@ -148,8 +148,11 @@ class Store:
             jsonschema.validate(rel_obj, REL_TO_MANY_SCHEMA)
         except ValidationError as err:
             raise BadRelError('invalid relationship object: %s' % err.message)
-        return [await self._sanitize_linkage(link, types)
-                for link in rel_obj['data']]
+
+        return_value = []
+        for link in rel_obj['data']:
+            return_value.append(self._sanitize_linkage(link, types))
+        return return_value
 
     async def _sanitize_attr(self, attr_obj, attr_schema):
         """Verify an attribute value and return it's content."""
