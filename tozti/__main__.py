@@ -56,8 +56,9 @@ def find_exts():
         elif os.path.isfile(pkg_path):
             spec = spec_from_file_location(ext, pkg_path)
         else:
-            msg = 'Could not find python file for extension {}'
-            raise ValueError(msg.format(ext))
+            logger.error('Could not find python file for extension {}'
+                             .format(ext))
+            continue
 
         mod = module_from_spec(spec)
         try:
@@ -124,7 +125,7 @@ def main():
             # add dependency on the core
             extension.dependencies.add('core')
             # static dir is only important if some files are included by the extension
-            if len(extension.includes) + len(extension.includes_after) > 0:
+            if len(extension.includes) > 0:
                 # make static_dir absolute and default to 'dist' if some files are included
                 if extension.static_dir is None :
                     extension.static_dir = 'dist'
@@ -132,27 +133,8 @@ def main():
                     os.path.join(tozti.TOZTI_BASE, 'extensions', extension.name))
             app.register(extension)
     except Exception as err:
-        logger.critical('Error while loading extensions {}: {}'.format(extension.name, err))
-        sys.exit(1)
-
-    # register core api
-    try:
-        # perhaps load these extensions thanks to a manifest directly ?
-        store_ext = tozti.app.Extension('store', 
-                              router=tozti.store.router,
-                              on_startup=tozti.store.open_db,
-                              on_shutdown=tozti.store.close_db)
-        core_ext = tozti.app.Extension('core',
-                             static_dir=os.path.join(tozti.TOZTI_BASE, 'dist'),
-                             includes=['bootstrap.js'])
-        # this next line is here to set includes_after for the core
-        # this isn't doable in the constructor because in theory extensions 
-        # shouldn't be able to define it
-        core_ext.includes_after = ['launch.js']
-        app.register(store_ext)
-        app.register(core_ext)
-    except Exception as err:
-        logger.critical('Error while loading core: {}'.format(err))
+        logger.critical('Error while loading extensions {}: {}'
+                        .format(extension.name, err), exc_info=sys.exc_info())
         sys.exit(1)
 
     try:
@@ -160,6 +142,11 @@ def main():
     except tozti.app.DependencyCycle as err:
         logger.critical('Found dependency cycle between extensions {} and {}'
                         .format(err.args[0], err.args[1]))
+    except Exception as err:
+        logger.critical('Fatal server error: {}'.format(err),
+                        exc_info=sys.exc_info())
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

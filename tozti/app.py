@@ -22,6 +22,7 @@ __all__ = ('DependencyCycle', 'App', 'Extension')
 import asyncio
 import os
 import traceback
+from functools import partial
 
 import logbook
 import pystache
@@ -29,6 +30,7 @@ from aiohttp import web
 
 import tozti
 from tozti.utils import APIError, json_response
+from tozti.store import Schema
 
 
 logger = logbook.Logger('tozti.app')
@@ -57,13 +59,10 @@ class Extension:
             on_response_prepare is executed by aiohttp
         on_shutdown (function): A function to be executed when the hook\
             on_shutdown is executed by aiohttp
-        includes_after (list): list of files that must be included after every modules\
-            have included their files. Note, this shouldn't be defined my extensions directly
-
     """
     def __init__(self, name, router=None, includes=(), static_dir=None,
                  dependencies=(), _god_mode=None, on_response_prepare=None,
-                 on_startup=None, on_cleanup=None, on_shutdown=None,
+                 on_startup=None, on_cleanup=None, on_shutdown=None, types={},
                  **kwargs):
         """ Build an extension from a list of its attributes (a MANIFEST for example).
         (TODO) Put a warning if an attribute which is not necessary in an extension is 
@@ -81,7 +80,7 @@ class Extension:
         self.on_startup = on_startup
         self.on_cleanup = on_cleanup
         self.on_shutdown = on_shutdown
-        self.includes_after = ()
+        self.types = {k: Schema(v) for (k, v) in types.items()}
 
         if len(kwargs) > 0:
             # TODO do something here. If kwargs is not empty, that means the manifest 
@@ -110,9 +109,9 @@ class Extension:
         if self.static_dir is not None and not os.path.isdir(self.static_dir):
             raise ValueError('Static directory {} does not exist'.format(
                              self.static_dir, self.name))
-        if len(self.includes) + len(self.includes_after) > 0 and self.static_dir is None:
+        if len(self.includes) > 0 and self.static_dir is None:
             raise ValueError('Includes given but no static directory')
-        for inc in self.includes + self.includes_after:
+        for inc in self.includes:
             if not os.path.isfile(os.path.join(self.static_dir, inc)):
                 raise ValueError('Included file {} does not exist in {}, did '
                                  'you execute `npm run build`?'
@@ -200,6 +199,7 @@ class App:
         self._static_dirs = {}
         self._includes_after = []
         self._dep_graph_includes = DependencyGraph()
+        self._types = {}
 
     def register(self, extension):
         """Register an extension."""
@@ -220,11 +220,9 @@ class App:
         if extension.static_dir is not None:
             self._static_dirs[extension.name] = extension.static_dir
 
-        
         inc_fmt = '/static/{}/{{}}'.format(extension.name)
         self._dep_graph_includes.add_node(extension.name,extension.dependencies, 
                                               [inc_fmt.format(incl) for incl in extension.includes])
-        self._includes_after.extend(inc_fmt.format(incl) for incl in extension.includes_after)
 
         # signal handlers
         if extension.on_response_prepare is not None:
@@ -235,6 +233,9 @@ class App:
             self._app.on_cleanup.append(extension.on_cleanup)
         if extension.on_shutdown is not None:
             self._app.on_shutdown.append(extension.on_shutdown)
+
+        for (k, v) in extension.types.items():
+            self._types['%s/%s' % (extension.name, k)] = v
 
         # last-resort hook to do whatever you want
         if extension._god_mode is not None:
@@ -255,8 +256,24 @@ class App:
         with open(template) as t:
             return pystache.render(t.read(), context)
 
+    def register_core(self):
+        self.register(Extension(
+            'store',
+            router=tozti.store.router,
+            on_startup=partial(tozti.store.open_db, types=self._types),
+            on_shutdown=tozti.store.close_db))
+
+        self.register(Extension(
+            'core',
+            static_dir=os.path.join(tozti.TOZTI_BASE, 'dist'),
+            includes=['bootstrap.js']))
+
+        self._includes_after.append('/static/core/launch.js')
+
     def main(self, loop=None):
         """Start the server."""
+
+        self.register_core()
 
         index_html = self._render_index()
 
