@@ -7,7 +7,7 @@ import pytest
 
 
 API = 'http://127.0.0.1:8080/api'
-USER_TYPE = "http://127.0.0.1:8080/static/core/types/user.json"
+USER_TYPE = "core/user"
 
 
 @pytest.fixture(scope="module")

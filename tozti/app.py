@@ -31,6 +31,7 @@ from aiohttp import web
 import tozti
 from tozti.utils import APIError, json_response
 from tozti.store import Schema
+from tozti.core_schemas import SCHEMAS
 
 
 logger = logbook.Logger('tozti.app')
@@ -266,7 +267,8 @@ class App:
         self.register(Extension(
             'core',
             static_dir=os.path.join(tozti.TOZTI_BASE, 'dist'),
-            includes=['bootstrap.js']))
+            includes=['bootstrap.js'],
+            types=SCHEMAS))
 
         self._includes_after.append('/static/core/launch.js')
 
