@@ -300,11 +300,15 @@ class Store:
         cursor = self._resources.find({'type': type_url,
                                        'rels.%s' % path: id},
                                       {'_id': 1, 'type': 1})
-        return {'self': REL_URL(id, rel),
-                'data': [{'id': hit['_id'],
-                          'type': hit['type'],
-                          'href': RES_URL(hit['_id'])}
-                         async for hit in cursor]}
+        return_value = {'self': REL_URL(id, rel),
+                        'data': []}
+        while (yield from cursor.fetch_next):
+            hit = cursor.next_object() 
+            return_value['data'].append({'id': hit['_id'],
+                                         'type': hit['type'],
+                                         'href': RES_URL(hit['_id'])})
+
+        return return_value
 
     async def create(self, data):
         """Create a new resource and return it's ID.
