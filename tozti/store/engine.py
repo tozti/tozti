@@ -294,8 +294,11 @@ class Store:
         See https://jsonapi.org/format/#document-resource-object-relationships.
         """
 
-        return {'self': REL_URL(id, rel),
-                'data': [await self._render_linkage(t) for t in targets]}
+        return_value = {'self': REL_URL(id, rel),
+                        'data': []}
+        for t in targets:
+            return_value['data'].append(await self._render_linkage(t))
+        return return_value
 
     async def _render_auto(self, id, rel, type_url, path):
         """Render a `reverse-of` to-many relationship object."""
