@@ -1,4 +1,4 @@
-from commons import launch_tozti, stop_tozti
+from tests.commons import launch_tozti, stop_tozti
 import json
 from requests import get, post, put, patch, delete
 import requests
