@@ -29,6 +29,7 @@ logger = logbook.Logger('tozti.store')
 import tozti
 from tozti.utils import (RouterDef, APIError, NotJsonError, BadJsonError,
                          BadDataError, json_response)
+from tozti.store.type_schema import Schema
 
 
 class NoResourceError(APIError):
@@ -153,10 +154,10 @@ async def relationship_post(req):
     return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
 
 
-async def open_db(app):
+async def open_db(app, types):
     """Initialize storage backend at app startup."""
 
-    app['tozti-store'] = Store(**tozti.CONFIG['mongodb'])
+    app['tozti-store'] = Store(types, **tozti.CONFIG['mongodb'])
 
 
 async def close_db(app):

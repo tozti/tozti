@@ -25,7 +25,6 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from tozti.store import (UUID_RE, logger, NoResourceError, BadAttrError,
                          NoRelError, BadRelError)
-from tozti.store.typecache import TypeCache
 from tozti.utils import BadDataError
 import asyncio
 
@@ -106,10 +105,10 @@ REL_TO_MANY_SCHEMA = {
 
 
 class Store:
-    def __init__(self, **kwargs):
+    def __init__(self, types, **kwargs):
         self._client = AsyncIOMotorClient(**kwargs)
         self._resources = self._client.tozti.resources
-        self._typecache = TypeCache()
+        self._typecache = types
 
     async def _sanitize_linkage(self, link, types):
         """Verify that a given linkage is valid.
@@ -177,7 +176,7 @@ class Store:
             raise BadDataError('invalid data: %s' % err.message)
 
         data = raw['data']
-        schema = await self._typecache[data['type']]
+        schema = self._typecache[data['type']]
 
         attrs = {}
         for (attr, attr_schema) in schema.attrs.items():
@@ -220,11 +219,11 @@ class Store:
 
         if type_hint is None:
             rep = await self.find_one(id)
-            resource_type = rep['type']
+            type_id = rep['type']
         else:
             rep = None
-            resource_type = type_hint
-        schema = await self._typecache[resource_type]
+            type_id = type_hint
+        schema = self._typecache[type_id]
 
         if rel in schema.autos:
             return await self._render_auto(id, rel, *schema.autos[rel])
@@ -255,7 +254,7 @@ class Store:
             else:
                 rels[rel] = await self._render_to_many(id, rel, rel_obj)
 
-        schema = await self._typecache[rep['type']]
+        schema = self._typecache[rep['type']]
         for (rel, auto_def) in schema.autos.items():
             rels[rel] = await self._render_auto(id, rel, *auto_def)
 
@@ -377,8 +376,8 @@ class Store:
         specified by JSON API. See https://jsonapi.org/format/#crud-updating.
         """
 
-        type_url = await self.typeof(id)
-        schema = await self._typecache[type_url]
+        type_id = await self.typeof(id)
+        schema = self._typecache[type_id]
 
         try:
             jsonschema.validate(raw, PATCH_SCHEMA)
@@ -430,8 +429,8 @@ class Store:
             raise err
 
     async def rel_replace(self, id, rel, data):
-        resource_type = await self.typeof(id)
-        schema = await self._typecache[resource_type]
+        type_id = await self.typeof(id)
+        schema = self._typecache[type_id]
 
         if rel in schema.to_one:
             rel_obj = await self._sanitize_to_one(data, schema.to_one[rel])
@@ -448,8 +447,8 @@ class Store:
             raise NoResourceError(id=id)
 
     async def rel_append(self, id, rel, data):
-        resource_type = await self.typeof(id)
-        schema = await self._typecache[resource_type]
+        type_id = await self.typeof(id)
+        schema = self._typecache[type_id]
 
         if rel in schema.to_many:
             rel_obj = await self._sanitize_to_many(data, schema.to_many[rel])
