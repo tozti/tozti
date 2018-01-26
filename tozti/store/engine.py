@@ -27,6 +27,7 @@ from tozti.store import (UUID_RE, logger, NoResourceError, BadAttrError,
                          NoRelError, BadRelError)
 from tozti.store.typecache import TypeCache
 from tozti.utils import BadDataError
+import asyncio
 
 #FIXME: how do we get the hostname? config file?
 RES_URL = lambda id: '/api/store/resources/%s' % id
@@ -151,7 +152,7 @@ class Store:
 
         return_value = []
         for link in rel_obj['data']:
-            return_value.append(self._sanitize_linkage(link, types))
+            return_value.append(await self._sanitize_linkage(link, types))
         return return_value
 
     async def _sanitize_attr(self, attr_obj, attr_schema):
@@ -300,7 +301,8 @@ class Store:
             return_value['data'].append(await self._render_linkage(t))
         return return_value
 
-    async def _render_auto(self, id, rel, type_url, path):
+    @asyncio.coroutine
+    def _render_auto(self, id, rel, type_url, path):
         """Render a `reverse-of` to-many relationship object."""
 
         cursor = self._resources.find({'type': type_url,
