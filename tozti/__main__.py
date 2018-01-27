@@ -134,8 +134,8 @@ def main():
                     os.path.join(tozti.TOZTI_BASE, 'extensions', extension.name))
             app.register(extension)
     except Exception as err:
-        logger.critical('Error while loading extensions {}: {}'
-                        .format(extension.name, err), exc_info=sys.exc_info())
+        logger.critical('Error while loading extensions: {}'
+                        .format(err), exc_info=sys.exc_info())
         sys.exit(1)
 
     try:
