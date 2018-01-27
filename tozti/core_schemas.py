@@ -7,7 +7,7 @@ user_schema = {
     'relationships': {
         'groups': {
             'reverse-of': {
-                'type': 'foo/group',
+                'type': 'core/group',
                 'path': 'members'
             }
         }
@@ -22,7 +22,7 @@ group_schema = {
     'relationships': {
         'members': {
             'arity': 'to-many',
-            'type': 'foo/user'
+            'type': 'core/user'
         }
     }
 }
