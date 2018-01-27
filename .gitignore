@@ -1,4 +1,6 @@
 *.swp
+*.pyc
+.cache/
 node_modules/
 dist/
 build/

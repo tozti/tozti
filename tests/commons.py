@@ -11,7 +11,7 @@ def stop_tozti(tozti_proc):
     """
     Stop a given tozti_proc
     """
-    if tozti_proc.poll() is None:
+    if tozti_still_running(tozti_proc):
         tozti_proc.terminate()
 
 def launch_tozti():
@@ -24,7 +24,8 @@ def launch_tozti():
                                   stdout = subprocess.PIPE)
     # parse stdout to know when the server is launched
     for line in iter(tozti_proc.stdout.readline, b''):
-        if b'ERROR' in line:
+        if b'ERROR' in line \
+           or b'CRITICAL' in line:
             stop_tozti(tozti_proc)
             return None
         if b'Finished boot sequence' in line:
@@ -60,9 +61,10 @@ def tozti(request):
                                 os.path.join("extensions/", ext))
 
     tozti = launch_tozti()
-    if tozti is None:
-        assert(False)
 
     yield tozti
 
     request.addfinalizer(tozti_end)
+
+def tozti_still_running(tozti):
+    return tozti is not None and tozti.poll() is None
