@@ -33,6 +33,17 @@ def launch_tozti():
     return tozti_proc
 
 
+def install_extension(ext):
+    """ Install the extension `ext` (found in `tests/extension`)
+    as a Tozti extension
+    """
+    extension_folder = "tests/extensions/"
+    ext_test = os.path.join(extension_folder, ext)
+    if os.path.isdir(ext_test):
+        shutil.copytree(ext_test,
+                        os.path.join("extensions/", ext))
+
+
 @pytest.fixture(scope="function")
 def tozti(request):
     """
@@ -53,12 +64,8 @@ def tozti(request):
     #install extensions
     extensions_marker = request.node.get_marker("extensions")
     if extensions_marker is not None:
-        extension_folder = "tests/extensions/"
         for ext in extensions_marker.args:
-            ext_test = os.path.join(extension_folder, ext)
-            if os.path.isdir(ext_test):
-                shutil.copytree(ext_test,
-                                os.path.join("extensions/", ext))
+            install_extension(ext)
 
     tozti = launch_tozti()
 

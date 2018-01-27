@@ -1,4 +1,4 @@
-from tests.commons import launch_tozti, stop_tozti
+from tests.commons import launch_tozti, stop_tozti, tozti
 import json
 from requests import get, post, put, patch, delete
 import requests
@@ -7,9 +7,10 @@ import pytest
 
 
 API = 'http://127.0.0.1:8080/api'
-USER_TYPE = "core/user"
+TYPE = "type/foo"
 
 
+"""
 @pytest.fixture(scope="module")
 def tozti(request):
     tozti = launch_tozti()
@@ -21,6 +22,7 @@ def tozti(request):
     def end():
         stop_tozti(tozti)
     request.addfinalizer(end)
+"""
 
 @pytest.fixture(scope="module")
 def load_db(request):
@@ -43,11 +45,14 @@ def check_call(meth, path, json=None):
     return 'errors' in ans
 
 
+@pytest.mark.extensions("type")
 @pytest.mark.parametrize("json, expected", [
-    ({"type": USER_TYPE,
-         "attributes": {"name": "f", "email": "a@a.com", "login": "bjr"}}, True),
-    ({"type": USER_TYPE,
-         "atxtributes": {"name": "f", "email": "a@a.com", "login": "bjr"}}, False)
+    ({"type": TYPE,
+         "attributes": {"name": "f", "email": "a@a.com"}}, True),
+    ({"type": TYPE,
+         "atxtributes": {"name": "f", "email": "a@a.com"}}, False),
+    ({"type": TYPE,
+         "atxtributes": {"name": "f", "email": "a"}}, False)
     ])
 def test_storage_post_request(tozti, db, json, expected):
     ret_val = check_call("POST", '/store/resources', json={"data": json})
@@ -60,9 +65,11 @@ def test_storage_post_request(tozti, db, json, expected):
             assert not expected
 
 
+
+@pytest.mark.extensions("type")
 @pytest.mark.parametrize("json", [
-    {"type": USER_TYPE,
-         "attributes": {"name": "f", "email": "a@a.com", "login": "bjr"}},
+    {"type": TYPE,
+         "attributes": {"name": "f", "email": "a@a.com"}},
     ])
 def test_storage_delete_object(tozti, db, json):
     try:
@@ -83,9 +90,10 @@ def test_storage_delete_object_fail_uuid(tozti, db):
     assert make_call("DELETE", "/store/resources/00000000-0000-0000-0000-000000000000").status_code == 404
 
 
+@pytest.mark.extensions("type")
 @pytest.mark.parametrize("json", [
-    {"type": USER_TYPE,
-         "attributes": {"name": "f", "email": "a@a.com", "login": "bjr"}},
+    {"type": TYPE,
+         "attributes": {"name": "f", "email": "a@a.com"}},
     ])
 def test_storage_get_object(tozti, db, json):
     try:
