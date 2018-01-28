@@ -18,15 +18,14 @@
 
 from datetime import datetime, timezone
 from uuid import uuid4, UUID
+import asyncio
 
-import jsonschema
-from jsonschema.exceptions import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from tozti.store import (UUID_RE, logger, NoResourceError, BadAttrError,
                          NoRelError, BadRelError)
-from tozti.utils import BadDataError
-import asyncio
+from tozti.utils import BadDataError, ValidationError, validate
+
 
 #FIXME: how do we get the hostname? config file?
 RES_URL = lambda id: '/api/store/resources/%s' % id
@@ -136,7 +135,7 @@ class Store:
         """Verify the relationship object and return the UUID of the target."""
 
         try:
-            jsonschema.validate(rel_obj, REL_TO_ONE_SCHEMA)
+            validate(rel_obj, REL_TO_ONE_SCHEMA)
         except ValidationError as err:
             raise BadRelData('invalid relationship object: %s' % err.message)
         rels[rel] = await self._sanitize_linkage(rel_obj['data'], types)
@@ -145,7 +144,7 @@ class Store:
         """Verify the relationship object and return the target UUID list."""
 
         try:
-            jsonschema.validate(rel_obj, REL_TO_MANY_SCHEMA)
+            validate(rel_obj, REL_TO_MANY_SCHEMA)
         except ValidationError as err:
             raise BadRelError('invalid relationship object: %s' % err.message)
 
@@ -158,7 +157,7 @@ class Store:
         """Verify an attribute value and return it's content."""
 
         try:
-            jsonschema.validate(attr_obj, attr_schema)
+            validate(attr_obj, attr_schema)
         except ValidationError as err:
             raise BadAttrError('invalid attribute: %s' % err.message)
         return attr_obj
@@ -171,7 +170,7 @@ class Store:
         """
 
         try:
-            jsonschema.validate(raw, POST_SCHEMA)
+            validate(raw, POST_SCHEMA)
         except ValidationError as err:
             raise BadDataError('invalid data: %s' % err.message)
 
@@ -380,7 +379,7 @@ class Store:
         schema = self._typecache[type_id]
 
         try:
-            jsonschema.validate(raw, PATCH_SCHEMA)
+            validate(raw, PATCH_SCHEMA)
         except ValidationError as err:
             raise BadDataError('invalid data: %s' % err.message)
         data = raw['data']

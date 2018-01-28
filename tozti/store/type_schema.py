@@ -17,7 +17,7 @@
 
 
 import jsonschema
-from jsonschema.exceptions import ValidationError
+from tozti.utils import validate, ValidationError
 
 
 META_SCHEMA = {
@@ -69,7 +69,7 @@ META_SCHEMA = {
 class Schema:
     def __init__(self, raw):
         try:
-            jsonschema.validate(raw, META_SCHEMA)
+            validate(raw, META_SCHEMA)
         except ValidationError as err:
             raise ValueError('invalid schema: %s' % err.message)
 

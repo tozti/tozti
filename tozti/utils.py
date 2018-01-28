@@ -16,10 +16,13 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from aiohttp.web import json_response as _json_response
 from json import JSONEncoder, dumps
 from datetime import datetime
 from uuid import UUID
+
+from aiohttp.web import json_response as _json_response
+import jsonschema
+from jsonschema.exceptions import ValidationError
 
 
 class RouteDef:
@@ -158,6 +161,13 @@ def json_response(data, **kwargs):
 
     fancy_dumps = lambda obj: dumps(obj, cls=ExtendedJSONEncoder)
     return _json_response(data, dumps=fancy_dumps, **kwargs)
+
+
+def validate(inst, schema):
+    """Validate data against a JsonSchema."""
+    
+    return jsonschema.validate(inst, schema, cls=jsonschema.Draft4Validator,
+                               format_checker=jsonschema.FormatChecker())
 
 
 class APIError(Exception):
