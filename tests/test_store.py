@@ -165,3 +165,23 @@ def test_storage_update_object_fail_not_uuid(tozti, db):
 
 def test_storage_update_object_fail_uuid(tozti, db):
     assert make_call("PATCH", "/store/resources/00000000-0000-0000-0000-000000000000").status_code == 400
+
+
+
+"""
+Now, tests for ressources \o/
+"""
+@pytest.mark.extensions("rel01")
+def test_storage_rel_toone_notspecified(tozti, db):
+    assert make_call("POST", "/store/resources/", json = {"type": "rel01/foo", "attributes": {"foo": "foo"}}).status_code == 404
+
+@pytest.mark.extensions("rel01")
+def test_storage_rel_toone_badrelerror(tozti, db):
+    """ Test coming from a bug in tozti: at first, their was a typo in _santize_to_one
+    with the presence of `BadRelData` instead of `BadRelError`
+    """
+    uid_bar = add_object_get_id({"type": "rel01/bar", "attributes": {"bar": "bar"}})
+    assert make_call("POST", 
+                    "/store/resources",
+                    {"type": "rel01/foo", "attributes": {"foo": "foo"}, "relationships": {"member": uid_bar}}
+                    ).status_code == 400

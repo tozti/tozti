@@ -137,7 +137,7 @@ class Store:
         try:
             validate(rel_obj, REL_TO_ONE_SCHEMA)
         except ValidationError as err:
-            raise BadRelData('invalid relationship object: %s' % err.message)
+            raise BadRelError('invalid relationship object: %s' % err.message)
         rels[rel] = await self._sanitize_linkage(rel_obj['data'], types)
 
     async def _sanitize_to_many(self, rel_obj, types):
