@@ -228,11 +228,12 @@ class Store:
         else:
             if rep is None:
                 rep = await self.find_one(id)
-            rel_obj = rep['rels'][rel]
             if rel in schema.to_one:
-                return await self._render_to_one(id, rel, rel_obj)
+                # at this point we are sure that 'rels' is in rep
+                # as the resource is typed
+                return await self._render_to_one(id, rel, rep['rels'][rel])
             elif rel in schema.to_many:
-                return await self._render_to_many(id, rel, rel_obj)
+                return await self._render_to_many(id, rel, rep['rels'][rel])
             else:
                 raise NoRelError('unknown relationship: %s' % rel)
 

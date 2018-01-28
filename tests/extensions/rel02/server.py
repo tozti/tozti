@@ -3,9 +3,9 @@ foo_schema = {
             'foo': { 'type': 'string' },
             },
         'relationships': {
-            "member": {
+            "members": {
                 "arity": "to-many",
-                "type": "rel01/bar",
+                "type": "rel02/bar",
                 }
             }
         }
