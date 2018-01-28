@@ -137,6 +137,7 @@ def test_storage_get_object_fail_uuid(tozti, db):
 @pytest.mark.extensions("type")
 @pytest.mark.parametrize("json, diff, expected", [
     ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"name": "g"},        True),
+    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {},                   False),
     ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"email": "b@b.com"}, True),
     ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"email": "a"},       False),
     ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"bar": "a"},         False),
@@ -209,3 +210,28 @@ def test_storage_rel_toone_post(tozti, db):
     else:
         assert False
 
+@pytest.mark.extensions("rel01")
+def test_storage_rel_toone_owner_patch_empty(tozti, db):
+    bar = {"attributes": {"bar": "bar"}}
+    uid_bar = add_object_get_id({"type": "rel01/bar", "attributes": {"bar": "bar"}})
+    uid_foo = add_object_get_id({"type": "rel01/foo", "attributes": {"foo": "foo"}, "relationships": {"member": {"data": {"id": uid_bar}}}})
+
+    result = make_call("PATCH", "/store/resources/{}".format(uid_foo), json={"data": {"relationships": {}}})
+    assert result.status_code == 500
+
+@pytest.mark.extensions("rel01")
+def test_storage_rel_toone_owner_patch(tozti, db):
+    bar = {"attributes": {"bar": "bar"}}
+    uid_bar = add_object_get_id({"type": "rel01/bar", "attributes": {"bar": "bar"}})
+    bar2 = {"attributes": {"bar": "bar"}}
+    uid_bar2 = add_object_get_id({"type": "rel01/bar", "attributes": {"bar": "bar"}})
+    uid_foo = add_object_get_id({"type": "rel01/foo", "attributes": {"foo": "foo"}, "relationships": {"member": {"data": {"id": uid_bar}}}})
+
+    foo = {"attributes": {"foo": "foo"}, "relationships": {"member": UUID(uid_bar)}}
+    assert db_contains_object(db, foo)
+
+    result = make_call("PATCH", "/store/resources/{}".format(uid_foo), json={"data": {"relationships": {"member": {"data": {"id": uid_bar2}}}}})
+    assert result.status_code == 200
+
+    foo = {"attributes": {"foo": "foo"}, "relationships": {"member": UUID(uid_bar2)}}
+    assert db_contains_object(db, foo)
