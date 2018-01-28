@@ -4,6 +4,7 @@ from requests import get, post, put, patch, delete
 import requests
 from pymongo import MongoClient
 import pytest
+from uuid import UUID
 
 
 API = 'http://127.0.0.1:8080/api'
@@ -45,14 +46,13 @@ def check_call(meth, path, json=None):
     return 'errors' in ans
 
 
-def db_is_object(db, obj):
+def db_contains_object(db, obj):
     """Check if the database only contains object obj
     """
-    if db.count() == 1:
-        for o in db.find():
-            if o["attrs"] != obj["attributes"]:
-                return False
-        return True
+    for o in db.find():
+        if o["attrs"] == obj["attributes"] \
+           and o["rels"] == obj.get("relationships", {}):
+            return True
     return False
 
 
@@ -75,7 +75,10 @@ def add_object_get_id(obj):
 def test_storage_post_request(tozti, db, json, expected):
     ret_val = make_call("POST", '/store/resources', json={"data": json})
     if ret_val.status_code == 200:
-        assert db_is_object(db, json) == expected
+        if db.count() == 1:
+            assert db_contains_object(db, json) == expected
+        else:
+            assert not expected
     else:
         assert not expected
 
@@ -148,7 +151,10 @@ def test_storage_update(tozti, db, json, diff, expected):
             for (k, v) in diff.items():
                 if k in theory["attributes"]:
                     theory["attributes"][k] = v
-            assert db_is_object(db, theory) == expected
+            if db.count() == 1:
+                assert db_contains_object(db, theory) == expected
+            else:
+                assert not expected
         else:
             assert not expected
     except:
@@ -175,6 +181,11 @@ Now, tests for ressources \o/
 def test_storage_rel_toone_notspecified(tozti, db):
     assert make_call("POST", "/store/resources", json = {"data": {"type": "rel01/foo", "attributes": {"foo": "foo"}}}).status_code == 400
 
+
+@pytest.mark.extensions("rel02")
+def test_storage_rel_tomany_notspecified(tozti, db):
+    assert make_call("POST", "/store/resources", json = {"data": {"type": "rel02/foo", "attributes": {"foo": "foo"}}}).status_code == 200
+
 @pytest.mark.extensions("rel01")
 def test_storage_rel_toone_badrelerror(tozti, db):
     """ Test coming from a bug in tozti: at first, their was a typo in _santize_to_one
@@ -186,3 +197,15 @@ def test_storage_rel_toone_badrelerror(tozti, db):
                     "/store/resources",
                     {"type": "rel01/foo", "attributes": {"foo": "foo"}, "relationships": {"member": uid_bar}}
                     ).status_code == 400
+
+@pytest.mark.extensions("rel01")
+def test_storage_rel_toone_post(tozti, db):
+    bar = {"attributes": {"bar": "bar"}}
+    uid_bar = add_object_get_id({"type": "rel01/bar", "attributes": {"bar": "bar"}})
+    foo = {"attributes": {"foo": "foo"}, "relationships": {"member": UUID(uid_bar)}}
+    uid_foo = add_object_get_id({"type": "rel01/foo", "attributes": {"foo": "foo"}, "relationships": {"member": {"data": {"id": uid_bar}}}})
+    if db.count() == 2:
+        assert db_contains_object(db, bar) and db_contains_object(db, foo)
+    else:
+        assert False
+
