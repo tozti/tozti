@@ -188,14 +188,13 @@ class Store:
 
         rels = {}
         for (rel, types) in schema.to_one.items():
-            if rel not in data['relationships']:
-                rels[rel] = INVALID_UUID
-                continue
+            if rel not in data.get('relationships', {}):
+                raise NoRelError('\"%s\" to-one relationships must be defined' % rel)
             rels[rel] = await self._sanitize_to_one(
                 data['relationships'].pop(rel), types)
 
         for (rel, types) in schema.to_many.items():
-            if rel not in data['relationships']:
+            if rel not in data.get('relationships', {}):
                 rels[rel] = []
                 continue
             rels[rel] = await self._sanitize_to_many(
