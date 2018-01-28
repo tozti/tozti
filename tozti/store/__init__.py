@@ -92,8 +92,14 @@ async def resources_get(req):
 async def resources_patch(req):
     """Request handler for ``PATCH /api/store/resources/{id}``."""
 
+    if req.content_type != 'application/json':
+        raise NotJsonError()
+    try:
+        data = await req.json()
+    except JSONDecodeError:
+        raise BadJsonError()
+
     id = UUID(req.match_info['id'])
-    data = await req.json()
     await req.app['tozti-store'].update(id, data)
     return json_response({'data': await req.app['tozti-store'].get(id)})
 
