@@ -56,16 +56,31 @@ def db_is_object(db, obj):
     return False
 
 
+def add_object_get_id(obj):
+    """Insert the object defined by `obj` into the database
+    And returns the associated id
+    """
+    ret_val = make_call("POST", '/store/resources', json={"data": obj}).json()
+    return ret_val['data']['id']
+
+
 @pytest.mark.extensions("type")
 @pytest.mark.parametrize("json, expected", [
     ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}},   True),
     ({"type": TYPE, "atxtributes": {"name": "f", "email": "a@a.com"}},  False),
-    ({"type": TYPE, "attributes": {"name": "f", "email": "a"}},        False)
+    ({"type": TYPE, "attributes": {"name": "f", "email": "a"}},         False),
+    ({"type": TYPE, "attributes": {"name": "f"}},                       False),
+    ({"type": TYPE, "attributes": {"name": "f", "foo": "b"}},           False)
     ])
 def test_storage_post_request(tozti, db, json, expected):
     ret_val = make_call("POST", '/store/resources', json={"data": json})
-    assert (ret_val.status_code == 200) == expected
-    assert db_is_object(db, json) == expected
+    if ret_val.status_code == 200:
+        assert db_is_object(db, json) == expected
+    else:
+        assert not expected
+
+def test_storage_post_no_content(tozti, db):
+    assert make_call("POST", '/store/resources').status_code == 400
 
 
 
@@ -76,8 +91,7 @@ def test_storage_post_request(tozti, db, json, expected):
     ])
 def test_storage_delete_object(tozti, db, json):
     try:
-        ret_val = make_call("POST", '/store/resources', json={"data": json}).json()
-        uid = ret_val['data']['id']
+        uid = add_object_get_id(json)
         c = db.count()
         make_call("DELETE", "/store/resources/{}".format(uid))
         assert c > db.count()
@@ -99,8 +113,7 @@ def test_storage_delete_object_fail_uuid(tozti, db):
     ])
 def test_storage_get_object(tozti, db, json):
     try:
-        ret_val = make_call("POST", '/store/resources', json={"data": json}).json()
-        uid = ret_val['data']['id']
+        uid = add_object_get_id(json)
         result = make_call("GET", "/store/resources/{}".format(uid)).json()["data"]
         expected = json
         expected["id"] = uid
@@ -118,23 +131,37 @@ def test_storage_get_object_fail_uuid(tozti, db):
 
 
 
-# TODO
 @pytest.mark.extensions("type")
 @pytest.mark.parametrize("json, diff, expected", [
     ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"name": "g"},        True),
     ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"email": "b@b.com"}, True),
     ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"email": "a"},       False),
+    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"bar": "a"},         False),
     ])
 def test_storage_update(tozti, db, json, diff, expected):
     try:
-        ret_val = make_call("POST", '/store/resources', json={"data": json}).json()
-        uid = ret_val['data']['id']
+        uid = add_object_get_id(json)
         result = make_call("PATCH", "/store/resources/{}".format(uid), json={"data": {"attributes": diff}})
         # test if the request succeeded
-        assert (result.status_code == 200) == expected
-        theory = json
-        for (k, v) in diff.items():
-            theory["attributes"][k] = v
-        assert db_is_object(db, theory) == expected
+        if result.status_code == 200:
+            theory = json
+            for (k, v) in diff.items():
+                if k in theory["attributes"]:
+                    theory["attributes"][k] = v
+            assert db_is_object(db, theory) == expected
+        else:
+            assert not expected
     except:
         assert False
+
+@pytest.mark.extensions("type")
+def test_storage_update_no_content(tozti, db):
+    json = {"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}
+    uid = add_object_get_id(json)
+    assert make_call("PATCH", "/store/resources/{}".format(uid)).status_code == 400
+
+def test_storage_update_object_fail_not_uuid(tozti, db):
+    assert make_call("PATCH", "/store/resources/foo").status_code == 404
+
+def test_storage_update_object_fail_uuid(tozti, db):
+    assert make_call("PATCH", "/store/resources/00000000-0000-0000-0000-000000000000").status_code == 400
