@@ -45,24 +45,27 @@ def check_call(meth, path, json=None):
     return 'errors' in ans
 
 
+def db_is_object(db, obj):
+    """Check if the database only contains object obj
+    """
+    if db.count() == 1:
+        for o in db.find():
+            if o["attrs"] != obj["attributes"]:
+                return False
+        return True
+    return False
+
+
 @pytest.mark.extensions("type")
 @pytest.mark.parametrize("json, expected", [
-    ({"type": TYPE,
-         "attributes": {"name": "f", "email": "a@a.com"}}, True),
-    ({"type": TYPE,
-         "atxtributes": {"name": "f", "email": "a@a.com"}}, False),
-    ({"type": TYPE,
-         "atxtributes": {"name": "f", "email": "a"}}, False)
+    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}},   True),
+    ({"type": TYPE, "atxtributes": {"name": "f", "email": "a@a.com"}},  False),
+    ({"type": TYPE, "attributes": {"name": "f", "email": "a"}},        False)
     ])
 def test_storage_post_request(tozti, db, json, expected):
-    ret_val = check_call("POST", '/store/resources', json={"data": json})
-    if not ret_val and expected:
-        assert True
-    if db.count() != 1:
-        assert not expected
-    for obj in db.find():
-        if obj["attrs"] != json["attributes"]:
-            assert not expected
+    ret_val = make_call("POST", '/store/resources', json={"data": json})
+    assert (ret_val.status_code == 200) == expected
+    assert db_is_object(db, json) == expected
 
 
 
@@ -92,8 +95,7 @@ def test_storage_delete_object_fail_uuid(tozti, db):
 
 @pytest.mark.extensions("type")
 @pytest.mark.parametrize("json", [
-    {"type": TYPE,
-         "attributes": {"name": "f", "email": "a@a.com"}},
+    {"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}},
     ])
 def test_storage_get_object(tozti, db, json):
     try:
@@ -113,3 +115,26 @@ def test_storage_get_object_fail_not_uuid(tozti, db):
 
 def test_storage_get_object_fail_uuid(tozti, db):
     assert make_call("GET", "/store/resources/00000000-0000-0000-0000-000000000000").status_code == 404
+
+
+
+# TODO
+@pytest.mark.extensions("type")
+@pytest.mark.parametrize("json, diff, expected", [
+    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"name": "g"},        True),
+    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"email": "b@b.com"}, True),
+    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"email": "a"},       False),
+    ])
+def test_storage_update(tozti, db, json, diff, expected):
+    try:
+        ret_val = make_call("POST", '/store/resources', json={"data": json}).json()
+        uid = ret_val['data']['id']
+        result = make_call("PATCH", "/store/resources/{}".format(uid), json={"data": {"attributes": diff}})
+        # test if the request succeeded
+        assert (result.status_code == 200) == expected
+        theory = json
+        for (k, v) in diff.items():
+            theory["attributes"][k] = v
+        assert db_is_object(db, theory) == expected
+    except:
+        assert False
