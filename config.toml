@@ -5,3 +5,7 @@ port = 8080
 [mongodb]
 host = '127.0.0.1'
 port = 27017
+
+[cookie]
+private_key = 'a super secret key, we should not share it...'
+public_key = 'a super public key...'
