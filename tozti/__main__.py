@@ -28,7 +28,6 @@ import toml
 import tozti
 import tozti.store
 import tozti.app
-import tozti.cookie.utils
 
 logger = logbook.Logger('tozti.main')
 
