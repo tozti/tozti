@@ -11,6 +11,7 @@ before_install:
     - export PATH=$HOME/geckodriver:$PATH
     - geckodriver --version
 install:
+    - sudo apt-get install libsodium-dev
     - pip install -r requirements.txt
     - pip install -r requirements-dev.txt
     - npm install
