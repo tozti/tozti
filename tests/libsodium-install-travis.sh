@@ -14,6 +14,7 @@ if [ ! -d "$HOME/libsodium/lib" ]; then
   ./configure --prefix=$HOME/libsodium
   make
   make install
+  cd ../
 else
   echo 'Using cached directory.'
 fi
