@@ -138,8 +138,6 @@ def main():
         sys.exit(1)
 
     try:
-        mac = tozti.cookie.utils.create_macaroon('test', 42, {1:7, 2:9, 3:7}, coucou=2, salut='coucou')
-        print(mac.inspect())
         app.main()
     except tozti.app.DependencyCycle as err:
         logger.critical('Found dependency cycle between extensions {} and {}'
