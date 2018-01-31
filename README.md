@@ -74,7 +74,7 @@ Tozti contains some tests. For them to be run, you need/
 
 The test suite can be launched as:
 ```
-pytest tests/ -driver [Chrome|Firefox]
+pytest tests/ --driver [Chrome|Firefox]
 ```
 If you are using `geckodriver`, user `Firefox` driver. Otherwise use `Chrome`
 
