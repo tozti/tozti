@@ -17,14 +17,14 @@
 
 import tozti
 
-from tozti.utils import RouterDef, NotJsonError, BadJsonError
+from tozti.utils import (RouterDef, NotJsonError, BadJsonError, json_response)
 from tozti.core_schemas import SCHEMAS
 
 router = RouterDef()
 login = router.add_route('/login')
 
-@login.post
-async def login_post(req):
+@login.get
+async def login_get(req):
     if req.content_type != 'application/json':
         raise NotJsonError()
     try:
@@ -37,5 +37,5 @@ async def login_post(req):
         raise BadJsonError()
     
     user = await req.app['tozti-store'].find_fields(SCHEMAS['user'], login=login)
-    if len(user) == 0:
-        raise 
+    return json_response({'data': "coucou"})
+

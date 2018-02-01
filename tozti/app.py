@@ -258,6 +258,12 @@ class App:
             return pystache.render(t.read(), context)
 
     def register_core(self):
+
+        self.register(Extension(
+            'auth',
+            router=tozti.auth.router))
+
+
         self.register(Extension(
             'store',
             router=tozti.store.router,
