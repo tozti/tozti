@@ -345,6 +345,23 @@ class Store:
             raise NoResourceError(id=id)
         return res
 
+    async def find_fields(self, validator, **kwargs):
+        """Query the DB for the list of resources with some specifications
+
+        `validator` must be the validator object of the type awaited
+        `kwargs` must be a dict fieldName:value
+        """
+        result = await self._resource.find(query=kwargs)
+        resultValidated = []
+        for item in result:
+            try:
+                validate(item, validator)
+                resultValidated.append(item)
+            except ValidationError as _:
+                pass
+
+        return resultValidated
+
     async def typeof(self, id):
         """Return the type URL of a given resource.
 
@@ -365,8 +382,9 @@ class Store:
 
         logger.debug('querying DB for resource {}'.format(id))
         resp = await self.find_one(id)
-        return await self._render(resp)
-
+        return await self._render(resp)    
+        
+        
     async def update(self, id, raw):
         """Update a resource in the DB.
 
