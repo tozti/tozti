@@ -2,7 +2,7 @@ from tests.commons import tozti
 
 def test_macaroon():
 
-    from tozti.cookie.utils import create_macaroon
+    from tozti.auth.utils import create_macaroon
     from tozti.__main__ import load_config_file
     import tozti as tozti_app
     
