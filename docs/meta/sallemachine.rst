@@ -1,6 +1,6 @@
-*************
+********************************
 Install tozti in a computer room
-*************
+********************************
 
 As you do not have enough credentials in the computer rooms of the ENS to install node, npm and therefore tozti. Here is a step by step guide on how to make tozti works in the computer rooms.
 
@@ -25,7 +25,6 @@ The javascript part
 We need to install node and npm locally. Type the following command in your terminal::
 
     curl https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
-`
 
 Restart your terminal and install node::
 

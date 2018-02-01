@@ -39,7 +39,7 @@ Project internals
 -----------------
 
 For the internal organisation, workflows and anything related to the *software
-project* course, see :doc:`meta/index`.
+project* course, see :doc:`meta/index`. If you want to write tests, a small documentation is available at :doc:`meta/tests`.
 
 
 .. _ENS de Lyon: https://ens-lyon.fr
