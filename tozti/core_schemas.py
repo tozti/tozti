@@ -14,6 +14,20 @@ user_schema = {
     }
 }
 
+user_password_schema = {
+    'attributes': {
+        'hash': {'type': 'string'},
+    },
+    'relationships': {
+        'groups': {
+            'reverse-of': {
+                'arity': 'to-one',
+                'type': 'core/user',
+                'path': 'members'
+            }
+        }
+    }
+}
 
 group_schema = {
     'attributes': {
@@ -28,4 +42,6 @@ group_schema = {
 }
 
 
-SCHEMAS = {'user': user_schema, 'group': group_schema}
+SCHEMAS = {'user': user_schema,
+           'group': group_schema,
+           'user_password':user_password_schema}
