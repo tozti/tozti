@@ -12,21 +12,21 @@ Running the tests will clean your mongodb and remove every extensions, so make s
 
 You might need to install `chromedriver` (chrome driver) or `geckodriver` (Firefox driver).
 
-To run the tests, the simplest way is to execute `pytest tests/ --driver [Firefox|Chrome]` to launch the whole test suite. If you want to only execute the tests included in `tests/test_foo.py`, then you might launch the command `pytest tests/test_foo.py --driver [Firefox|Chrome]`.
+To run the tests, the simplest way is to execute `pytest tests/ --driver [Firefox|Chrome]` to launch the whole test suite. If you want to only execute the tests included in `tests/test_foo.py`, then you can use the command `pytest tests/test_foo.py --driver [Firefox|Chrome]`.
 
-If you have problem with the tests, it might be because they are launched with `python2` instead of `python3`. In this case, instead of running `pytest [args]`, run `python3 -m pytest [args]`
+If you have any problems with the tests, it might be because they are launched with `python2` instead of `python3`. In this case, instead of running `pytest [args]`, run `python3 -m pytest [args]`
 
 Test architecture
 =================
 
-We can divide our testing architecture in three parts.
+We can divide our testing architecture into three parts.
 
 Travis
 ------
 
 We are using travis_ for continuous integrations. Each time a commit 
-is pushed on `master`, `travis` will install every things `tozti` needs
-to run and also execute our test suite. This enable us to see in a glance
+is pushed on `master`, `travis` will install everything `tozti` needs
+to run and also execute our test suite. This enables us to see in a glance
 if the modifications we made are breaking something.
 
 Unit testing
