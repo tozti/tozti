@@ -14,7 +14,7 @@ for more information.
 
 For this project to work you will need:
 - nodejs (>=9.4.0 garanteed, earlier versions may or may not work)
-- python3
+- python3 (>= 3.5)
 
 ### Installation
 
