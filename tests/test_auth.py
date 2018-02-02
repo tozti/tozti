@@ -1,4 +1,3 @@
-from tests.commons import tozti
 
 def test_macaroon():
 
