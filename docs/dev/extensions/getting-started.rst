@@ -31,7 +31,7 @@ some modules::
 
     from tozti.utils import RouterDef
     from aiohttp import web
-    import logging
+    import logbook
 
 * ``RouterDef`` allows us to define a new router and therefore new request
   handlers.
