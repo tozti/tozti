@@ -2,7 +2,7 @@ import subprocess
 import os, shutil
 import time
 import pytest
-from tests.commons import tozti, tozti_still_running
+from tests.commons import tozti_still_running
 import requests
 
 
@@ -19,11 +19,6 @@ def test_tozti_routing(tozti):
 
 
 
-# test using headerless browser
-@pytest.fixture
-def firefox_options(firefox_options):
-    firefox_options.add_argument("-headless")
-    return firefox_options
 
 # vue routing
 @pytest.mark.extensions("vue-routing01")

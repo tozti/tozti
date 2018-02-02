@@ -1,22 +1,25 @@
 import subprocess
+from requests import get, post, put, patch, delete
+import requests
+from pymongo import MongoClient
 import os, sys, shutil
 import pytest
 
 def empty_extensions_list():
+    """Remove all extensions
+    """
     for f in os.listdir("extensions/"):
         if f != ".gitkeep":
             shutil.rmtree(os.path.join("extensions", f))
 
 def stop_tozti(tozti_proc):
-    """
-    Stop a given tozti_proc
+    """Stop a given tozti_proc
     """
     if tozti_still_running(tozti_proc):
         tozti_proc.terminate()
 
 def launch_tozti():
-    """
-    Start a tozti server and either:
+    """Start a tozti server and either:
         - return None if the server couldn't be launched
         - return a Popen object representing tozti's process
     """
@@ -34,7 +37,7 @@ def launch_tozti():
 
 
 def install_extension(ext):
-    """ Install the extension `ext` (found in `tests/extension`)
+    """Install the extension `ext` (found in `tests/extension`)
     as a Tozti extension
     """
     extension_folder = "tests/extensions/"
@@ -44,34 +47,51 @@ def install_extension(ext):
                         os.path.join("extensions/", ext))
 
 
-@pytest.fixture(scope="function")
-def tozti(request):
-    """
-    Fixture that:
-        - clean the extension folder
-        - if extensions are to be installed, install the extensions
-        - launch a tozti server
-        - waits one second for it to be started
-        - shutdown it at the end
-    To install extensions, add a mark named "extensions" to the test 
-    with arguments the extensions you want to install:
-        `@pytest.mark.extensions("ext1", "ext2")`
-    """
-    def tozti_end():
-        stop_tozti(tozti)
-
-    empty_extensions_list()
-    #install extensions
-    extensions_marker = request.node.get_marker("extensions")
-    if extensions_marker is not None:
-        for ext in extensions_marker.args:
-            install_extension(ext)
-
-    tozti = launch_tozti()
-
-    yield tozti
-
-    request.addfinalizer(tozti_end)
-
 def tozti_still_running(tozti):
+    """Check if the instance of tozti ran in the process passed
+    as argument is still running
+
+    Params:
+        tozti: tozti's process
+    """
     return tozti is not None and tozti.poll() is None
+
+
+API = 'http://127.0.0.1:8080/api'
+
+def make_call(meth, path, json=None):
+    """make a call to the storage API
+
+    Params:
+        meth: the method use by the call. ex: PATCH, PUT, GET, POST, DELETE
+        path: the relative path to the api
+        json: the json that must be send with the request
+
+    Returns:
+        a `requests` object
+    """
+    return requests.request(meth, API + path, json=json)
+
+def db_contains_object(db, obj):
+    """Check if the database only contains object obj
+
+    Params:
+        db: a `pymongo` object which allow us to operate on the db
+        obj: the obj we want to find in the db
+
+    Returns:
+        True if the object is in the db, False otherwize
+    """
+    for o in db.find():
+        if o["attrs"] == obj["attributes"] \
+           and o["rels"] == obj.get("relationships", {}):
+            return True
+    return False
+
+def add_object_get_id(obj):
+    """Insert the object defined by `obj` into the database
+    And returns the associated id
+    """
+    ret_val = make_call("POST", '/store/resources', json={"data": obj}).json()
+    return ret_val['data']['id']
+

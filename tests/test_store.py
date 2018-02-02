@@ -1,67 +1,11 @@
-from tests.commons import launch_tozti, stop_tozti, tozti
+from tests.commons import db_contains_object, make_call, add_object_get_id
 import json
-from requests import get, post, put, patch, delete
-import requests
-from pymongo import MongoClient
 import pytest
 from uuid import UUID
 
 
-API = 'http://127.0.0.1:8080/api'
 TYPE = "type/foo"
 
-
-"""
-@pytest.fixture(scope="module")
-def tozti(request):
-    tozti = launch_tozti()
-    if tozti is None:
-        assert False
-
-    yield tozti
-
-    def end():
-        stop_tozti(tozti)
-    request.addfinalizer(end)
-"""
-
-@pytest.fixture(scope="module")
-def load_db(request):
-    client = MongoClient(host="localhost", port=27017)
-    yield client.tozti.resources
-    request.addfinalizer(lambda: client.close())
-
-@pytest.fixture(scope="function")
-def db(load_db):
-    load_db.drop()
-    yield load_db
-
-
-def make_call(meth, path, json=None):
-    return requests.request(meth, API + path, json=json)
-
-def check_call(meth, path, json=None):
-    resp = requests.request(meth, API + path, json=json)
-    ans = resp.json()
-    return 'errors' in ans
-
-
-def db_contains_object(db, obj):
-    """Check if the database only contains object obj
-    """
-    for o in db.find():
-        if o["attrs"] == obj["attributes"] \
-           and o["rels"] == obj.get("relationships", {}):
-            return True
-    return False
-
-
-def add_object_get_id(obj):
-    """Insert the object defined by `obj` into the database
-    And returns the associated id
-    """
-    ret_val = make_call("POST", '/store/resources', json={"data": obj}).json()
-    return ret_val['data']['id']
 
 
 @pytest.mark.extensions("type")
