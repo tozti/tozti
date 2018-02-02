@@ -27,6 +27,8 @@ API = 'http://127.0.0.1:8080/api'
 def check_call(meth, path, json=None):
     resp = requests.request(meth, API + path, json=json)
     ans = resp.json()
+    if len(resp.cookies)>0:
+        print('Cookie(s) : ', requests.utils.dict_from_cookiejar(resp.cookies))
     if 'errors' not in ans:
         return ans
     print('ERROR: %s (status: %s)' % (ans['errors'][0]['code'], resp.status_code))
@@ -54,3 +56,4 @@ def update_resource(id, **kwargs):
 
 def delete_resource(id):
     check_call('delete', '/store/resources/%s' % id)
+    
