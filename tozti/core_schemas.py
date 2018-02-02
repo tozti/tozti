@@ -14,18 +14,19 @@ user_schema = {
     }
 }
 
+
+"""
+Hash of the user's password (SHA256)
+The hash is represented by a base10 integer in big endian
+"""
+
+#TODO : add salt to the hash
 user_password_schema = {
     'attributes': {
         'hash': {'type': 'string'},
+        'login': {'type': 'string'} 
     },
     'relationships': {
-        'groups': {
-            'reverse-of': {
-                'arity': 'to-one',
-                'type': 'core/user',
-                'path': 'members'
-            }
-        }
     }
 }
 

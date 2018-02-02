@@ -16,8 +16,14 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 import tozti
+import tozti.auth.utils
 
-from tozti.utils import (RouterDef, NotJsonError, BadJsonError, json_response)
+from pysodium import (crypto_pwhash_scryptsalsa208sha256_str,
+                      crypto_pwhash_scryptsalsa208sha256_str_verify)
+import json
+from json import JSONDecodeError
+from tozti.utils import (RouterDef, NotJsonError, BadJsonError,
+                         json_response)
 from tozti.core_schemas import SCHEMAS
 
 router = RouterDef()
@@ -35,7 +41,20 @@ async def login_get(req):
         raise BadJsonError()
     except IndexError:
         raise BadJsonError()
-    
-    user = await req.app['tozti-store'].find_fields(SCHEMAS['user'], login=login)
-    return json_response({'data': "coucou"})
 
+    userPasswd = await req.app['tozti-store'].find_fields(SCHEMAS['user_password'], login=login)
+
+    localHash = userPasswd['hash']
+
+    try:
+        pysodium.crypto_pwhash_scryptsalsa208sha256_str_verify(
+            localHash, passwd
+        )
+    except ValueError:
+        raise tozti.auth.utils.BadPasswordError()
+        
+    ans = json_response({'logged':True})
+    mac = tozti.auth.utils.create_macaroon({'login':login, 'id':43})
+    ans.set_cookie('test', mac.serialize())
+    return ans
+    

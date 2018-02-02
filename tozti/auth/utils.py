@@ -1,9 +1,7 @@
 import json
 from pymacaroons import Macaroon, Verifier
 import tozti
-
-def place_macaroon(app, response, title, m):
-    response.cookie[title] = m.serialize()
+from tozti.utils import APIError
 
 def create_macaroon(*args, **kwargs):
     mac = Macaroon(
@@ -14,9 +12,13 @@ def create_macaroon(*args, **kwargs):
 
     for a in args:
         mac.add_first_party_caveat(json.dumps(a))
-        
-    
+            
     for key, value in kwargs.items():
         mac.add_first_party_caveat('{} = {}'.format(json.dumps(key), json.dumps(value)))
     
     return mac
+
+class BadPasswordError(tozti.utils.APIError):
+    code = 'Bad_password'
+    title = 'Submitted login or password is not valid'
+    status = 400
