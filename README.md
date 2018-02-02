@@ -16,6 +16,8 @@ For this project to work you will need:
 - nodejs
 - python3
 
+/!\ For Ubuntu/Debian users the nodejs package is not up-to-date so you can use this -totally unsafe- script to install the good version https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-an-ubuntu-14-04-server
+
 ### Installation
 
 Start by creating a virtualenv and activate it:
