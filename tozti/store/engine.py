@@ -216,7 +216,7 @@ class Store:
         """
 
         if type_hint is None:
-            rep = await self.find_one(id)
+            rep = await self._resource_by_id(id)
             type_id = rep['type']
         else:
             rep = None
@@ -227,7 +227,7 @@ class Store:
             return await self._render_auto(id, rel, *schema.autos[rel])
         else:
             if rep is None:
-                rep = await self.find_one(id)
+                rep = await self._resource_by_id(id)
             if rel in schema.to_one:
                 # at this point we are sure that 'rels' is in rep
                 # as the resource is typed
@@ -333,11 +333,11 @@ class Store:
         await self._resources.insert_one(sanitized)
         return sanitized['_id']
     
-    async def find_one(self, id):
+    async def _resource_by_id(self, id):
         """Returns the resource with given id.
 
-        `id` must be an instance of `uuid.UUID`. Raises `KeyError` if the
-        resource is not found.
+        `id` must be an instance of `uuid.UUID`. Raises `NoResourceError` if the id
+        is not found.
         """
 
         res = await self._resources.find_one({'_id': id})
@@ -345,36 +345,19 @@ class Store:
             raise NoResourceError(id=id)
         return res
 
-    async def find_fields(self, validator, **kwargs):
-        """Query the DB for the list of resources with some specifications
+    async def hash_by_login(self, login):
+        """Returns the user resource with given login.
 
-        `validator` must be the validator object of the type awaited
-        `kwargs` must be a dict fieldName:value
+        Raises `NoResourceError` if the login is not found.
         """
-        #result = await self._resources.find(kwargs)
-        result = self._resources.find()
-        print(result)
-        print(result.count())
-        if result is None:
-            return None
-        resultValidated = []
 
-        def insert(res, error):
-            if error:
-                raise error
-
-            if (res, error) == (None, None):
-                return
-            
-            try:
-                validate(res, validator)
-                resultValidated.append(res)
-            except ValidationError as _:
-                return
-
-        result.each(insert)
-
-        return resultValidated
+        res = await self._resources.find_one({'type': 'core/user',
+                                              'attrs.login': login},
+                                             {'_id': 1, 'attrs.hash': 1})
+        if res is None:
+            # a better error maybe?
+            raise NoResourceError(id='login: %s' % login)
+        return (res['_id'], res['attrs']['hash'])
 
     async def typeof(self, id):
         """Return the type URL of a given resource.
@@ -383,7 +366,7 @@ class Store:
         resource is not found.
         """
 
-        res = await self.find_one(id)
+        res = await self._resource_by_id(id)
         return res['type']
         
     async def get(self, id):
@@ -395,8 +378,8 @@ class Store:
         """
 
         logger.debug('querying DB for resource {}'.format(id))
-        resp = await self.find_one(id)
-        return await self._render(resp)    
+        resp = await self._resource_by_id(id)
+        return await self._render(resp)
         
         
     async def update(self, id, raw):

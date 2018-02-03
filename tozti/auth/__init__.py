@@ -15,22 +15,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
-import tozti
-import tozti.auth.utils
 
-from pysodium import (crypto_pwhash_scryptsalsa208sha256_str,
-                      crypto_pwhash_scryptsalsa208sha256_str_verify)
-import json
 from json import JSONDecodeError
-from tozti.utils import (RouterDef, NotJsonError, BadJsonError,
-                         json_response)
-from tozti.core_schemas import SCHEMAS
+
+from pysodium import (
+    crypto_pwhash_scryptsalsa208sha256_str as pwhash_str,
+    crypto_pwhash_scryptsalsa208sha256_str_verify as pwhash_verify)
+
+from tozti.auth.utils import BadPasswordError, create_macaroon
+from tozti.utils import (RouterDef, NotJsonError, BadJsonError, json_response)
+
 
 router = RouterDef()
 login = router.add_route('/login')
 
-@login.get
-async def login_get(req):
+@login.post
+async def login_post(req):
     if req.content_type != 'application/json':
         raise NotJsonError()
     try:
@@ -42,22 +42,15 @@ async def login_get(req):
     except IndexError:
         raise BadJsonError()
 
-    userPasswdList = await req.app['tozti-store'].find_fields(SCHEMAS['user_password'], login=login)
-
-    if len(userPasswdList) == 0:
-        raise tozti.auth.utils.BadPasswordError()
-    
-    localHash = userPasswd['hash']
+    (uid, hash) = await req.app['tozti-store'].hash_by_login(login)
 
     try:
-        pysodium.crypto_pwhash_scryptsalsa208sha256_str_verify(
-            localHash, passwd
-        )
+        pwhash_verify(hash, passwd)
     except ValueError:
-        raise tozti.auth.utils.BadPasswordError()
+        raise BadPasswordError()
         
-    ans = json_response({'logged':True})
-    mac = tozti.auth.utils.create_macaroon({'login':login, 'id':43})
+    ans = json_response({'logged': True})
+    mac = create_macaroon({'login': login, 'id': 43})
     ans.set_cookie('test', mac.serialize())
     return ans
     
