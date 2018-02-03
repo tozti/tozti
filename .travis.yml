@@ -2,11 +2,11 @@ language: python
 python:
     - "3.6"
     - "3.5"
+sudo: required
 services:
     - mongodb
 before_install:
-    - ./tests/libsodium-install-travis.sh
-    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/libsodium/lib
+    - wget https://download.libsodium.org/libsodium/releases/LATEST.tar.gz && tar xzf LATEST.tar.gz && pushd libsodium-stable/ && ./configure --prefix=/usr && make && make check && sudo make install && popd
     - export GECKODRIVER_DOWNLOAD='https://github.com/mozilla/geckodriver/releases/download/v0.19.1/geckodriver-v0.19.1-linux64.tar.gz'
     - curl -L -o /tmp/geckodriver.tar.gz $GECKODRIVER_DOWNLOAD
     - mkdir $HOME/geckodriver && tar xvf /tmp/geckodriver.tar.gz -C $HOME/geckodriver
@@ -26,4 +26,3 @@ cache:
         - $HOME/.cache/bower
         - $HOME/.npm
         - "node_modules"
-        - $HOME/libsodium
