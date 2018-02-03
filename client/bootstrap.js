@@ -4,7 +4,7 @@ import Taxonomy  from './components/Taxonomy.vue'
 
 import store from './store'
 
-// Create a "polymorphic" component.
+// Create a 'polymorphic' component.
 // A polymorphic component is a component with a single prop `resource` that
 // transparently passes the rendering to another component based on the type
 // of the passed resource. To register a new component handling a given type,
@@ -71,6 +71,18 @@ const tozti = window.tozti = {
       }
     }
   ],
+
+  globalMenuItems: [
+    { name: 'Accueil', route: 'counter', props: { } } 
+  ],
+
+  /**
+   * @param {string} name - The name of the menu item.
+   * @param {string | Location} route - The route it points to.
+   */
+  addMenuItem(name, route, props = {}) {
+    tozti.globalMenuItems.push({ name, route, props})
+  },
 
   postLaunchHooks: []
 }

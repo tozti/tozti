@@ -14,16 +14,19 @@
           </nav>
         </div>
     </div>
+    <navigation></navigation>
     <router-view></router-view>
   </div>
 </template>
 
 <script>
   import NotificationCenter from './NotificationCenter.vue'
+  import Navigation from './Navigation.vue'
 
   export default {
     components: {
-      NotificationCenter
+      NotificationCenter,
+      Navigation,
     }
   }
 </script>
