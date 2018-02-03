@@ -65,17 +65,21 @@ resources = router.add_route('/resources')
 resources_single = router.add_route('/resources/{id:%s}' % UUID_RE)
 relationship = router.add_route('/resources/{id:%s}/{rel}' % UUID_RE)
 
-
-@resources.post
-async def resources_post(req):
-    """Request handler for ``POST /api/store/resources``."""
-
+async def get_json_from_request(req):
     if req.content_type != 'application/json':
         raise NotJsonError()
     try:
         data = await req.json()
     except JSONDecodeError:
         raise BadJsonError()
+    
+    return data
+
+@resources.post
+async def resources_post(req):
+    """Request handler for ``POST /api/store/resources``."""
+
+    data = await get_json_from_request(req)
     id = await req.app['tozti-store'].create(data)
     return json_response({'data': await req.app['tozti-store'].get(id)})
 
@@ -92,13 +96,7 @@ async def resources_get(req):
 async def resources_patch(req):
     """Request handler for ``PATCH /api/store/resources/{id}``."""
 
-    if req.content_type != 'application/json':
-        raise NotJsonError()
-    try:
-        data = await req.json()
-    except JSONDecodeError:
-        raise BadJsonError()
-
+    data = await get_json_from_request(req)
     id = UUID(req.match_info['id'])
     await req.app['tozti-store'].update(id, data)
     return json_response({'data': await req.app['tozti-store'].get(id)})
@@ -126,16 +124,10 @@ async def relationship_get(req):
 async def relationship_put(req):
     """Request handler for ``PUT /api/store/resources/{id}/{rel}``."""
 
-    if req.content_type != 'application/json':
-        raise NotJsonError()
-    try:
-        data = await req.json()
-    except JSONDecodeError:
-        raise BadJsonError()
+    data = await get_json_from_request(req)
     
     id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
-    data = await req.json()
 
     await req.app['tozti-store'].rel_replace(id, rel, data)
     return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
@@ -145,18 +137,22 @@ async def relationship_put(req):
 async def relationship_post(req):
     """Request handler for ``POST /api/store/resources/{id}/{rel}``."""
     
-    if req.content_type != 'application/json':
-        raise NotJsonError()
-    try:
-        data = await req.json()
-    except JSONDecodeError:
-        raise BadJsonError()
-    
+    data = await get_json_from_request(req)
     id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
-    data = await req.json()
 
     await req.app['tozti-store'].rel_append(id, rel, data)
+    return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
+
+@relationship.delete
+async def relationship_delete(req):
+    """Request handler for ``DELETE /api/store/resources/{id}/{rel}``"""
+
+    data = await get_json_from_request(req)
+    id = UUID(req.match_info['id'])
+    rel = req.match_info['rel']
+
+    await req.app['tozti-store'].rel_delete(id, rel, data)
     return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
 
 
