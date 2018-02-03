@@ -42,8 +42,11 @@ async def login_get(req):
     except IndexError:
         raise BadJsonError()
 
-    userPasswd = await req.app['tozti-store'].find_fields(SCHEMAS['user_password'], login=login)
+    userPasswdList = await req.app['tozti-store'].find_fields(SCHEMAS['user_password'], login=login)
 
+    if len(userPasswdList) == 0:
+        raise tozti.auth.utils.BadPasswordError()
+    
     localHash = userPasswd['hash']
 
     try:

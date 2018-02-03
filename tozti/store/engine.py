@@ -351,14 +351,28 @@ class Store:
         `validator` must be the validator object of the type awaited
         `kwargs` must be a dict fieldName:value
         """
-        result = await self._resource.find(query=kwargs)
+        #result = await self._resources.find(kwargs)
+        result = self._resources.find()
+        print(result)
+        print(result.count())
+        if result is None:
+            return None
         resultValidated = []
-        for item in result:
+
+        def insert(res, error):
+            if error:
+                raise error
+
+            if (res, error) == (None, None):
+                return
+            
             try:
-                validate(item, validator)
-                resultValidated.append(item)
+                validate(res, validator)
+                resultValidated.append(res)
             except ValidationError as _:
-                pass
+                return
+
+        result.each(insert)
 
         return resultValidated
 

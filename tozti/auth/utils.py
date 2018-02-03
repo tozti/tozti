@@ -21,4 +21,6 @@ def create_macaroon(*args, **kwargs):
 class BadPasswordError(tozti.utils.APIError):
     code = 'Bad_password'
     title = 'Submitted login or password is not valid'
+    detail = 'The login/password couple you submited seems to be unknown to our server' 
     status = 400
+
