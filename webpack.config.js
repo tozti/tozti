@@ -12,19 +12,17 @@ const fileLoader = {
     // When using relatives paths, the css where fetched from /static/core/_/css/.. 
     // for exemple
     publicPath: "/static/core/",
-  }  
+  }
 }
 
 // Webpack configuration
 module.exports = {
   entry: {
-    index: './client/components/index.js',
-    style: './client/assets/sass/style.scss',
-    bootstrap: './client/bootstrap.js',
     launch: './client/launch.js',
-    images: 'multi-entry-loader?include=./client/assets/img/**.*!',
-    fonts: 'multi-entry-loader?include=./client/assets/fonts/**.*!',
+    bootstrap: './client/bootstrap.js',
+    style: './assets/sass/style.scss',
   },
+
   output: {
     path: path.resolve(__dirname, 'dist/'),
     filename: '[name].js'
@@ -33,6 +31,7 @@ module.exports = {
   plugins: [
     new extract('css/[name].css'),
   ],
+
   module: {
     rules: [
       {
@@ -89,7 +88,10 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['*', '.js', '.vue', '.json']
+    extensions: ['*', '.js', '.vue', '.json'],
+    alias: {
+      assets: path.resolve(__dirname, 'assets')
+    },
   },
   externals: {
     vue: 'Vue',

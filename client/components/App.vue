@@ -2,7 +2,7 @@
   <div>
     <header class="main-header">
       <section class="branding">
-        <a href="#"><img :src="tozti_logo" alt="tozti"></a>
+        <a href="#"><img src="~assets/img/logo.svg" alt="tozti"></a>
       </section>
 
       <section class="search">
@@ -35,7 +35,6 @@
 </template>
 
 <script>
-  import tozti_logo from "../assets/img/logo.svg"
   import NotificationCenter from './NotificationCenter.vue'
   import Navigation from './Navigation.vue'
 
@@ -43,11 +42,6 @@
     components: {
       NotificationCenter,
       Navigation,
-    },
-    data: function () {
-        return {
-            tozti_logo: tozti_logo
-        }
     }
   }
 </script>
