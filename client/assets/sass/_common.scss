@@ -1,0 +1,12 @@
+body {
+	font-family: $text-font;
+	font-size: $text-size;
+}
+
+body, input {
+	color: $black;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: $title-font;
+}
