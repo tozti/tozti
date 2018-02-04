@@ -25,9 +25,13 @@ from pysodium import (
 from tozti.auth.utils import BadPasswordError, create_macaroon
 from tozti.utils import (RouterDef, NotJsonError, BadJsonError, json_response)
 
+from tozti.auth import decorators
+from pymacaroons import Macaroon, Verifier
+
 
 router = RouterDef()
 login = router.add_route('/login')
+is_logged = router.add_route('/is_logged')
 
 @login.post
 async def login_post(req):
@@ -54,3 +58,7 @@ async def login_post(req):
     ans.set_cookie('auth-token', mac.serialize())
     return ans
     
+@is_logged.get
+@decorators.must_be_logged
+def is_logged(req):
+    return json_response({'logged':True})
