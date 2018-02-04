@@ -50,7 +50,7 @@ async def login_post(req):
         raise BadPasswordError()
         
     ans = json_response({'logged': True})
-    mac = create_macaroon({'login': login, 'id': 43})
-    ans.set_cookie('test', mac.serialize())
+    mac = create_macaroon({'login': login, 'uid': uid})
+    ans.set_cookie('auth-token', mac.serialize())
     return ans
     
