@@ -4,7 +4,9 @@ import time
 import pytest
 from tests.commons import tozti_still_running
 import requests
-
+from contextlib import contextmanager
+from selenium.webdriver.support.ui import WebDriverWait 
+from selenium.webdriver.support.expected_conditions import staleness_of
 
 def test_tozti_launch_and_runs(tozti):
     # check if tozti is running
@@ -26,6 +28,15 @@ def test_tozti_vue_routing(selenium, tozti):
     assert(tozti_still_running(tozti))
     selenium.get("http://0.0.0.0:8080/counter")
     assert("test success" in selenium.page_source)
+
+# vue menu item append
+@pytest.mark.extensions("vue-menu-item01")
+def test_tozti_vue_menu_item(selenium, tozti):
+    assert(tozti_still_running(tozti))
+    selenium.get("http://0.0.0.0:8080/")
+    assert("test menu item" in selenium.page_source)
+    assert(len(selenium.find_elements_by_xpath("//a[contains(text(), 'test menu item')]")) == 1)
+
 
 # test than loading a bad define type fails
 @pytest.mark.extensions("type-baddefined01")
