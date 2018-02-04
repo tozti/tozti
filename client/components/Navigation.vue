@@ -3,7 +3,12 @@
 
     <!-- global menu items -->
     <nav>
-      <router-link v-for="{ name, route, props } in globalMenuItems" :to="route" :key="name">
+      <router-link
+        v-for="{ name, route, props } in globalMenuItems"
+        :to="route"
+        :key="name"
+        active-class="active"
+        exact>
         <i v-if="props.icon" :class="'nc-icon ' + props.icon"></i>{{ name }}
       </router-link>
     </nav>
