@@ -152,7 +152,78 @@ up-to-date content.
 Endpoints
 =========
 
-TODO
+We remind that the api is quite similar to what jsonapi_ proposes.
+In the following section, type ``user`` is the type defined as::
+
+        'attributes': {
+            'name': { 'type': 'string' },
+            },
+        'relationships': {
+            "member": {
+                "arity": "to-one",
+                "type": "user",
+                }
+            }
+        }
+
+Fetching an object
+------------------
+
+To fetch an object, you must execute a ``GET`` request on ``/api/store/resources/{id}`` where ``id`` is the ``ID`` of the ressource.
+
+Error code:
+    - ``404`` if ``id`` corresponds to no known objects
+    - ``400`` if an error occured when processing the object (for exemple, one of the object linked to it doesn't exists anymore in the database)
+    - ``200`` if the request was succesfull.
+
+Returns:
+    If the request is succesfull, the server will send back a json object with an entry ``data`` which has the following entries:
+        - ``id``: ID of the object
+        - ``type``: type of the object,
+        - ``attributes``: attributes of the object
+        - ``relationships``: relationships of the object. Includes the relation ``self`` (automatically created). The entries are relationship objects.
+        - ``meta``: meta informations about the object. Containts at least the following entries:
+            - ``created``: date of creation
+            - ``last-modified``: date of last modification
+
+Exemple:
+    Suppose that an object of type ``user`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
+        
+        >> GET /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e
+        200
+        {
+           'data':{
+              'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
+              'type':'user',
+              'attributes':{
+                 'name':'Pierre'
+              },
+              'relationships':{
+                 'self':{
+                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/self',
+                    'data':{
+                       'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
+                       'type':'user',
+                       'href':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
+                    }
+                 },
+                 'member':{
+                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/member',
+                    'data':{
+                       'id':'1bb2ff78-cefb-4ce1-b057-333f5baed577',
+                       'type':'user',
+                       'href':'/api/store/resources/1bb2ff78-cefb-4ce1-b057-333f5baed577'
+                    }
+                 }
+              },
+              'meta':{
+                 'created':'2018-02-05T23:13:26',
+                 'last-modified':'2018-02-05T23:13:26'
+              }
+           }
+        }
+
+
 
 
 .. _jsonapi: http://jsonapi.org/
