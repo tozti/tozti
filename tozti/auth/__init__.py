@@ -32,6 +32,7 @@ from pymacaroons import Macaroon, Verifier
 router = RouterDef()
 login = router.add_route('/login')
 is_logged = router.add_route('/is_logged')
+create_user = router.add_route('/create_user')
 
 @login.post
 async def login_post(req):
@@ -59,6 +60,7 @@ async def login_post(req):
     return ans
     
 @is_logged.get
-@decorators.must_be_logged
+@decorators.restrict_known_user
 def is_logged(req):
     return json_response({'logged':True})
+

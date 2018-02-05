@@ -5,9 +5,11 @@ from tozti.core_schemas import SCHEMAS
 
 """
 This decorator is applied to any endpoint for which it is obligated to be
-logged in
+logged in.
+
+The decorator modifies the req object by adding to it a new field "user"
 """
-def must_be_logged(func):
+def restrict_known_user(func):
     def function_logged(req, *args, **kwargs):
         app = req.app
         storage = app['tozti-store']
@@ -24,6 +26,7 @@ def must_be_logged(func):
                 return False
             except ValidationError:
                 return False
+            req['user'] = user
             return True
                 
         if not 'auth-token' in req.cookies:
