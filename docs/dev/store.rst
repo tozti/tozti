@@ -21,7 +21,7 @@ properties:
    An UUIDv4_ which uniquely identifies a resource.
 
 ``type``
-   An URL that resolves to a JSON file containing a `type object`_.
+   The name of a `type object`_.
 
 ``attributes``
    An arbitrary JSON object where each attribute is constained by the
@@ -95,8 +95,8 @@ one:
 
 ``type``
    This property is optional and can be used to restrict what types the targets
-   of this relationship can be. It can be either an URL to a type object or
-   an array of URL to allowed type objects.
+   of this relationship can be. It can be either the name of a type object or
+   an array of names of allowed type objects.
 
 The other kind of relationship description exists because relationships are
 directed. As such, because sometimes bidirectional relationships are useful, we
@@ -121,7 +121,7 @@ Let's show an example, we will consider two types: users and groups.
        "relationships": {
            "groups": {
                "reverse-of": {
-                   "type": "http://localhost/types/group.json",
+                   "type": "group",
                    "path": "members"
                }
            }
@@ -138,7 +138,7 @@ Let's show an example, we will consider two types: users and groups.
        "relationships": {
            "members": {
                "arity": "to-many",
-               "type": "http://localhost/types/user.json"
+               "type": "user"
            }
        }
    }
