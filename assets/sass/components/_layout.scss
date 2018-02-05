@@ -112,10 +112,12 @@ html {
 
 .main-sidebar h3 {
 	color: $dark-grey;
-	margin: 35px 0 10px;
+	margin: 30px 0 5px;
+  padding: 5px 0;
 	text-transform: uppercase;
 	font-size: 1em;
 	font-weight: 300;
+  cursor: pointer;
 }
 
 .main-sidebar nav a {

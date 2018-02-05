@@ -1,8 +1,13 @@
+import Buefy from 'buefy'
+
 import App       from './components/App.vue'
 import Dashboard from './components/Dashboard.vue'
 import Taxonomy  from './components/Taxonomy.vue'
+import Summary from './components/Summary.vue'
 
 import store from './store'
+
+Vue.use(Buefy)
 
 // Create a 'polymorphic' component.
 // A polymorphic component is a component with a single prop `resource` that
@@ -42,18 +47,23 @@ export function polymorphic_component(name, fallback) {
     return table;
 }
 
-const tozti = window.tozti = {
+export let tozti = window.tozti = {
   store,
   App,
 
   routes: [
     { name: 'home',      path: '/',      component: Dashboard },
-    { name: 'workspace', path: '/w/:id', component: Taxonomy },
-    { path: '/g/:taxonomy+', component: Taxonomy },
+    { name: 'workspace', path: '/w/:id', component: Summary },
+    { path: '/w/:taxonomy+', component: Taxonomy },
   ],
 
-  globalMenuItems: [{ name: 'Accueil', route: '/', props: { icon: 'nc-home-52' } }],
-  workspaceMenuItems: [{ name: 'Résumé', route: 'workspace', props: { icon: 'nc-grid-45' } }],
+  globalMenuItems: [
+    { name: 'Accueil', route: '/', props: { icon: 'nc-home-52' } }
+  ],
+
+  workspaceMenuItems: [
+    { name: 'Résumé', route: 'workspace', props: { icon: 'nc-grid-45' } }
+  ],
 
   /**
    * Define a global sidebar menu item.
@@ -76,4 +86,3 @@ const tozti = window.tozti = {
   postLaunchHooks: [],
 }
 
-export default tozti

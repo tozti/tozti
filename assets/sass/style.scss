@@ -1,7 +1,10 @@
 @import 'normalize';
+
 @import 'settings';
 @import 'common';
 @import 'fonts';
 @import 'icons';
 
 @import 'components/layout';
+
+@import '~buefy/lib/buefy.css';

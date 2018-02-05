@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "This repository contains the core of the tozti software project. It is licensed under the AGPLv3.",
   "scripts": {
-    "build": "webpack --progress --hide-modules"
+    "build": "webpack --progress --hide-modules",
+    "watch": "webpack --watch --progress --hide-modules"
   },
   "repository": {
     "type": "git",
@@ -33,5 +34,8 @@
     "multi-entry-loader": "^1.1.2",
     "vue-loader": "^13.0.5",
     "vue-template-compiler": "^2.4.4"
+  },
+  "dependencies": {
+    "buefy": "^0.6.3"
   }
 }

@@ -8,9 +8,6 @@ const fileLoader = {
   options: {
     name: '[path][name].[ext]',
     context: path.resolve(__dirname, 'assets'),
-    // we put an absolute path to avoid issues with relatives.
-    // When using relatives paths, the css where fetched from /static/core/_/css/.. 
-    // for exemple
     publicPath: "/static/core/",
   }
 }

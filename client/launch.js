@@ -1,8 +1,6 @@
 const app = window.app = new Vue({
   el: '#app',
 
-  store: tozti.store,
-
   router: new VueRouter({
     mode: "history",
     routes: tozti.routes

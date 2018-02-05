@@ -1,28 +1,19 @@
 <template>
   <div>
     <header class="main-header">
+
       <section class="branding">
-        <a href="#"><img src="~assets/img/logo.svg" alt="tozti"></a>
+        <router-link to="/">
+          <img src="~assets/img/logo.svg" alt="tozti">
+        </router-link>
       </section>
 
-      <section class="search">
-        <label for="search-field">
-          <i class="nc-icon nc-zoom-2"></i>
-        </label>
-        <input type="text" id="search-field" placeholder="Ne pas utiliser.">
-      </section>
+      <search-bar></search-bar>
 
       <section class="user">
-        <a href="#" class="notifications">
-          <i class="nc-icon nc-bell-53"></i>
-        </a>
+        <notification-center></notification-center>
+        <user-info></user-info>
 
-        <a href="#" class="logged">
-          <div class="avatar">
-          </div>
-          Romain
-          <i class="material-icons">arrow_drop_down</i>
-        </a>
       </section>
     </header>
 
@@ -36,12 +27,16 @@
 
 <script>
   import NotificationCenter from './NotificationCenter.vue'
+  import SearchBar from './SearchBar.vue'
   import Navigation from './Navigation.vue'
+  import UserInfo from './UserInfo.vue'
 
   export default {
     components: {
       NotificationCenter,
       Navigation,
+      SearchBar,
+      UserInfo,
     }
   }
 </script>
