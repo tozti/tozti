@@ -3,6 +3,10 @@ from tozti.auth.utils import (LoginRequired, UnauthorizedRequest)
 from tozti.utils import validate, ValidationError
 from tozti.core_schemas import SCHEMAS
 
+"""
+This decorator is applied to any endpoint for which it is obligated to be
+logged in
+"""
 def must_be_logged(func):
     def function_logged(req, *args, **kwargs):
         app = req.app
@@ -20,6 +24,7 @@ def must_be_logged(func):
                 return False
             except ValidationError:
                 return False
+            return True
                 
         if not 'auth-token' in req.cookies:
             raise LoginRequired()
