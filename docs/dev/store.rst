@@ -197,8 +197,11 @@ In the following section, type ``warrior`` is the type defined as::
 A warrior has a name and a certain quantity of honor. He also possesses a weapon, and can be the (proud) owner of several cats (or no cats).
 
 
+Resources
+---------
+
 Fetching an object
-------------------
+^^^^^^^^^^^^^^^^^^
 
 To fetch an object, you must execute a ``GET`` request on ``/api/store/resources/{id}`` where ``id`` is the ``ID`` of the ressource.
 
@@ -257,7 +260,7 @@ Exemple:
         }
 
 Creating an object
-------------------
+^^^^^^^^^^^^^^^^^^
 
 To create an object, you must execute a ``POST`` request on ``/api/store/resources`` where the body is a JSON object representing the object you want to send. The object must be encapsulated inside a `data` entry.  
 
@@ -321,7 +324,7 @@ Exemple:
         }
 
 Editing an object
-------------------
+^^^^^^^^^^^^^^^^^^
 
 To edit an object, you must execute a ``PATCH`` request on ``/api/store/resources/{id}`` where ``id`` is the ID you want to update. The body of the request must be a JSON object representing the change you want to operate on the object. The object must be encapsulated inside a `data` entry.  
 Remark: you don't need to provide every entries.
@@ -386,7 +389,7 @@ Exemple:
 
 
 Deleting an object
-------------------
+^^^^^^^^^^^^^^^^^^
 
 To delet an object, you must execute a ``DELETE`` request on ``/api/store/resources/{id}`` where ``id`` is the ID you want to update. 
 Remark: you don't need to provide every entries.
@@ -404,6 +407,56 @@ Exemple:
         >> DELETE /api/store/resources
         200
         {}
+
+
+Relationships
+-------------
+
+In the same way that you can act on ressources, you can also act on relationships.
+
+Fetching a relationship
+^^^^^^^^^^^^^^^^^^^^^^^
+
+To fetch a relationship, you must execute a ``GET`` request on ``/api/store/resources/{id}/{rel}`` where ``id`` is the ID of the ressource possessing the relationship you want to access, and ``rel` the name of the relationship.
+
+Error code:
+    - ``404`` if ``id`` corresponds to no known objects or ``rel`` is an invalid relationship name.
+    - ``400`` if an error occured when processing the object.
+    - ``200`` if the request was successful.
+
+Returns:
+    If the request is successful, the server will send back a `relationship object`_ under JSON format.
+
+Exemple:
+    Suppose that an object of type ``warrior`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
+        
+        >> GET /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/kitties
+        200
+        {
+            "data": {
+                "self": "/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/members", "data": [{
+                    "id": "93b41bf0-73e8-4b37-b2b9-d26d758c2539", 
+                    "type": "cat", 
+                    "href": "/api/store/resources/93b41bf0-73e8-4b37-b2b9-d26d758c2539"
+                }, {
+                    "id": "dff2b520-c3b0-4457-9dfe-cb9972188e48", 
+                    "type": "cat", 
+                    "href": "/api/store/resources/dff2b520-c3b0-4457-9dfe-cb9972188e48"
+                }]
+            }
+        }
+
+        >> GET /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/weapon
+        200
+        {
+            "data": {
+                "self": "/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/members", "data": {
+                    "id": "34078dd5-516d-42dd-816d-6fbfd82a2da9",
+                    "type": "cat", 
+                    "href": "/api/store/resources/34078dd5-516d-42dd-816d-6fbfd82a2da9"
+                }
+            }
+        }
 
 
 
