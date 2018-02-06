@@ -1,13 +1,35 @@
-*********
-Store API
-*********
+***
+API
+***
 
 The tozti core provides an API to perform operations on the database prefixed
 with ``/api/store``. This API is largely inspired by jsonapi_ so you are
 encouraged to go take a look at their specification.
 
+Error format
+============
+
+If a request raised an error, the server will send back a response with status code ``500``, ``404`` or ``400``. This response might send back a json object with an entry ``errors`` containing a list of json objects with the following properties:
+
+``code``
+    The name of the error
+
+``status``
+    Status code of the error
+
+``title``
+    Short description of the error
+
+``detail``
+    More about this error. This entry might not be present.
+
+``traceback``
+    Traceback of the error. This entry might not be present.
+
 Concepts and Datastructures
 ===========================
+
+.. _resource object:
 
 Resources
 ---------
@@ -153,18 +175,26 @@ Endpoints
 =========
 
 We remind that the api is quite similar to what jsonapi_ proposes.
-In the following section, type ``user`` is the type defined as::
+In the following section, type ``warrior`` is the type defined as::
 
         'attributes': {
             'name': { 'type': 'string' },
-            },
+            'honor': { 'type': 'number'}
+        },
         'relationships': {
-            "member": {
+            "weapon": {
                 "arity": "to-one",
-                "type": "user",
-                }
+                "type": "weapon",
+            },
+            "kitties": {
+                "arity": "to-many",
+                "type": "cat"
             }
+
         }
+
+A warrior has a name and a certain quantity of honor. He also possesses a weapon, and can be the (proud) owner of several cats (or no cats).
+
 
 Fetching an object
 ------------------
@@ -172,19 +202,13 @@ Fetching an object
 To fetch an object, you must execute a ``GET`` request on ``/api/store/resources/{id}`` where ``id`` is the ``ID`` of the ressource.
 
 Error code:
-    - ``404`` if ``id`` corresponds to no known objects
-    - ``400`` if an error occured when processing the object (for exemple, one of the object linked to it doesn't exists anymore in the database)
-    - ``200`` if the request was succesfull.
+    - ``404`` if ``id`` corresponds to no known objects.
+    - ``400`` if an error occured when processing the object (for exemple, one of the object linked to it doesn't exists anymore in the database).
+    - ``200`` if the request was successful.
 
 Returns:
-    If the request is succesfull, the server will send back a json object with an entry ``data`` which has the following entries:
-        - ``id``: ID of the object
-        - ``type``: type of the object,
-        - ``attributes``: attributes of the object
-        - ``relationships``: relationships of the object. Includes the relation ``self`` (automatically created). The entries are relationship objects.
-        - ``meta``: meta informations about the object. Containts at least the following entries:
-            - ``created``: date of creation
-            - ``last-modified``: date of last modification
+    If the request is successful, the server will send back a `resource object`_ under JSON format.
+    Otherwise, some precisions might be contained in an object under json format.
 
 Exemple:
     Suppose that an object of type ``user`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
@@ -194,25 +218,34 @@ Exemple:
         {
            'data':{
               'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
-              'type':'user',
+              'type':'warrior',
               'attributes':{
-                 'name':'Pierre'
+                 'name':'Pierre',
+                 'honor': '9000'
               },
               'relationships':{
                  'self':{
                     'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/self',
                     'data':{
                        'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
-                       'type':'user',
+                       'type':'warrior',
                        'href':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
                     }
                  },
-                 'member':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/member',
+                 'weapon':{
+                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
                     'data':{
                        'id':'1bb2ff78-cefb-4ce1-b057-333f5baed577',
-                       'type':'user',
+                       'type':'weapon',
                        'href':'/api/store/resources/1bb2ff78-cefb-4ce1-b057-333f5baed577'
+                    }
+                 },
+                 'kitties':{
+                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
+                    'data':{
+                       'id':'6a4d05f1-f04a-4a94-923e-ad52a54456e6',
+                       'type':'cat',
+                       'href':'/api/store/resources/6a4d05f1-f04a-4a94-923e-ad52a54456e6'
                     }
                  }
               },
@@ -223,6 +256,8 @@ Exemple:
            }
         }
 
+Creating an object
+------------------
 
 
 
