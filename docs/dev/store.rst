@@ -61,6 +61,7 @@ properties:
 
 
 .. _relationship objects:
+.. _relationship object:
 
 Relationships
 -------------
@@ -417,7 +418,7 @@ In the same way that you can act on ressources, you can also act on relationship
 Fetching a relationship
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-To fetch a relationship, you must execute a ``GET`` request on ``/api/store/resources/{id}/{rel}`` where ``id`` is the ID of the ressource possessing the relationship you want to access, and ``rel` the name of the relationship.
+To fetch a relationship, you must execute a ``GET`` request on ``/api/store/resources/{id}/{rel}`` where ``id`` is the ID of the ressource possessing the relationship you want to access, and ``rel`` the name of the relationship.
 
 Error code:
     - ``404`` if ``id`` corresponds to no known objects or ``rel`` is an invalid relationship name.
@@ -434,7 +435,7 @@ Exemple:
         200
         {
             "data": {
-                "self": "/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/members", "data": [{
+                "self": "/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/kitties", "data": [{
                     "id": "93b41bf0-73e8-4b37-b2b9-d26d758c2539", 
                     "type": "cat", 
                     "href": "/api/store/resources/93b41bf0-73e8-4b37-b2b9-d26d758c2539"
@@ -446,19 +447,146 @@ Exemple:
             }
         }
 
+    ::
+
         >> GET /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/weapon
         200
         {
             "data": {
-                "self": "/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/members", "data": {
+                "self": "/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/weapon", "data": {
                     "id": "34078dd5-516d-42dd-816d-6fbfd82a2da9",
-                    "type": "cat", 
+                    "type": "weapon", 
                     "href": "/api/store/resources/34078dd5-516d-42dd-816d-6fbfd82a2da9"
                 }
             }
         }
 
 
+
+Updating a relationship
+^^^^^^^^^^^^^^^^^^^^^^^
+
+To update a relationship (which is not an automatic relationship), you must execute a ``PUT`` request on ``/api/store/resources/{id}/{rel}`` where ``id`` is the ID of the ressource possessing the relationship you want to access, and ``rel`` the name of the relationship. The content of your request is a JSON object containing:
+    - for a ``to-one`` relationship the ID of the new target
+    - for a ``to-many`` relationship several IDs representing the new targets
+
+Error code:
+    - ``404`` if ``id`` corresponds to no known objects or ``rel`` is an invalid relationship name.
+    - ``400`` if an error occured when processing the object.
+    - ``200`` if the request was successful.
+
+Returns:
+    If the request is successful, the server will send back a `relationship object`_ under JSON format.
+
+Exemple:
+    Suppose that an object of type ``warrior`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. We also suppose that its relationship ``kitties`` possesses two targets having id ``<id1>`` and ``<id2>``. The relationship ``weapon`` targets ``<id_sword>``. Then::
+        
+        >> PUT /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/kitties {'data': [{'id': <id3>}]}
+        200
+        {
+            "data": {
+                "self": "/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/kitties", "data": [{
+                    "id": <id3>, 
+                    "type": "cat", 
+                    "href": "/api/store/resources/<id3>"
+                }]
+            }
+        }
+
+    ::
+
+        >> PUT /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/weapon {'data': {'id': <id_shotgun>}}
+        200
+        {
+            "data": {
+                "self": "/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/weapon", "data": [
+                    "id": <id_shotgun>, 
+                    "type": "weapon", 
+                    "href": "/api/store/resources/<id_shotgun>"
+                ]
+            }
+        }
+
+
+Adding new targets to a relationship
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To add new targets to a ``to-many`` relationship, you must execute a ``POST`` request on ``/api/store/resources/{id}/{rel}`` where ``id`` is the ID of the ressource possessing the relationship you want to access, and ``rel`` the name of the relationship. The content of your request is a JSON object containing the ids of the objects you want to add to the relationship.
+
+Error code:
+    - ``404`` if ``id`` corresponds to no known objects or ``rel`` is an invalid relationship name.
+    - ``403`` if the relationship is not a too-many relationship
+    - ``400`` if an error occured when processing the object.
+    - ``200`` if the request was successful.
+
+Returns:
+    If the request is successful, the server will send back a `relationship object`_ under JSON format.
+
+Exemple:
+    Suppose that an object of type ``warrior`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. We also suppose that its relationship ``kitties`` possesses one targets having id ``<id1>``. Then::
+        
+        >> POST /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/kitties {'data': [{'id': <id2>}, {'id': <id3>}]}
+        200
+        {
+            "data": {
+                "self": "/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/kitties", "data": [{
+                    "id": <id1>, 
+                    "type": "cat", 
+                    "href": "/api/store/resources/<id1>"
+                }, {
+                    "id": <id2>, 
+                    "type": "cat", 
+                    "href": "/api/store/resources/<id2>"
+                }, {
+                    "id": <id3>, 
+                    "type": "cat", 
+                    "href": "/api/store/resources/<id3>"
+                }]
+            }
+        }
+
+
+Deleting a relationship
+^^^^^^^^^^^^^^^^^^^^^^^
+
+To fetch some targets from a ``to-many`` relationship, you must execute a ``DELETE`` request on ``/api/store/resources/{id}/{rel}`` where ``id`` is the ID of the ressource possessing the relationship you want to access, and ``rel`` the name of the relationship. The content of your request is a JSON object containing the ids of the objects you want to remove from the relationship.
+
+Error code:
+    - ``404`` if ``id`` corresponds to no known objects or ``rel`` is an invalid relationship name.
+    - ``403`` if the relationship is not a too-many relationship
+    - ``400`` if an error occured when processing the object.
+    - ``200`` if the request was successful.
+
+Returns:
+    If the request is successful, the server will send back a `relationship object`_ under JSON format.
+
+Exemple:
+    Suppose that an object of type ``warrior`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. We also suppose that its relationship ``kitties`` possesses three targets having ids ``<id1>``, ``<id2>`` and ``<id3>``. Then::
+        
+        >> DELETE /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/kitties {'data': [{'id': <id1>}, {'id': <id3>}]}
+        200
+        {
+            "data": {
+                "self": "/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/kitties", "data": [{
+                    "id": <id2>, 
+                    "type": "cat", 
+                    "href": "/api/store/resources/<id2>"
+                }]
+            }
+        }
+
+    ::
+
+        >> DELETE /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/weapon
+        403
+        {
+            "errors": [{
+                "code": "BAD_RELATIONSHIP", 
+                "title": "a relationship is invalid", 
+                "status": "403", 
+                "detail": "to-one relationships cannot be deleted"
+            }]
+        }
 
 .. _jsonapi: http://jsonapi.org/
 .. _resource objects: http://jsonapi.org/format/#document-resource-objects
