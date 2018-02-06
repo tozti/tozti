@@ -290,8 +290,15 @@ def test_storage_rel_delete_from_missing(tozti, db):
     uid_foo = add_object_get_id({"type": "rel02/foo", "attributes": {"foo": "foo"}, "relationships": {"members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
 
     resp = make_call("DELETE", "/store/resources/{}/does_not_exist".format(uid_foo), {'data':[{'id': uid_bar}]})
-    assert resp.status_code == 403
+    assert resp.status_code == 404
 
+@pytest.mark.extensions("rel02")
+def test_storage_rel_delete_from_nonexisting_resource(tozti, db):
+    uid_bar = add_object_get_id({"type": "rel02/bar", "attributes": {"bar": "bar"}})
+    uid_bar2 = add_object_get_id({"type": "rel02/bar", "attributes": {"bar": "bar"}})
+    uid_foo = add_object_get_id({"type": "rel02/foo", "attributes": {"foo": "foo"}, "relationships": {"members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
+
+    resp = make_call("DELETE", "/store/resources/{}/does_not_exist".format(uid_foo), {'data':[{'id': uid_bar}]})
     random_uid = uuid4().hex
     resp = make_call("DELETE", "/store/resources/{}/members".format(random_uid), {'data':[{'id': uid_bar}]})
     assert resp.status_code == 404

@@ -456,7 +456,7 @@ class Store:
             rel_obj = await self._sanitize_to_many(data, schema.to_many[rel])
         elif rel in schema.to_one:
             raise BadRelError('to-one relationships cannot be posted to', status=403)
-        elif rel in schema.to_many:
+        elif rel in schema.autos:
             raise BadRelError('auto relationships cannot be modified', status=403)
         else:
             raise BadRelError('unknown relationship: %s' % rel, status=404)
@@ -477,9 +477,14 @@ class Store:
         type_id = await self.typeof(id)
         schema = self._typecache[type_id]
 
-        if rel not in schema.to_many:
-            raise BadRelError('only to-many relationships support this operation', status=403)
-        types = schema.to_many[rel]
+        if rel in schema.to_many:
+            types = schema.to_many[rel]
+        elif rel in schema.to_one:
+            raise BadRelError('to-one relationships cannot be deleted', status=403)
+        elif rel in schema.autos:
+            raise BadRelError('auto relationships cannot be deleted', status=403)
+        else:
+            raise BadRelError('unknown relationship: %s' % rel, status=404)
         
         ids = await self._sanitize_to_many(data, types, ignore_missing_ids=True)
 
