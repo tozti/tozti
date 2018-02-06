@@ -208,7 +208,6 @@ Error code:
 
 Returns:
     If the request is successful, the server will send back a `resource object`_ under JSON format.
-    Otherwise, some precisions might be contained in an object under json format.
 
 Exemple:
     Suppose that an object of type ``user`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
@@ -221,7 +220,7 @@ Exemple:
               'type':'warrior',
               'attributes':{
                  'name':'Pierre',
-                 'honor': '9000'
+                 'honor': 9000
               },
               'relationships':{
                  'self':{
@@ -242,11 +241,11 @@ Exemple:
                  },
                  'kitties':{
                     'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
-                    'data':{
+                    'data':[{
                        'id':'6a4d05f1-f04a-4a94-923e-ad52a54456e6',
                        'type':'cat',
                        'href':'/api/store/resources/6a4d05f1-f04a-4a94-923e-ad52a54456e6'
-                    }
+                    }]
                  }
               },
               'meta':{
@@ -258,6 +257,67 @@ Exemple:
 
 Creating an object
 ------------------
+
+To create an object, you must execute a ``POST`` request on ``/api/store/resources`` where the body is a JSON object representing the object you want to send. The object must be encapsulated inside a `data` entry.  
+
+Error code:
+    - ``404`` if one of the object targetted by a relationship doesn't exists
+    - ``400`` if an error occured when processing the object. For exemple, if the json object which was sended is malformated, or if the body of the request is not JSON..
+    - ``200`` if the request was successful.
+
+Returns:
+    If the request is successful, the server will send back a `resource object`_ under JSON format.
+
+Exemple:
+    Suppose that an object of type ``user`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
+        
+        >> POST /api/store/resources {'data': {'type': 'warrior', 
+                        'attributes': {'name': Pierre, 'honor': 9000}, 
+                        'relationships': {
+                            'weapon': {'data': {'id': <id_weapon>}}, 
+                            'kitties': {'data': [{'id': <kitty_1_id>}]}
+                        }}}
+        200
+        {
+           'data':{
+              'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
+              'type':'warrior',
+              'attributes':{
+                 'name':'Pierre',
+                 'honor': 9000
+              },
+              'relationships':{
+                 'self':{
+                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/self',
+                    'data':{
+                       'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
+                       'type':'warrior',
+                       'href':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
+                    }
+                 },
+                 'weapon':{
+                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
+                    'data':{
+                       'id':'1bb2ff78-cefb-4ce1-b057-333f5baed577',
+                       'type':'weapon',
+                       'href':'/api/store/resources/1bb2ff78-cefb-4ce1-b057-333f5baed577'
+                    }
+                 },
+                 'kitties':{
+                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
+                    'data': [{
+                       'id':'6a4d05f1-f04a-4a94-923e-ad52a54456e6',
+                       'type':'cat',
+                       'href':'/api/store/resources/6a4d05f1-f04a-4a94-923e-ad52a54456e6'
+                    }]
+                 }
+              },
+              'meta':{
+                 'created':'2018-02-05T23:13:26',
+                 'last-modified':'2018-02-05T23:13:26'
+              }
+           }
+        }
 
 
 
