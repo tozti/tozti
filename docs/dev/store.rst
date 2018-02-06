@@ -9,6 +9,7 @@ encouraged to go take a look at their specification.
 Error format
 ============
 
+The format of the errors follows `jsonapi errors`_ 
 If a request raised an error, the server will send back a response with status code ``500``, ``404`` or ``400``. This response might send back a json object with an entry ``errors`` containing a list of json objects with the following properties:
 
 ``code``
@@ -24,7 +25,7 @@ If a request raised an error, the server will send back a response with status c
     More about this error. This entry might not be present.
 
 ``traceback``
-    Traceback of the error. This entry might not be present.
+    Traceback of the error. This entry might not be present and is included only if tozti is launched in dev mode.
 
 Concepts and Datastructures
 ===========================
@@ -210,7 +211,7 @@ Returns:
     If the request is successful, the server will send back a `resource object`_ under JSON format.
 
 Exemple:
-    Suppose that an object of type ``user`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
+    Suppose that an object of type ``warrior`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
         
         >> GET /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e
         200
@@ -269,7 +270,7 @@ Returns:
     If the request is successful, the server will send back a `resource object`_ under JSON format.
 
 Exemple:
-    Suppose that an object of type ``user`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
+    Suppose that an object of type ``warrior`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
         
         >> POST /api/store/resources {'data': {'type': 'warrior', 
                         'attributes': {'name': Pierre, 'honor': 9000}, 
@@ -319,6 +320,91 @@ Exemple:
            }
         }
 
+Editing an object
+------------------
+
+To edit an object, you must execute a ``PATCH`` request on ``/api/store/resources/{id}`` where ``id`` is the ID you want to update. The body of the request must be a JSON object representing the change you want to operate on the object. The object must be encapsulated inside a `data` entry.  
+Remark: you don't need to provide every entries.
+
+Error code:
+    - ``404`` if ``id`` corresponds to no known objects.
+    - ``400`` if an error occured when processing the object. For exemple, if the json object which was sended is malformated, or if the body of the request is not JSON..
+    - ``200`` if the request was successful.
+
+Returns:
+    If the request is successful, the server will send back a `resource object`_ under JSON format representing the object (after changes are applied). 
+
+Exemple:
+    We suppose the object with id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
+        
+        >> PATCH /api/store/resources {'data': {'type': 'warrior', 
+                        'attributes': {'name': Luc}, 
+                        'relationships': {
+                            'weapon': {'data': {'id': <id_weapon_more_powerfull>}}, 
+                        }}}
+        200
+        {
+           'data':{
+              'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
+              'type':'warrior',
+              'attributes':{
+                 'name':'Luc',
+                 'honor': 9000
+              },
+              'relationships':{
+                 'self':{
+                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/self',
+                    'data':{
+                       'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
+                       'type':'warrior',
+                       'href':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
+                    }
+                 },
+                 'weapon':{
+                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
+                    'data':{
+                       'id':'<id_weapon_more_powerfull>',
+                       'type':'weapon',
+                       'href':'/api/store/resources/<id_weapon_more_powerfull>'
+                    }
+                 },
+                 'kitties':{
+                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
+                    'data': [{
+                       'id':'6a4d05f1-f04a-4a94-923e-ad52a54456e6',
+                       'type':'cat',
+                       'href':'/api/store/resources/6a4d05f1-f04a-4a94-923e-ad52a54456e6'
+                    }]
+                 }
+              },
+              'meta':{
+                 'created':'2018-02-05T23:13:26',
+                 'last-modified':'2018-02-05T23:13:26'
+              }
+           }
+        }
+
+
+Deleting an object
+------------------
+
+To delet an object, you must execute a ``DELETE`` request on ``/api/store/resources/{id}`` where ``id`` is the ID you want to update. 
+Remark: you don't need to provide every entries.
+
+Error code:
+    - ``404`` if ``id`` corresponds to no known objects.
+    - ``200`` if the request was successful.
+
+Returns:
+    If the request is successful, the server will send back an empty JSON object.
+
+Exemple:
+    We suppose the object with id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
+        
+        >> DELETE /api/store/resources
+        200
+        {}
+
 
 
 .. _jsonapi: http://jsonapi.org/
@@ -326,3 +412,4 @@ Exemple:
 .. _UUIDv4: https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_(random)
 .. _jsonapi rel: http://jsonapi.org/format/#document-resource-object-relationships
 .. _JSON Schema: http://json-schema.org/
+.. _jsonapi errors: http://jsonapi.org/format/#error-objects 
