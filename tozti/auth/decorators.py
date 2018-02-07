@@ -7,44 +7,13 @@ from tozti.core_schemas import SCHEMAS
 This decorator is applied to any endpoint for which it is obligated to be
 logged in.
 
-The decorator modifies the req object by adding to it a new field "user"
+The decorator check if the user is connected (with the req.user field,
+created in the auth_middleware. It raises an error if no user is logged in
 """
 def restrict_known_user(func):
     def function_logged(req, *args, **kwargs):
-        app = req.app
-        storage = app['tozti-store']
-        
-        def user_exists(pred):
-            l = pred.split('=')
-            if l[0] != "uid":
-                return False
-            uid = l[1]
-            try:
-                user = storage.get(uid)
-                validate(user, SCHEMAS['user'])
-            except KeyError:
-                return False
-            except ValidationError:
-                return False
-            req['user'] = user
-            return True
-                
-        if not 'auth-token' in req.cookies:
-            raise LoginRequired()
-
-        token = req.cookies['auth-token']
-        mac = Macaroon.deserialize(token)
-        v = Verifier()
-        v.satisfy_general(user_exists)
-
-        verified = v.verify(
-            mac,
-            app.CONFIG['cookie']['private_key']
-        )
-
-        if not verified:
-            raise LoginRequired()
-        
+        if req.user == None:
+            raise LoginRequired() 
         return func(req, *args, **kwargs)
     return function_logged
     
