@@ -302,8 +302,7 @@ class Store:
             return_value['data'].append(await self._render_linkage(t))
         return return_value
 
-    @asyncio.coroutine
-    def _render_auto(self, id, rel, type_url, path):
+    async def _render_auto(self, id, rel, type_url, path):
         """Render a `reverse-of` to-many relationship object."""
 
         cursor = self._resources.find({'type': type_url,
@@ -311,8 +310,8 @@ class Store:
                                       {'_id': 1, 'type': 1})
         return_value = {'self': REL_URL(id, rel),
                         'data': []}
-        while (yield from cursor.fetch_next):
-            hit = cursor.next_object() 
+
+        async for hit in cursor:
             return_value['data'].append({'id': hit['_id'],
                                          'type': hit['type'],
                                          'href': RES_URL(hit['_id'])})
