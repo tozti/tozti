@@ -1,0 +1,18 @@
+// Import Bulma's core
+@import "~bulma/sass/utilities/all";
+
+// Custom colors
+$primary-invert: findColorInvert($primary);
+$link: $primary;
+$link-invert: $primary-invert;
+$link-focus-border: $primary;
+
+$text: $black;
+
+// Custom fonts
+$family-primary: $text-font;
+$size-normal: $size-6 * 0.98;
+
+// Import Bulma and Buefy styles
+@import "~bulma/bulma";
+@import "~buefy/src/scss/buefy";

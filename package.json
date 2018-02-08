@@ -18,6 +18,9 @@
     "url": "https://github.com/tozti/tozti/issues"
   },
   "homepage": "https://github.com/tozti/tozti#readme",
+  "dependencies": {
+    "buefy": "^0.6.3"
+  },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
