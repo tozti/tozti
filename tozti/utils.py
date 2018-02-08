@@ -203,7 +203,7 @@ class APIError(Exception):
 
 class NotJsonError(APIError):
     code = 'NOT_JSON'
-    title = "content type is not `application/json`"
+    title = "content type is not `application/vnd.api+json`"
     status = 400
 
 
