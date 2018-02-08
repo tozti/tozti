@@ -109,7 +109,7 @@ class Store:
         self._resources = self._client.tozti.resources
         self._typecache = types
 
-    async def _sanitize_linkage(self, link, types):
+    async def _sanitize_linkage(self, link, types, *, ignore_missing_ids=False):
         """Verify that a given linkage is valid.
 
         Checks if the target exists and if the given type (if any) is valid.
@@ -120,7 +120,10 @@ class Store:
         try:
             type_url = await self.typeof(id)
         except NoResourceError:
-            raise BadRelError('linked resource %s does not exist' % id)
+            if ignore_missing_ids:
+                return id
+            else:
+                raise BadRelError('linked resource %s does not exist' % id)
         #FIXME: this error leaks type information, check if user can read
         # linked resource first
         if 'type' in link and link['type'] != type_url:
@@ -140,7 +143,7 @@ class Store:
             raise BadRelError('invalid relationship object: %s' % err.message)
         return await self._sanitize_linkage(rel_obj['data'], types)
 
-    async def _sanitize_to_many(self, rel_obj, types):
+    async def _sanitize_to_many(self, rel_obj, types, *, ignore_missing_ids=False):
         """Verify the relationship object and return the target UUID list."""
 
         try:
@@ -150,7 +153,7 @@ class Store:
 
         return_value = []
         for link in rel_obj['data']:
-            return_value.append(await self._sanitize_linkage(link, types))
+            return_value.append(await self._sanitize_linkage(link, types, ignore_missing_ids=ignore_missing_ids))
         return return_value
 
     async def _sanitize_attr(self, attr_obj, attr_schema):
@@ -453,7 +456,7 @@ class Store:
             rel_obj = await self._sanitize_to_many(data, schema.to_many[rel])
         elif rel in schema.to_one:
             raise BadRelError('to-one relationships cannot be posted to', status=403)
-        elif rel in schema.to_many:
+        elif rel in schema.autos:
             raise BadRelError('auto relationships cannot be modified', status=403)
         else:
             raise BadRelError('unknown relationship: %s' % rel, status=404)
@@ -469,6 +472,28 @@ class Store:
         if res.matched_count != 1:
             # this should never happen
             raise NoResourceError(id=id)
+
+    async def rel_delete(self, id, rel, data):
+        type_id = await self.typeof(id)
+        schema = self._typecache[type_id]
+
+        if rel in schema.to_many:
+            types = schema.to_many[rel]
+        elif rel in schema.to_one:
+            raise BadRelError('to-one relationships cannot be deleted', status=403)
+        elif rel in schema.autos:
+            raise BadRelError('auto relationships cannot be deleted', status=403)
+        else:
+            raise BadRelError('unknown relationship: %s' % rel, status=404)
+        
+        ids = await self._sanitize_to_many(data, types, ignore_missing_ids=True)
+
+        res = await self._resources.update_one(
+            {'_id': id},
+            {'$pullAll': {
+                'rels.%s' % rel: ids
+            }}
+        )
 
     async def close(self):
         """Close the connection to the MongoDB server."""
