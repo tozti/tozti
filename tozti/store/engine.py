@@ -357,7 +357,7 @@ class Store:
 
         res = await self.find_one(id)
         return res['type']
-        
+
     async def get(self, id):
         """Query the DB for a resource.
 

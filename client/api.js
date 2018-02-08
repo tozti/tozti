@@ -4,8 +4,12 @@
 
 const API = {}
 
-API.origin = window.location.origin + '/api'
-API.resourceURL = id => API.origin + '/ressources/' + id
+API.origin = window.location.origin + '/api/store'
+
+// API endpoints
+API.resourcesURL = API.origin + '/resources'
+API.resourceURL = id => API.resourcesURL + '/' + id
+API.typeURL = type => API.origin + '/types/' + id
 
 const config = {
   mode: 'same-origin',
@@ -14,17 +18,16 @@ const config = {
   credentials: 'same-origin',
 
   headers: new Headers({
-    'Content-type': 'application/vnd.api+json'
+    'Content-type': 'application/vnd.api+json',
     'Accept': 'application/vnd.api+json'
   })
 }
 
-// the fetch() Promise always resolves to the response,
-// whether it was successful or not
-
-request(url, config) {
+function request(url, config) {
+  // the fetch() Promise always resolves to the response,
+  // whether it was successful or not
   return fetch(url, config)
-    .then(res => res.ok ? Promise.resolve(res) : Promise.error(res))
+    .then(res => res.ok ? Promise.resolve(res) : Promise.reject(res))
 }
 
 API.post = url => {

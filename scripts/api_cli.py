@@ -25,12 +25,13 @@ API = 'http://127.0.0.1:8080/api'
 
 
 def check_call(meth, path, json=None):
-    resp = requests.request(meth, API + path, json=json)
+    resp = requests.request(meth, API + path, json=json,
+            headers = { 'content-type': 'application/vnd.api+json' })
     ans = resp.json()
     if 'errors' not in ans:
         return ans
     print('ERROR: %s (status: %s)' % (ans['errors'][0]['code'], resp.status_code))
-    print(ans['errors'][0]['detail'])
+    print(ans['errors'][0].get('detail'))
 
 def create_resource(**kwargs):
     ans = check_call('post', '/store/resources', json={'data': kwargs})

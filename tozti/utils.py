@@ -165,7 +165,7 @@ def json_response(data, **kwargs):
 
 def validate(inst, schema):
     """Validate data against a JsonSchema."""
-    
+
     return jsonschema.validate(inst, schema, cls=jsonschema.Draft4Validator,
                                format_checker=jsonschema.FormatChecker())
 

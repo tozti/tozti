@@ -1,8 +1,8 @@
 <template>
   <div>
     <b-collapse :open="true" animation="fadeInDown">
-      <h3 slot="trigger">workspace {{ attributes.name }}</h3>
-      <nav v-if="resource.loaded">
+      <h3 slot="trigger">workspace {{ id }}</h3>
+      <nav v-if="resource">
         <router-link
           v-for="{ name, route, props } in workspaceItems"
           :to="{ name: route, params: { id } }"
@@ -10,6 +10,7 @@
           active-class="active">
           <i v-if="props.icon" :class="'nc-icon ' + props.icon"></i>
           {{ name }}
+          {{ resource.attributes.name }}
         </router-link>
       </nav>
     </b-collapse>
@@ -17,13 +18,14 @@
 </template>
 
 <script>
-  import { resourceMixin } from '../mixins'
-
   export default {
-    mixins: [ resourceMixin('core/workspace') ],
+    props: {
+      id: String,
+    },
 
     data: _ => ({
-      workspaceItems: tozti.workspaceMenuItems
+      workspaceItems: tozti.workspaceMenuItems,
+      resource: null
     })
   }
 </script>

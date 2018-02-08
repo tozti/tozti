@@ -54,6 +54,8 @@ export let tozti = window.tozti = {
 
   App,
 
+  uid: 'bc85c833-33d6-4dcb-87a9-2c1e5128dfba',
+
   routes: [
     { name: 'home',      path: '/',      component: Dashboard },
     { name: 'workspace', path: '/w/:id', component: Summary },

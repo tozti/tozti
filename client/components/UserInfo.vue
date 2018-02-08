@@ -1,14 +1,24 @@
 <template>
-  <a href="#" class="logged">
+  <a v-if="user" href="#" class="logged">
     <div class="avatar">
     </div>
-    User
+    {{ user.attributes.name }}
     <i class="material-icons">arrow_drop_down</i>
   </a>
 </template>
 
 <script>
   export default {
+    mounted() {
+      tozti
+        .store.get(tozti.uid)
+        .then(user => {
+          this.user = user
+        })
+    },
 
+    data: _ => ({
+      user: null
+    })
   }
 </script>

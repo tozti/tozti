@@ -11,5 +11,6 @@ package-lock.json
 .vscode
 docs/_build
 extensions/*
+data/
 
 !tests/extensions/*/dist/
