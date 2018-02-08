@@ -1,10 +1,22 @@
-// TODO(flupe): fill in the computed attributes & relationships
-//              ideally set up an alternative to VueX
-export let resourceMixin = {
-  props: { id: Number },
-  data() {
-    return {
-      resource: tozti.store.get(this.id)
+const resourceMixins = {}
+
+export function resourceMixin(type)  {
+  if (Object.keys(resourceMixins).includes(type)) {
+    return resourceMixins[type]
+  }
+
+  return resourceMixins[type] = {
+    props: { id: Number },
+
+    computed: {
+      attributes() { return this.resource.attributes },
+      relationships() { return this.resource.relationships },
+    },
+
+    data() {
+      return {
+        resource: tozti.store.get(type, this.id)
+      }
     }
   }
 }

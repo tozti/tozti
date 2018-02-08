@@ -1,8 +1,8 @@
 <template>
   <div>
-    <b-collapse :open="false" animation="fadeInDown">
-      <h3 slot="trigger">workspace {{ id }}</h3>
-      <nav>
+    <b-collapse :open="true" animation="fadeInDown">
+      <h3 slot="trigger">workspace {{ attributes.name }}</h3>
+      <nav v-if="resource.loaded">
         <router-link
           v-for="{ name, route, props } in workspaceItems"
           :to="{ name: route, params: { id } }"
@@ -20,10 +20,8 @@
   import { resourceMixin } from '../mixins'
 
   export default {
-    props: {
-      id: Number,
-    },
-    // mixins: [ resourceMixin ],
+    mixins: [ resourceMixin('core/workspace') ],
+
     data: _ => ({
       workspaceItems: tozti.workspaceMenuItems
     })

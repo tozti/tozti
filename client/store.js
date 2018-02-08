@@ -1,3 +1,5 @@
+import api from './api'
+
 // TODO(flupe): read about WeakMaps to see if it can help freeing memory
 
 // contains the unaltered server data
@@ -11,7 +13,7 @@ const store = {
   schemas: {},
 
   /**
-   * Finds a resource in the store.
+   * Finds a resource in the store by its id.
    * The type of the resource (its schema) MUST be specified
    * As it allows for resource initialization until the server responds.
    *
@@ -23,25 +25,44 @@ const store = {
       return storage.get(id)
     }
     else {
-      return store.fetch(type, id)
+      const schema = store.schemas[type]
+      const proxied = createSchemaInstance(type, schema)
+
+      proxied.loaded = false
+
+      storage.set(id, proxied)
+      store.fetch(id)
+      return proxied
     }
   },
 
-  fetch(type, id) {
-    const schema = store.schemas[type]
-    const proxied = createSchemaInstance(schema)
 
-    storage.set(id, proxied)
+  /**
+   * Fetch the resource matching the given uuid
+   * (/api/resources/id)
+   */
+  fetchResource(uuid) {
+    return api
+      .get(api.resourceURL(uuid))
+      .then(res => {
+        let data = res.json().data
+        saveResource(data)
+      })
+  },
 
-    /**
-     * TODO(flupe): send GET request
-     * - if it succeeds, update cache
-     *   (which should automatically update storage)
-     * - if it fails, then what?
-     *   - maybe remove item from storage
-     */
-
-    return proxied
+  /**
+   * Fetch every resource matching the given type
+   * (/api/type/[type])
+   */
+  fetchByType(type) {
+    return api
+      .get(API.origin + '/type/' + type)
+      .then(res => {
+        let data = res.json().data
+        if (data !== null)
+          data.forEach(resource => saveResource(data))
+        return data
+      })
   },
 
   registerSchema(name, schema) {
@@ -79,6 +100,13 @@ store.registerSchema('core/group', {
       type: 'core/user',
     }
   }
+})
+
+store.registerSchema('core/workspace', {
+  attributes: {
+    name: { type: String },
+  },
+  relationships: {}
 })
 
 /**
@@ -137,3 +165,10 @@ export function createSchemaInstance({ attributes = {}, relationships = {} }) {
   return data
 }
 
+function saveResource(resource) {
+  cache.set(resource.id, resource)
+
+  function updateAttribute() {
+
+  }
+}

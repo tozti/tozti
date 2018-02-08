@@ -6,6 +6,7 @@ import Taxonomy  from './components/Taxonomy.vue'
 import Summary from './components/Summary.vue'
 
 import store from './store'
+import api from './api'
 
 Vue.use(Buefy)
 
@@ -49,6 +50,8 @@ export function polymorphic_component(name, fallback) {
 
 export let tozti = window.tozti = {
   store,
+  api,
+
   App,
 
   routes: [

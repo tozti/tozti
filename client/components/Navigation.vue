@@ -25,7 +25,7 @@
     components: { WorkspaceMenu },
     data: _ => ({
       globalMenuItems: tozti.globalMenuItems,
-      workspaces: [0, 0, 0]
+      workspaces: [0, 1, 2]
     })
   }
 </script>
