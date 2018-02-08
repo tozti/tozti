@@ -23,7 +23,7 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from tozti.store import (UUID_RE, logger, NoResourceError, BadAttrError,
-                         NoRelError, BadRelError)
+                         NoRelError, BadRelError, BadTypeError)
 from tozti.utils import BadDataError, ValidationError, validate
 
 
@@ -494,6 +494,17 @@ class Store:
                 'rels.%s' % rel: ids
             }}
         )
+
+    async def type_get(self, type):
+        logger.debug('Querying type %s' % type)
+        if type not in self._typecache:
+            raise BadTypeError(type=type)
+        
+        cursor = self._resources.find({'type': type})
+        ret = []
+        async for c in cursor:
+            ret.append(await self._render(c))
+        return ret
 
     async def close(self):
         """Close the connection to the MongoDB server."""
