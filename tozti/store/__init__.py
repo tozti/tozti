@@ -75,7 +75,7 @@ router = RouterDef()
 resources = router.add_route('/resources')
 resources_single = router.add_route('/resources/{id:%s}' % UUID_RE)
 relationship = router.add_route('/resources/{id:%s}/{rel}' % UUID_RE)
-types = router.add_route('/types/{type:%s}' % TYPE_RE)
+types = router.add_route('/by-type/{type:%s}' % TYPE_RE)
 
 async def get_json_from_request(req):
     if req.content_type != 'application/json':
@@ -169,7 +169,7 @@ async def relationship_delete(req):
 
 @types.get
 async def types_get(req):
-    """Request handler for ``GET /api/store/types/{type}``."""
+    """Request handler for ``GET /api/store/by-type/{type}``."""
     type = req.match_info['type']
 
     return json_response({'data': await req.app['tozti-store'].type_get(type)})

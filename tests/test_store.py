@@ -309,7 +309,7 @@ def test_storage_type_get(tozti, db):
     uid_bar2 = add_object_get_id({"type": "rel02/bar", "attributes": {"bar": "bar"}})
     uid_foo = add_object_get_id({"type": "rel02/foo", "attributes": {"foo": "foo"}, "relationships": {"members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
 
-    resp = make_call("GET", "/store/types/rel02/bar")
+    resp = make_call("GET", "/store/by-type/rel02/bar")
     data = resp.json()['data']
     ids = {d['id'] for d in data}
 
@@ -319,18 +319,18 @@ def test_storage_type_get(tozti, db):
 def test_storage_type_get_empty(tozti, db):
     uid_foo = add_object_get_id({"type": "rel02/foo", "attributes": {"foo": "foo"}, "relationships": {"members": {"data": []}}})
 
-    resp = make_call("GET", "/store/types/rel02/bar")
+    resp = make_call("GET", "/store/by-type/rel02/bar")
     data = resp.json()['data']
 
     assert len(data) == 0
 
 @pytest.mark.extensions("rel02")
 def test_storage_type_get_nonexistent(tozti, db):
-    resp = make_call("GET", "/store/types/")
+    resp = make_call("GET", "/store/by-type/")
     assert resp.status_code == 404
 
-    resp = make_call("GET", "/store/types/nonexistent")
+    resp = make_call("GET", "/store/by-type/nonexistent")
     assert resp.status_code == 404
 
-    resp = make_call("GET", "/store/types/a/bit/long")
+    resp = make_call("GET", "/store/by-type/a/bit/long")
     assert resp.status_code == 404
