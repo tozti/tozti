@@ -20,11 +20,10 @@ def auth_middleware(req, handler):
         uid = l[1]
         try:
             user = storage.get(uid)
-            validate(user, SCHEMAS['user'])
+            if user["type"] != "core/user":
+                return False
         except KeyError:
-            return False
-        except ValidationError:
-            return False
+                    return False
         req['user'] = user
         return True
             
