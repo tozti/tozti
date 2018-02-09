@@ -23,7 +23,7 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from tozti.store import (UUID_RE, logger, NoResourceError, BadAttrError,
-                         NoRelError, BadRelError)
+                         NoRelError, BadRelError, BadTypeError)
 from tozti.utils import BadDataError, ValidationError, validate
 
 
@@ -302,8 +302,7 @@ class Store:
             return_value['data'].append(await self._render_linkage(t))
         return return_value
 
-    @asyncio.coroutine
-    def _render_auto(self, id, rel, type_url, path):
+    async def _render_auto(self, id, rel, type_url, path):
         """Render a `reverse-of` to-many relationship object."""
 
         cursor = self._resources.find({'type': type_url,
@@ -311,8 +310,8 @@ class Store:
                                       {'_id': 1, 'type': 1})
         return_value = {'self': REL_URL(id, rel),
                         'data': []}
-        while (yield from cursor.fetch_next):
-            hit = cursor.next_object() 
+
+        async for hit in cursor:
             return_value['data'].append({'id': hit['_id'],
                                          'type': hit['type'],
                                          'href': RES_URL(hit['_id'])})
@@ -494,6 +493,17 @@ class Store:
                 'rels.%s' % rel: ids
             }}
         )
+
+    async def type_get(self, type):
+        logger.debug('Querying type %s' % type)
+        if type not in self._typecache:
+            raise BadTypeError(type=type)
+        
+        cursor = self._resources.find({'type': type}, ['_id'])
+        ret = []
+        async for hit in cursor:
+            ret.append(await self._render_linkage(hit['_id']))
+        return ret
 
     async def close(self):
         """Close the connection to the MongoDB server."""
