@@ -1,3 +1,5 @@
+import pytest
+from tests.commons import add_object_get_id
 
 def test_macaroon():
 
@@ -19,7 +21,7 @@ def test_macaroon():
     ({"login": "Alice", "passwd": None}, False), # no passwd
     ({"login": None, "passwd": "passwd_a"}, False) # no login
     ])
-def test_login_post(db, json):
+def test_login_post(db, json, expected):
     uid_A = add_object_get_id({"type": "core/user", "attributes": {"login": "Alice", "passwd": "passwd_a"}})
     uid_B = add_object_get_id({"type": "core/user", "attributes": {"login": "Bob", "passwd": "passwd_b"}})
     req = make_call("POST", "/auth/login", json=json)
