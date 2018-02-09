@@ -26,9 +26,9 @@ import logbook
 UUID_RE = '-'.join('[0-9a-fA-F]{%d}' % i for i in (8, 4, 4, 4, 12))
 
 # Regex for validating whether a string is a valid type name. 
-# Here, valid type names are arbitrary strings with at most one '/' character
-# and no '{' or '}'.
-TYPE_RE = '([^{}/]+/)?[^{}/]+' 
+# Here, valid type names are arbitrary alphanumeric strings
+# with '-', '_' and at most one '/'
+TYPE_RE = '([\w-]+/)?[\w-]+' 
 
 logger = logbook.Logger('tozti.store')
 
@@ -171,6 +171,9 @@ async def relationship_delete(req):
 async def types_get(req):
     """Request handler for ``GET /api/store/by-type/{type}``."""
     type = req.match_info['type']
+    
+    from pprint import pprint
+    pprint(req.GET)
 
     return json_response({'data': await req.app['tozti-store'].type_get(type)})
 

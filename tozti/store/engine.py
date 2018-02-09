@@ -499,10 +499,10 @@ class Store:
         if type not in self._typecache:
             raise BadTypeError(type=type)
         
-        cursor = self._resources.find({'type': type})
+        cursor = self._resources.find({'type': type}, ['_id'])
         ret = []
-        async for c in cursor:
-            ret.append(await self._render(c))
+        async for hit in cursor:
+            ret.append(await self._render_linkage(hit['_id']))
         return ret
 
     async def close(self):
