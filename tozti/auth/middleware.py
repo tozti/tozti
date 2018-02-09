@@ -1,15 +1,14 @@
 from aiohttp import web
 
-"""
-Middleware that check if a user is logged in the session, and
-if this is the case, set its user object in the req object
-
-Usage : in any function, to get access to the current user, juste
-use req.user
-"""
-
 @web.middleware
 def auth_middleware(req, handler):
+    """
+    Middleware that check if a user is logged in the session, and
+    if this is the case, set its user object in the req object
+
+    Usage : in any function, to get access to the current user, juste
+    use req.user
+    """
     app = req.app
     storage = app['tozti-store']
 
@@ -23,7 +22,7 @@ def auth_middleware(req, handler):
             if user["type"] != "core/user":
                 return False
         except KeyError:
-                    return False
+            return False
         req['user'] = user
         return True
             
