@@ -4,12 +4,16 @@
 
 const API = {}
 
-API.origin = window.location.origin + '/api/store'
+API.origin = window.location.origin + '/api'
 
-// API endpoints
-API.resourcesURL = API.origin + '/resources'
-API.resourceURL = id => API.resourcesURL + '/' + id
-API.typeURL = type => API.origin + '/types/' + id
+API.endpoints = {
+  resources: API.origin + '/store/resources',
+  types: API.origin + '/types',
+  me: API.origin + '/store/me',
+}
+
+API.resourceURL = id => API.endpoints.resources + '/' + id
+API.typeURL = type => API.endpoints.types + '/' + type
 
 const config = {
   mode: 'same-origin',
@@ -17,6 +21,7 @@ const config = {
   // allow the request to send & receive cookies
   credentials: 'same-origin',
 
+  // conforming to JSON API
   headers: new Headers({
     'Content-type': 'application/vnd.api+json',
     'Accept': 'application/vnd.api+json'

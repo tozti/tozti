@@ -41,7 +41,7 @@ some modules::
   logs.
 
 We define a logger, which will enable us to log informations::
-    
+
     logger = logbook.Logger("tozti-routing")
 
 Then, we create an empty router::
@@ -95,11 +95,7 @@ As a convention, all static assets must be put inside a folder ``dist`` inside
 your extension folder. Let's create a file called ``index.js`` inside
 ``extension-name/dist/``:
 
-.. code-block:: javascript
-
-  tozti.store.commit('registerWidget', {
-    template: '<div class="uk-placeholder">A widget coming directly from our extension! :)</div>'
-  })
+TODO.
 
 As you might have guessed, we need to inform *tozti* of the existence of this
 file, inside ``MANIFEST``::

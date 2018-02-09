@@ -1,9 +1,11 @@
 import Buefy from 'buefy'
+import Vue from 'vue'
 
 import App       from './components/App.vue'
 import Dashboard from './components/Dashboard.vue'
 import Taxonomy  from './components/Taxonomy.vue'
 import Summary from './components/Summary.vue'
+
 
 import store from './store'
 import api from './api'

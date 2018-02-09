@@ -2,11 +2,9 @@ import api from './api'
 
 // TODO(flupe): read about WeakMaps to see if it can help freeing memory
 
-// contains the unaltered server data
-const cache = new Map()
-
 // contains the proxied resources
 const storage = new Map()
+const pending = new Map()
 
 const store = {
 
@@ -23,6 +21,9 @@ const store = {
     if (storage.has(id)) {
       return Promise.resolve(storage.get(id))
     }
+    else if (pending.has(id)) {
+      return pending.get(id)
+    }
     else {
       return store.fetchResource(id)
     }
@@ -36,7 +37,7 @@ const store = {
    * @param {string} id - The uuid of the queried resource.
    */
   fetchResource(id) {
-    return api
+    const promise = api
       .get(api.resourceURL(id))
       .then(res => res.json())
       .then(({ data }) => {
@@ -52,6 +53,16 @@ const store = {
           return proxy
         }
       })
+
+    pending.set(id, promise)
+
+    // maybe move this inside the promise definition.
+    // note that this is not very robust to other type of queries.
+    promise.finally(_ => {
+      pending.delete(id)
+    })
+
+    return promise
   },
 
 

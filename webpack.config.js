@@ -92,6 +92,7 @@ module.exports = {
   },
   externals: {
     vue: 'Vue',
-    tozti: 'tozti'
+    tozti: 'tozti',
+    buefy: 'Buefy'
   }
 }
