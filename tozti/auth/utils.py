@@ -30,6 +30,12 @@ class LoginRequired(tozti.utils.APIError):
     detail = 'You must be logged to do this request'
     status = 401
 
+class LoginForbidden(tozti.utils.APIError):
+    code = 'Forbidden'
+    title = 'Forbidden request'
+    detail = 'You must not be logged to do this request'
+    status = 401
+
 class UnauthorizedRequest(tozti.utils.APIError):
     code = 'Unauthorized'
     title = 'Unauthorized request'

@@ -22,6 +22,8 @@ from pysodium import (
     crypto_pwhash_scryptsalsa208sha256_str as pwhash_str,
     crypto_pwhash_scryptsalsa208sha256_str_verify as pwhash_verify)
 
+import tozti
+
 from tozti.auth.utils import BadPasswordError, create_macaroon
 from tozti.utils import (RouterDef, NotJsonError, BadJsonError, json_response)
 
@@ -35,6 +37,7 @@ is_logged = router.add_route('/is_logged')
 create_user = router.add_route('/create_user')
 
 @login.post
+@decorators.restrict_not_logged_in
 async def login_post(req):
     if req.content_type != 'application/json':
         raise NotJsonError()
@@ -61,6 +64,40 @@ async def login_post(req):
     
 @is_logged.get
 @decorators.restrict_known_user
-def is_logged(req):
+async def is_logged(req):
     return json_response({'logged':True})
+
+@create_user.post
+async def create_user(req):
+
+    opslimit = 500
+    memlimit = 500
+    
+    if req.content_type != 'application/json':
+        raise NotJsonError()
+    try:
+        data = await req.json()
+        login = data['login']
+        name = data['name']
+        passwd = data['passwd']
+        mail = data['email']
+    except JSONDecodeError:
+        raise BadJsonError()
+    except IndexError:
+        raise BadJsonError()
+
+    uid_user = await req.app['tozti-store'].create({'type':'core/user', 'attributes':{
+    	'name':name, 'login':login, 'email':email
+    }})
+    uid_hash = await req.app['tozti-store'].create({'type':'core/user_password', 'attributes':{
+	'login':login, 'hash':pwhash_str(passwd, opslimit=opslimit, memlimit=memlimit)
+   }})
+
+    rep = {'created': True}
+
+    if not tozti.PRODUCTION:
+        rep['uid-user'] = uid
+        
+    ans = json_response(rep)
+    return ans
 
