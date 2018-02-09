@@ -1,29 +1,47 @@
 <template>
   <div>
-    <div uk-sticky class="uk-navbar-container">
-        <div class="uk-container">
-          <nav uk-navbar>
-            <div class="uk-navbar-left">
-              <a href="/" class="uk-navbar-item uk-logo">
-                tozti
-              </a>
-            </div>
-            <div class="uk-navbar-right" style="margin-right: 0;">
-              <notification-center></notification-center>
-            </div>
-          </nav>
-        </div>
-    </div>
-    <router-view></router-view>
+    <header class="main-header">
+      <section class="branding">
+        <a href="#"><img src="~assets/img/logo.svg" alt="tozti"></a>
+      </section>
+
+      <section class="search">
+        <label for="search-field">
+          <i class="nc-icon nc-zoom-2"></i>
+        </label>
+        <input type="text" id="search-field" placeholder="Ne pas utiliser.">
+      </section>
+
+      <section class="user">
+        <a href="#" class="notifications">
+          <i class="nc-icon nc-bell-53"></i>
+        </a>
+
+        <a href="#" class="logged">
+          <div class="avatar">
+          </div>
+          Romain
+          <i class="material-icons">arrow_drop_down</i>
+        </a>
+      </section>
+    </header>
+
+    <navigation></navigation>
+
+    <main class="main-content">
+      <router-view></router-view>
+    </main>
   </div>
 </template>
 
 <script>
   import NotificationCenter from './NotificationCenter.vue'
+  import Navigation from './Navigation.vue'
 
   export default {
     components: {
-      NotificationCenter
+      NotificationCenter,
+      Navigation,
     }
   }
 </script>

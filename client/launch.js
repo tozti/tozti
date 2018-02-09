@@ -1,3 +1,8 @@
+import Vue from 'vue'
+import Buefy from 'buefy'
+
+Vue.use(Buefy)
+
 const app = window.app = new Vue({
   el: '#app',
 
@@ -8,7 +13,7 @@ const app = window.app = new Vue({
     routes: tozti.routes
   }),
 
-  render: h => h(tozti.components.App)
+  render: h => h(tozti.App)
 })
 
 // we still want to give the possibility for modules

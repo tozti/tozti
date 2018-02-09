@@ -1,0 +1,3 @@
+MANIFEST={
+    'includes': ['build.js']
+}
