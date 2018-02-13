@@ -18,9 +18,11 @@
 
 from json import JSONDecodeError
 
-from pysodium import (
-    crypto_pwhash_scryptsalsa208sha256_str as pwhash_str,
-    crypto_pwhash_scryptsalsa208sha256_str_verify as pwhash_verify)
+from nacl.pwhash import (
+    str as pwhash_str,
+    verify as pwhash_verify)
+
+from nacl.exceptions import InvalidkeyError as InvalidkeyError
 
 import tozti
 
@@ -51,11 +53,13 @@ async def login_post(req):
         raise BadJsonError()
 
     hash_string = await req.app['tozti-store'].hash_by_login(login)
+    print(hash_string)
     hash = str.encode(hash_string)
+    print(hash)
     user_uid = await req.app['tozti-store'].user_uid_by_login(login)
     try:
-        pwhash_verify(hash, passwd)
-    except ValueError:
+        pwhash_verify(hash, str.encode(passwd))
+    except InvalidkeyError:
         raise BadPasswordError()
         
     ans = json_response({'logged': True})
@@ -71,8 +75,8 @@ async def is_logged(req):
 @create_user.post
 async def create_user(req):
 
-    opslimit = 50000
-    memlimit = 50000
+    opslimit = 1000000
+    memlimit = 1000000
     
     if req.content_type != 'application/json':
         raise NotJsonError()
@@ -90,14 +94,17 @@ async def create_user(req):
     uid_user = await req.app['tozti-store'].create({'data':{'type':'core/user', 'attributes':{
     	'name':name, 'login':login, 'email':email
     }}})
+    hash = pwhash_str(str.encode(passwd))
     uid_hash = await req.app['tozti-store'].create({'data':{'type':'core/user_password', 'attributes':{
-	'login':login, 'hash':(pwhash_str(passwd, opslimit=opslimit, memlimit=memlimit)).decode()
+	'login':login, 'hash':hash.decode()
     }}})
 
     rep = {'created': True}
 
     if not tozti.PRODUCTION:
         rep['uid-user'] = uid_user
+        rep['hash'] = str(hash)
+        rep['hash_decode'] = hash.decode()
         
     ans = json_response(rep)
     return ans

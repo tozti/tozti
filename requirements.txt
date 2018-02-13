@@ -6,4 +6,4 @@ motor==1.2.0
 jsonschema==2.6.0
 yarl==0.18.0
 pymacaroons==0.12.0
-pysodium==0.6.15
+pynacl==1.2.1
