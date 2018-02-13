@@ -47,9 +47,11 @@ POST_SCHEMA = {
                 'relationships': { 'type': 'object' },
             },
             'required': ['type', 'attributes'],
+            'additionalProperties': False,
         },
     },
     'required': ['data'],
+    'additionalProperties': False,
 }
 
 PATCH_SCHEMA = {
@@ -63,9 +65,11 @@ PATCH_SCHEMA = {
                 'attributes': { 'type': 'object' },
                 'relationships': { 'type': 'object' },
             },
+            'additionalProperties': False,
         },
     },
     'required': ['data'],
+    'additionalProperties': False,
 }
 
 
@@ -79,9 +83,11 @@ REL_TO_ONE_SCHEMA = {
                 'type': { 'type': 'string', 'format': 'uri' },
             },
             'required': ['id'],
+            'additionalProperties': False,
         },
     },
     'required': ['data'],
+    'additionalProperties': False,
 }
 
 
@@ -97,10 +103,12 @@ REL_TO_MANY_SCHEMA = {
                     'type': { 'type': 'string', 'format': 'uri' },
                 },
                 'required': ['id'],
+                'additionalProperties': False,
             },
         },
     },
     'required': ['data'],
+    'additionalProperties': False,
 }
 
 
