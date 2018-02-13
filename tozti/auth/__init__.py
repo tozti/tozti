@@ -50,15 +50,16 @@ async def login_post(req):
     except IndexError:
         raise BadJsonError()
 
-    (uid, hash) = await req.app['tozti-store'].hash_by_login(login)
-
+    hash_string = await req.app['tozti-store'].hash_by_login(login)
+    hash = str.encode(hash_string)
+    user_uid = await req.app['tozti-store'].user_uid_by_login(login)
     try:
         pwhash_verify(hash, passwd)
     except ValueError:
         raise BadPasswordError()
         
     ans = json_response({'logged': True})
-    mac = create_macaroon({'login': login, 'uid': uid})
+    mac = create_macaroon({'login': login, 'uid': str(user_uid)})
     ans.set_cookie('auth-token', mac.serialize())
     return ans
     
@@ -70,8 +71,8 @@ async def is_logged(req):
 @create_user.post
 async def create_user(req):
 
-    opslimit = 500
-    memlimit = 500
+    opslimit = 50000
+    memlimit = 50000
     
     if req.content_type != 'application/json':
         raise NotJsonError()
@@ -80,23 +81,23 @@ async def create_user(req):
         login = data['login']
         name = data['name']
         passwd = data['passwd']
-        mail = data['email']
+        email = data['email']
     except JSONDecodeError:
         raise BadJsonError()
     except IndexError:
         raise BadJsonError()
 
-    uid_user = await req.app['tozti-store'].create({'type':'core/user', 'attributes':{
+    uid_user = await req.app['tozti-store'].create({'data':{'type':'core/user', 'attributes':{
     	'name':name, 'login':login, 'email':email
-    }})
-    uid_hash = await req.app['tozti-store'].create({'type':'core/user_password', 'attributes':{
-	'login':login, 'hash':pwhash_str(passwd, opslimit=opslimit, memlimit=memlimit)
-   }})
+    }}})
+    uid_hash = await req.app['tozti-store'].create({'data':{'type':'core/user_password', 'attributes':{
+	'login':login, 'hash':(pwhash_str(passwd, opslimit=opslimit, memlimit=memlimit)).decode()
+    }}})
 
     rep = {'created': True}
 
     if not tozti.PRODUCTION:
-        rep['uid-user'] = uid
+        rep['uid-user'] = uid_user
         
     ans = json_response(rep)
     return ans

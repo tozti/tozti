@@ -346,18 +346,30 @@ class Store:
         return res
 
     async def hash_by_login(self, login):
-        """Returns the user resource with given login.
+        """Returns the user_password resource with given login.
 
         Raises `NoResourceError` if the login is not found.
         """
 
-        res = await self._resources.find_one({'type': 'core/user',
+        res = await self._resources.find_one({'type': 'core/user_password',
                                               'attrs.login': login},
                                              {'_id': 1, 'attrs.hash': 1})
         if res is None:
             # a better error maybe?
             raise NoResourceError(id='login: %s' % login)
-        return (res['_id'], res['attrs']['hash'])
+        return res['attrs']['hash']
+
+    async def user_uid_by_login(self, login):
+        """Returns the user resource with given login.
+
+        Raises `NoResourceError` if the login is not found.
+        """
+
+        res = await self._resources.find_one({'type': 'core/user', 'attrs.login': login}, {'_id': 1})
+        if res is None:
+            # a better error maybe?
+            raise NoResourceError(id='login: %s' % login)
+        return res['_id']
 
     async def typeof(self, id):
         """Return the type URL of a given resource.
