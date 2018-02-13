@@ -37,3 +37,9 @@ class UnauthorizedRequest(tozti.utils.APIError):
     code = 'Unauthorized'
     title = 'Unauthorized request'
     status = 403
+
+class LoginUnknown(tozti.utils.APIError):
+    code = 'Login_unknown'
+    title = 'Login not known'
+    status = 400
+    

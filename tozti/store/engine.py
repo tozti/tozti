@@ -26,6 +26,7 @@ from tozti.store import (UUID_RE, logger, NoResourceError, BadAttrError,
                          NoRelError, BadRelError)
 from tozti.utils import BadDataError, ValidationError, validate
 
+from tozti.auth.utils import LoginUnknown as LoginUnknown
 
 #FIXME: how do we get the hostname? config file?
 RES_URL = lambda id: '/api/store/resources/%s' % id
@@ -357,8 +358,7 @@ class Store:
         res = await self._client.tozti.auth.find_one({'login': login},
                                                      {'hash': 1})
         if res is None:
-            # a better error maybe?
-            raise NoResourceError(id='login: %s' % login)
+            raise LoginUnknown('User not found : {}'.format(login))
         return res['hash']
 
     async def user_uid_by_login(self, login):
@@ -369,8 +369,8 @@ class Store:
 
         res = await self._resources.find_one({'type': 'core/user', 'attrs.login': login}, {'_id': 1})
         if res is None:
-            # a better error maybe?
-            raise NoResourceError(id='login: %s' % login)
+            raise LoginUnknown('User not found : {}'.format(login))
+        
         return res['_id']
 
     async def typeof(self, id):

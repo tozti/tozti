@@ -26,7 +26,7 @@ from nacl.exceptions import InvalidkeyError as InvalidkeyError
 
 import tozti
 
-from tozti.auth.utils import BadPasswordError, create_macaroon
+from tozti.auth.utils import (BadPasswordError, create_macaroon, LoginUnknown)
 from tozti.utils import (RouterDef, NotJsonError, BadJsonError, json_response)
 
 from tozti.auth import decorators
@@ -50,12 +50,15 @@ async def login_post(req):
     except (JSONDecodeError, IndexError, KeyError):
         raise BadJsonError()
 
-    hash = await req.app['tozti-store'].hash_by_login(login)
-    user_uid = await req.app['tozti-store'].user_uid_by_login(login)
+    try:
+        hash = await req.app['tozti-store'].hash_by_login(login)
+        user_uid = await req.app['tozti-store'].user_uid_by_login(login)
+    except LoginUnknown as err:
+        raise err
     try:
         pwhash_verify(hash.encode('utf-8'), passwd.encode('utf-8'))
     except InvalidkeyError:
-        raise BadPasswordError()
+        raise BadPasswordError('The login/password couple you submited seems to be unknown to our server')
 
     rep = {'logged': True}
     
