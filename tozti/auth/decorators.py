@@ -27,7 +27,7 @@ def restrict_not_logged_in(func):
     """
     def function_not_logged(req, *args, **kwargs):
         if req.user != None:
-                raise LoginForbidden() 
+                raise LoginForbidden('You must not be logged to do this request') 
         return func(req, *args, **kwargs)
     return function_not_logged
     
