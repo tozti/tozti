@@ -1,5 +1,5 @@
 import pytest
-from tests.commons import make_call
+from tests.commons import make_call, launch_tozti
 from tozti.auth.__init__ import login_post, create_user
 
 def test_macaroon():
@@ -22,7 +22,7 @@ def test_macaroon():
     ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": "alice01", "passwd": None}}}, False), # no passwd
     ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": None, "passwd": "passwd_a"}}}, False) # no login
     ])
-def test_login_post(db, json, expected):
+def test_login_post(db, json, expected, tozti):
     uid_A = create_user({"type": "core/user", "attributes": {"name": "Alice", "login": "alice01", "passwd": "passwd_a"}})
     uid_B = create_user({"type": "core/user", "attributes": {"name": "Bob", "login": "bob01", "passwd": "passwd_b"}})
     req = make_call("POST", "/auth/login", json=json)
