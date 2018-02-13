@@ -1,3 +1,5 @@
+import Vue from 'vue'
+
 import App       from './components/App.vue'
 import Dashboard from './components/Dashboard.vue'
 import Taxonomy  from './components/Taxonomy.vue'
@@ -43,7 +45,6 @@ export function polymorphic_component(name, fallback) {
 }
 
 const tozti = window.tozti = {
-  store,
   App,
 
   routes: [

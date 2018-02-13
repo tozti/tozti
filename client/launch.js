@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Buefy from 'buefy'
+import tozti from 'tozti'
 
 Vue.use(Buefy)
 

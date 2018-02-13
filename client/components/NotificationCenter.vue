@@ -6,11 +6,8 @@
 
 <script>
   export default {
-    computed: {
-      count () {
-        return this.$store.state.notifications
-               .filter(notif => !notif.seen).length
-      }
+    data() {
+      return { count: 0 }
     }
   }
 </script>

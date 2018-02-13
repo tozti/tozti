@@ -1,19 +1,21 @@
 const path = require('path')
 const webpack = require('webpack')
 const ExtractPlugin = require('extract-text-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 // Custom loader for static assets
 const fileLoader = {
   loader: 'file-loader',
   options: {
     name: '[path][name].[ext]',
-    context: path.resolve(__dirname, 'assets'),
+    context: path.resolve(__dirname, '../assets'),
     publicPath: "/static/core/",
   }
 }
 
 // Webpack configuration
 module.exports = {
+
   entry: {
     launch: './client/launch.js',
     bootstrap: './client/bootstrap.js',
@@ -21,12 +23,15 @@ module.exports = {
   },
 
   output: {
-    path: path.resolve(__dirname, 'dist/'),
-    filename: '[name].js'
+    path: path.resolve(__dirname, '../dist/'),
+    filename: '[name].js',
   },
 
   plugins: [
     new ExtractPlugin('css/[name].css'),
+    new CopyWebpackPlugin([
+      { from: 'assets/img/', to: 'dist/img/', }
+    ])
   ],
 
   module: {
@@ -83,7 +88,7 @@ module.exports = {
   resolve: {
     extensions: ['*', '.js', '.vue', '.json'],
     alias: {
-      assets: path.resolve(__dirname, 'assets')
+      assets: path.resolve(__dirname, '../assets')
     },
   },
 

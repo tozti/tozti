@@ -3,20 +3,17 @@
 <head>
 	<meta charset="utf-8">
 	<title>tozti</title>
-    <!--<link rel="apple-touch-icon" href="~assets/img/icon.png">
-    <link rel="icon" type="image/png" href="/static/core/img/icon.png">-->
-  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.35/css/uikit.min.css"> -->
-  <link rel="icon" href="~assets/img/icon.png">
+	<link rel="icon" type="image/png" href="/static/core/img/icon.png">
 	<link rel="stylesheet" href="/static/core/css/style.css">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Icons|Open+Sans">
-	{{#styles}}
+{{#styles}}
 	<link rel="stylesheet" href="{{src}}">
-	{{/styles}}
+{{/styles}}
 </head>
 <body>
 	<main id="app"></main>
 	<script src="https://unpkg.com/vue@2.5.9/dist/vue.js"></script>
-	<script src="https://unpkg.com/vuex@3.0.1/dist/vuex.js"></script>
+	<script src="https://unpkg.com/buefy@0.6.3/lib/index.js"></script>
 	<script src="https://unpkg.com/vue-router@3.0.1/dist/vue-router.js"></script>
 	{{#scripts}}
 	<script src="{{src}}"></script>

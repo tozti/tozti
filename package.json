@@ -3,8 +3,9 @@
   "version": "0.0.1",
   "description": "This repository contains the core of the tozti software project. It is licensed under the AGPLv3.",
   "scripts": {
-    "build": "webpack --config dev.config.js --progress --hide-modules",
-    "release": "webpack --config prod.config.js --progress --hide-modules"
+    "build": "webpack --config webpack/dev.config.js --progress --hide-modules",
+    "watch": "webpack --watch --config webpack/dev.config.js --progress --hide-modules",
+    "release": "webpack --config webpack/prod.config.js --progress --hide-modules"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
     "buefy": "^0.6.3"
   },
   "devDependencies": {
+    "copy-webpack-plugin": "^4.4.1",
     "css-loader": "^0.28.7",
     "extract-text-webpack-plugin": "^3.0.2",
     "file-loader": "^1.1.4",
