@@ -26,7 +26,7 @@ API = 'http://127.0.0.1:8080/api'
 
 class APIError(Exception):
     def __init__(self, code, **kwargs):
-        super().__init__(code, **kwargs)
+        super().__init__(code, kwargs.values())
         self.code = code
         self.status = kwargs.get('status')
         self.detail = kwargs.get('detail')
@@ -36,8 +36,8 @@ class APIError(Exception):
         msg = self.code
         if self.status is not None:
             msg += ' [%s]' % self.status
-        if self.msg is not None:
-            msg += ': %s' % self.msg
+        if self.detail is not None:
+            msg += ': %s' % self.detail
         if self.traceback is not None:
             msg += '\n=== SERVER TRACEBACK ===\n%s' % self.traceback
         return msg
