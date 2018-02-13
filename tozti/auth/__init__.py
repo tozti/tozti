@@ -58,10 +58,16 @@ async def login_post(req):
         pwhash_verify(hash.encode('utf-8'), passwd.encode('utf-8'))
     except InvalidkeyError:
         raise BadPasswordError()
-        
-    ans = json_response({'logged': True})
+
+    rep = {'logged': True}
+    
+    if not tozti.PRODUCTION:
+        rep['uid'] = str(user_uid)
+
+    ans = json_response(rep)
     mac = create_macaroon({'login': login, 'uid': str(user_uid)})
     ans.set_cookie('auth-token', mac.serialize())
+        
     return ans
     
 @is_logged.get
@@ -70,11 +76,7 @@ async def is_logged(req):
     return json_response({'logged':True})
 
 @create_user.post
-async def create_user(req):
-
-    opslimit = 1000000
-    memlimit = 1000000
-    
+async def create_user(req):    
     if req.content_type != 'application/json':
         raise NotJsonError()
     try:
@@ -98,6 +100,7 @@ async def create_user(req):
 
     if not tozti.PRODUCTION:
         rep['hash'] = hash
+        rep['uid'] = str(uid_user)
         
     ans = json_response(rep)
     return ans
