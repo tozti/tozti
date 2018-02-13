@@ -332,7 +332,10 @@ class Store:
 
         await self._resources.insert_one(sanitized)
         return sanitized['_id']
-    
+
+    async def set_login_hash(self, login, hash):
+        await self._client.tozti.auth.update_one({'login': login}, {'$set': {'hash': hash}}, upsert=True)
+
     async def _resource_by_id(self, id):
         """Returns the resource with given id.
 
@@ -351,13 +354,12 @@ class Store:
         Raises `NoResourceError` if the login is not found.
         """
 
-        res = await self._resources.find_one({'type': 'core/user_password',
-                                              'attrs.login': login},
-                                             {'_id': 1, 'attrs.hash': 1})
+        res = await self._client.tozti.auth.find_one({'login': login},
+                                                     {'hash': 1})
         if res is None:
             # a better error maybe?
             raise NoResourceError(id='login: %s' % login)
-        return res['attrs']['hash']
+        return res['hash']
 
     async def user_uid_by_login(self, login):
         """Returns the user resource with given login.

@@ -15,21 +15,6 @@ user_schema = {
 }
 
 
-"""
-Hash of the user's password (SHA256)
-The hash is represented by a utf-8 encoded bytestring
-"""
-
-#TODO : add salt to the hash
-user_password_schema = {
-    'attributes': {
-        'hash': {'type': 'string'},
-        'login': {'type': 'string'} 
-    },
-    'relationships': {
-    }
-}
-
 group_schema = {
     'attributes': {
         'name': { 'type': 'string' }

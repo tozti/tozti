@@ -52,13 +52,10 @@ async def login_post(req):
     except IndexError:
         raise BadJsonError()
 
-    hash_string = await req.app['tozti-store'].hash_by_login(login)
-    print(hash_string)
-    hash = str.encode(hash_string)
-    print(hash)
+    hash = await req.app['tozti-store'].hash_by_login(login)
     user_uid = await req.app['tozti-store'].user_uid_by_login(login)
     try:
-        pwhash_verify(hash, str.encode(passwd))
+        pwhash_verify(hash.encode('utf-8'), passwd.encode('utf-8'))
     except InvalidkeyError:
         raise BadPasswordError()
         
@@ -94,18 +91,13 @@ async def create_user(req):
     uid_user = await req.app['tozti-store'].create({'data':{'type':'core/user', 'attributes':{
     	'name':name, 'login':login, 'email':email
     }}})
-    hash = pwhash_str(str.encode(passwd))
-    uid_hash = await req.app['tozti-store'].create({'data':{'type':'core/user_password', 'attributes':{
-	'login':login, 'hash':hash.decode()
-    }}})
+    hash = pwhash_str(passwd.encode('utf-8')).decode('utf-8')
+    await req.app['tozti-store'].set_login_hash(login, hash)
 
     rep = {'created': True}
 
     if not tozti.PRODUCTION:
-        rep['uid-user'] = uid_user
-        rep['hash'] = str(hash)
-        rep['hash_decode'] = hash.decode()
+        rep['hash'] = hash
         
     ans = json_response(rep)
     return ans
-
