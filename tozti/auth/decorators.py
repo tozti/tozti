@@ -13,7 +13,7 @@ def restrict_known_user(func):
     """
     def function_logged(req, *args, **kwargs):
         if req.user == None:
-            raise LoginRequired() 
+            raise LoginRequired('You must be logged to do this request') 
         return func(req, *args, **kwargs)
     return function_logged
 
