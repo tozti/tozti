@@ -1,5 +1,5 @@
 import pytest
-from tests.commons import make_call, launch_tozti
+from tests.commons import make_call
 from tozti.auth.__init__ import login_post, create_user
 
 def test_macaroon():
@@ -13,21 +13,16 @@ def test_macaroon():
     mac = create_macaroon('test', 42, {1:7, 2:9, 3:7}, coucou=2, salut='coucou')
     print(mac.inspect())
 
-
-# Untested, highly experimental
 @pytest.mark.parametrize("json, expected", [
-    ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": "alice01", "passwd": "passwd_a"}}}, True),
-    ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": "bob01", "passwd": "passwd_a"}}}, False), # wrong login
-    ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": "alice01", "passwd": "passwd_b"}}}, False), # wrong passwd
-    ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": "alice01", "passwd": None}}}, False), # no passwd
-    ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": None, "passwd": "passwd_a"}}}, False) # no login
+    ({"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"}, True),
+    ({"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": None}, False),
+    ({"name": None, "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"}, False), # noname
+    ({"name": "Alice", "login": "alice01", "passwd": None, "email": "a@a.com"}, False), # no passwd
+    ({"name": "Alice", "login": None, "passwd": "passwd_a", "email": "a@a.com"}, False) # no login
     ])
 def test_login_post(db, json, expected, tozti):
-    uid_A = create_user({"type": "core/user", "attributes": {"name": "Alice", "login": "alice01", "passwd": "passwd_a"}})
-    uid_B = create_user({"type": "core/user", "attributes": {"name": "Bob", "login": "bob01", "passwd": "passwd_b"}})
-    req = make_call("POST", "/auth/login", json=json)
-    try:
-        ans = login_post(req)
-        assert expected
-    except:
-        assert not expected
+    """ Test user format for create_user and login_post.
+    """
+    assert (make_call('POST', '/auth/create_user', json=json).status_code == 200) == expected
+    assert (make_call("POST", "/auth/login", json=json).status_code == 200) == expected
+   
