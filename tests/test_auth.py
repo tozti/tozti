@@ -1,5 +1,6 @@
 import pytest
-from tests.commons import add_object_get_id
+from tests.commons import make_call
+from tozti.auth.__init__ import login_post, create_user
 
 def test_macaroon():
 
@@ -15,15 +16,15 @@ def test_macaroon():
 
 # Untested, highly experimental
 @pytest.mark.parametrize("json, expected", [
-    ({"login": "Alice", "passwd": "passwd_a"}, True),
-    ({"login": "Bob", "passwd": "passwd_a"}, False), # wrong login
-    ({"login": "Alice", "passwd": "passwd_b"}, False), # wrong passwd
-    ({"login": "Alice", "passwd": None}, False), # no passwd
-    ({"login": None, "passwd": "passwd_a"}, False) # no login
+    ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": "alice01", "passwd": "passwd_a"}}}, True),
+    ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": "bob01", "passwd": "passwd_a"}}}, False), # wrong login
+    ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": "alice01", "passwd": "passwd_b"}}}, False), # wrong passwd
+    ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": "alice01", "passwd": None}}}, False), # no passwd
+    ({'data':{'type':'core/user', 'attributes':{"name": "Alice", "login": None, "passwd": "passwd_a"}}}, False) # no login
     ])
 def test_login_post(db, json, expected):
-    uid_A = add_object_get_id({"type": "core/user", "attributes": {"login": "Alice", "passwd": "passwd_a"}})
-    uid_B = add_object_get_id({"type": "core/user", "attributes": {"login": "Bob", "passwd": "passwd_b"}})
+    uid_A = create_user({"type": "core/user", "attributes": {"name": "Alice", "login": "alice01", "passwd": "passwd_a"}})
+    uid_B = create_user({"type": "core/user", "attributes": {"name": "Bob", "login": "bob01", "passwd": "passwd_b"}})
     req = make_call("POST", "/auth/login", json=json)
     try:
         ans = login_post(req)

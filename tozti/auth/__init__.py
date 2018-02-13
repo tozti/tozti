@@ -76,7 +76,7 @@ async def is_logged(req):
     return json_response({'logged':True})
 
 @create_user.post
-async def create_user(req):    
+async def create_user(req):
     if req.content_type != 'application/json':
         raise NotJsonError()
     try:
