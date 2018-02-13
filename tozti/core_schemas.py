@@ -17,7 +17,7 @@ user_schema = {
 
 """
 Hash of the user's password (SHA256)
-The hash is represented by a base10 integer in big endian
+The hash is represented by a utf-8 encoded bytestring
 """
 
 #TODO : add salt to the hash
