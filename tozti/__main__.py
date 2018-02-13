@@ -29,6 +29,7 @@ import tozti
 import tozti.store
 import tozti.app
 import tozti.auth
+from tozti.utils import ConfigError
 
 logger = logbook.Logger('tozti.main')
 
@@ -104,11 +105,11 @@ def load_config_file(path = "config.toml"):
 
     for major in required:
         if not major in config:
-            raise Exception("Expected a {} entry".format(major))
+            raise ConfigError("Expected a {} entry".format(major))
         else:
             for minor in required[major]:
                 if not minor in config[major]:
-                    raise Exception("Entry {} expected sub-entry {}".format(major, minor))
+                    raise ConfigError("Entry {} expected sub-entry {}".format(major, minor))
     return config
 
 
