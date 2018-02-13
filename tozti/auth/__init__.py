@@ -47,9 +47,7 @@ async def login_post(req):
         data = await req.json()
         login = data['login']
         passwd = data['passwd']
-    except JSONDecodeError:
-        raise BadJsonError()
-    except IndexError:
+    except (JSONDecodeError, IndexError, KeyError):
         raise BadJsonError()
 
     hash = await req.app['tozti-store'].hash_by_login(login)
