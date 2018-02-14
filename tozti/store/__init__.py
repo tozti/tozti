@@ -24,6 +24,12 @@ from uuid import UUID
 import logbook
 
 UUID_RE = '-'.join('[0-9a-fA-F]{%d}' % i for i in (8, 4, 4, 4, 12))
+
+# Regex for validating whether a string is a valid type name. 
+# Here, valid type names are arbitrary alphanumeric strings
+# with '-', '_' and at most one '/'
+TYPE_RE = '([\w-]+/)?[\w-]+' 
+
 logger = logbook.Logger('tozti.store')
 
 import tozti
@@ -56,6 +62,11 @@ class BadRelError(APIError):
     title = 'a relationship is invalid'
     status = 400
 
+class BadTypeError(APIError):
+    code = 'BAD_TYPE'
+    title = 'invalid type'
+    status = 404
+    template = 'type {type} not found'
 
 from tozti.store.engine import Store
 
@@ -64,6 +75,7 @@ router = RouterDef()
 resources = router.add_route('/resources')
 resources_single = router.add_route('/resources/{id:%s}' % UUID_RE)
 relationship = router.add_route('/resources/{id:%s}/{rel}' % UUID_RE)
+types = router.add_route('/by-type/{type:%s}' % TYPE_RE)
 
 async def get_json_from_request(req):
     if req.content_type != 'application/vnd.api+json':
@@ -154,6 +166,15 @@ async def relationship_delete(req):
     await req.app['tozti-store'].rel_delete(id, rel, data)
     return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
 
+@types.get
+async def types_get(req):
+    """Request handler for ``GET /api/store/by-type/{type}``."""
+    type = req.match_info['type']
+    
+    from pprint import pprint
+    pprint(req.GET)
+
+    return json_response({'data': await req.app['tozti-store'].type_get(type)})
 
 async def open_db(app, types):
     """Initialize storage backend at app startup."""

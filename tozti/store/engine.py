@@ -23,9 +23,10 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from tozti.store import (UUID_RE, logger, NoResourceError, BadAttrError,
-                         NoRelError, BadRelError)
+                         NoRelError, BadRelError, BadTypeError)
 from tozti.utils import BadDataError, ValidationError, validate
 
+from tozti.auth.utils import LoginUnknown as LoginUnknown
 
 #FIXME: how do we get the hostname? config file?
 RES_URL = lambda id: '/api/store/resources/%s' % id
@@ -219,7 +220,7 @@ class Store:
         """
 
         if type_hint is None:
-            rep = await self.find_one(id)
+            rep = await self._resource_by_id(id)
             type_id = rep['type']
         else:
             rep = None
@@ -230,7 +231,7 @@ class Store:
             return await self._render_auto(id, rel, *schema.autos[rel])
         else:
             if rep is None:
-                rep = await self.find_one(id)
+                rep = await self._resource_by_id(id)
             if rel in schema.to_one:
                 # at this point we are sure that 'rels' is in rep
                 # as the resource is typed
@@ -302,8 +303,7 @@ class Store:
             return_value['data'].append(await self._render_linkage(t))
         return return_value
 
-    @asyncio.coroutine
-    def _render_auto(self, id, rel, type_url, path):
+    async def _render_auto(self, id, rel, type_url, path):
         """Render a `reverse-of` to-many relationship object."""
 
         cursor = self._resources.find({'type': type_url,
@@ -311,8 +311,8 @@ class Store:
                                       {'_id': 1, 'type': 1})
         return_value = {'self': REL_URL(id, rel),
                         'data': []}
-        while (yield from cursor.fetch_next):
-            hit = cursor.next_object() 
+
+        async for hit in cursor:
             return_value['data'].append({'id': hit['_id'],
                                          'type': hit['type'],
                                          'href': RES_URL(hit['_id'])})
@@ -335,18 +335,45 @@ class Store:
 
         await self._resources.insert_one(sanitized)
         return sanitized['_id']
-    
-    async def find_one(self, id):
+
+    async def set_login_hash(self, login, hash):
+        await self._client.tozti.auth.update_one({'login': login}, {'$set': {'hash': hash}}, upsert=True)
+
+    async def _resource_by_id(self, id):
         """Returns the resource with given id.
 
-        `id` must be an instance of `uuid.UUID`. Raises `KeyError` if the
-        resource is not found.
+        `id` must be an instance of `uuid.UUID`. Raises `NoResourceError` if the id
+        is not found.
         """
 
         res = await self._resources.find_one({'_id': id})
         if res is None:
             raise NoResourceError(id=id)
         return res
+
+    async def hash_by_login(self, login):
+        """Returns the user_password resource with given login.
+
+        Raises `NoResourceError` if the login is not found.
+        """
+
+        res = await self._client.tozti.auth.find_one({'login': login},
+                                                     {'hash': 1})
+        if res is None:
+            raise LoginUnknown('User not found : {}'.format(login))
+        return res['hash']
+
+    async def user_uid_by_login(self, login):
+        """Returns the user resource with given login.
+
+        Raises `NoResourceError` if the login is not found.
+        """
+
+        res = await self._resources.find_one({'type': 'core/user', 'attrs.login': login}, {'_id': 1})
+        if res is None:
+            raise LoginUnknown('User not found : {}'.format(login))
+        
+        return res['_id']
 
     async def typeof(self, id):
         """Return the type URL of a given resource.
@@ -355,7 +382,7 @@ class Store:
         resource is not found.
         """
 
-        res = await self.find_one(id)
+        res = await self._resource_by_id(id)
         return res['type']
 
     async def get(self, id):
@@ -367,9 +394,10 @@ class Store:
         """
 
         logger.debug('querying DB for resource {}'.format(id))
-        resp = await self.find_one(id)
+        resp = await self._resource_by_id(id)
         return await self._render(resp)
-
+        
+        
     async def update(self, id, raw):
         """Update a resource in the DB.
 
@@ -494,6 +522,17 @@ class Store:
                 'rels.%s' % rel: ids
             }}
         )
+
+    async def type_get(self, type):
+        logger.debug('Querying type %s' % type)
+        if type not in self._typecache:
+            raise BadTypeError(type=type)
+        
+        cursor = self._resources.find({'type': type}, ['_id'])
+        ret = []
+        async for hit in cursor:
+            ret.append(await self._render_linkage(hit['_id']))
+        return ret
 
     async def close(self):
         """Close the connection to the MongoDB server."""

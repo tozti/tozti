@@ -32,9 +32,10 @@ import tozti
 from tozti.utils import APIError, json_response
 from tozti.store import Schema
 from tozti.core_schemas import SCHEMAS
-
+from tozti.auth.middleware import auth_middleware
 
 logger = logbook.Logger('tozti.app')
+
 
 
 class DependencyCycle(Exception):
@@ -196,7 +197,7 @@ class App:
     """The Tozti server."""
 
     def __init__(self):
-        self._app = web.Application(middlewares=[error_handler])
+        self._app = web.Application(middlewares=[error_handler, tozti.auth.middleware.auth_middleware])
         self._static_dirs = {}
         self._includes_after = []
         self._dep_graph_includes = DependencyGraph()
@@ -258,6 +259,12 @@ class App:
             return pystache.render(t.read(), context)
 
     def register_core(self):
+
+        self.register(Extension(
+            'auth',
+            router=tozti.auth.router))
+
+
         self.register(Extension(
             'store',
             router=tozti.store.router,

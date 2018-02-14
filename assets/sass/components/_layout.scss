@@ -1,14 +1,15 @@
-$header-height: 72px;
+$header-height: 70px;
 $sidebar-width: 290px;
-$sidebar-padding: 23px;
-$content-padding: 23px;
+$sidebar-padding: 30px 20px;
+$content-padding: 30px 33px;
 
+$separator-color: #f5f5f5;
 $separator-size: 2px;
 $logo-size: 42px;
 $avatar-size: 43px;
 
 html {
-	background: #f9f9f9;
+	background: #fcfcfc;
 }
 
 .main-header {
@@ -20,7 +21,7 @@ html {
 
 	z-index: 1;
 	background: #fff;
-	box-shadow: 0 0 6px rgba(#000, .07);
+	box-shadow: 0 0 5px rgba(#000, .07);
 	font-family: $title-font;
 
 	display: flex;
@@ -33,8 +34,8 @@ html {
 
 .main-header .branding {
 	box-sizing: border-box;
-	width: $sidebar-width;
-	border-right: $separator-size solid #f4f4f4;
+	width: $sidebar-width + $separator-size;
+	border-right: $separator-size solid $separator-color;
 
 	display: flex;
 	justify-content: center;
@@ -51,7 +52,7 @@ html {
 	display: flex;
 	align-items: center;
 	font-size: 1.3em;
-	margin: 0 25px;
+	margin: 0 30px;
 }
 
 .main-header .search label {
@@ -77,13 +78,12 @@ html {
 	align-items: center;
 	height: 100%;
 	text-decoration: none;
-	border-left: $separator-size solid #f4f4f4;
+	border-left: $separator-size solid $separator-color;
 	padding: 0 25px;
 }
 
 .main-header .notifications {
 	font-size: 1.3em;
-	line-height: .6em;
 }
 
 .main-header .avatar {
@@ -104,8 +104,9 @@ html {
 	box-sizing: border-box;
 
 	background: rgba(#fff, .5);
-	border-left: $separator-size solid #f4f4f4;
-	border-right: $separator-size solid #f4f4f4;
+	// border-left: $separator-size solid $separator-color;
+	// border-right: $separator-size solid $separator-color;
+	box-shadow: 0 0 5px rgba(#000, .07);
 	font-family: $title-font;
 	font-weight: 300;
 }
@@ -127,7 +128,7 @@ html {
 	font-size: 1.1em;
 	color: $dark-grey;
 	margin: 4px 0;
-	padding: 9px 15px;
+	padding: 7px 15px;
 	border-radius: 4px;
 
 	i {
@@ -140,12 +141,12 @@ html {
 .main-sidebar nav .counter {
 	float: right;
 	font-size: 15px;
-	margin-top: -2px;
-	padding: 2px 6px;
+	padding: 0 6px;
+	line-height: 1.4;
 	color: lighten($dark-grey, 22);
 	border: 2px solid lighten($dark-grey, 32);
 	border-radius: 20px;
-	min-width: 16px;
+	min-width: 30px;
 	text-align: center;
 }
 
@@ -161,8 +162,21 @@ html {
 }
 
 .main-content {
-	overflow: auto;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+
 	padding: $content-padding;
-	margin-top: $header-height;
+	margin-top: $header-height + $separator-size;
 	margin-left: $sidebar-width + $separator-size;
+
+	font-size: .96rem;
+}
+
+.fixed-width {
+	max-width: 1100px;
+}
+
+.actions {
+	width: 300px;
 }

@@ -170,6 +170,10 @@ def validate(inst, schema):
                                format_checker=jsonschema.FormatChecker())
 
 
+class ConfigError(Exception):
+    pass
+
+
 class APIError(Exception):
     """Base class for API errors."""
 

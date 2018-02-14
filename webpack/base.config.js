@@ -1,19 +1,21 @@
 const path = require('path')
 const webpack = require('webpack')
-const extract = require('extract-text-webpack-plugin')
+const ExtractPlugin = require('extract-text-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 // Custom loader for static assets
 const fileLoader = {
   loader: 'file-loader',
   options: {
     name: '[path][name].[ext]',
-    context: path.resolve(__dirname, 'assets'),
+    context: path.resolve(__dirname, '../assets'),
     publicPath: "/static/core/",
   }
 }
 
 // Webpack configuration
 module.exports = {
+
   entry: {
     launch: './client/launch.js',
     bootstrap: './client/bootstrap.js',
@@ -21,30 +23,33 @@ module.exports = {
   },
 
   output: {
-    path: path.resolve(__dirname, 'dist/'),
-    filename: '[name].js'
+    path: path.resolve(__dirname, '../dist/'),
+    filename: '[name].js',
   },
 
   plugins: [
-    new extract('css/[name].css'),
+    new ExtractPlugin('css/[name].css'),
+    new CopyWebpackPlugin([
+      { from: 'assets/img/', to: 'img/', }
+    ])
   ],
 
   module: {
     rules: [
       {
         test: /\.css$/,
-        use: extract.extract(['css-loader']),
+        use: ExtractPlugin.extract(['css-loader']),
       },
       {
         test: /\.scss$/,
-        use: extract.extract({
+        use: ExtractPlugin.extract({
           fallback: 'vue-style-loader',
           use: ['css-loader', 'sass-loader'],
         })
       },
       {
         test: /\.sass$/,
-        use: extract.extract({
+        use: ExtractPlugin.extract({
           fallback: 'vue-style-loader',
           use: ['css-loader', 'sass-loader?indentedSyntax'],
         })
@@ -54,25 +59,20 @@ module.exports = {
         loader: 'vue-loader',
         options: {
           loaders: {
-            'css': extract.extract({
+            'css': ExtractPlugin.extract({
               fallback: 'vue-style-loader',
               use: ['css-loader'],
             }),
-            'scss': extract.extract({
+            'scss': ExtractPlugin.extract({
               fallback: 'vue-style-loader',
               use: ['css-loader', 'sass-loader'],
             }),
-            'sass': extract.extract({
+            'sass': ExtractPlugin.extract({
               fallback: 'vue-style-loader',
               use: ['css-loader', 'sass-loader?indentedSyntax'],
             })
           }
         }
-      },
-      {
-        test: /\.js$/,
-        loader: 'babel-loader',
-        exclude: /node_modules/
       },
       {
         test: /\.(png|jpg|gif|svg)$/,
@@ -84,12 +84,14 @@ module.exports = {
       }
     ]
   },
+
   resolve: {
     extensions: ['*', '.js', '.vue', '.json'],
     alias: {
-      assets: path.resolve(__dirname, 'assets')
+      assets: path.resolve(__dirname, '../assets')
     },
   },
+
   externals: {
     vue: 'Vue',
     tozti: 'tozti',

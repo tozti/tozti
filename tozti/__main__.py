@@ -28,7 +28,8 @@ import toml
 import tozti
 import tozti.store
 import tozti.app
-
+import tozti.auth
+from tozti.utils import ConfigError
 
 logger = logbook.Logger('tozti.main')
 
@@ -80,6 +81,40 @@ def find_exts():
             continue
 
 
+def load_config_file(path = "config.toml"):
+    """Load tozti's configuration file.
+    TODO: add validation
+
+    Args:
+        path (str): the path where the config file should be
+
+    Returns:
+        a dictionnary representing the config file
+
+    Raises:
+        Exception if the file couldn't be loaded
+    """
+
+    # put this in a function for the moment when validation will be done
+    config = {}
+    required = {"http":["host", "port"], 
+                "mongodb":["host", "port"], 
+                "cookie": ["private_key", "public_key"]}
+    with open(path) as s:
+        config = toml.load(s)
+
+    for major in required:
+        if not major in config:
+            raise ConfigError("Expected a {} entry".format(major))
+        else:
+            for minor in required[major]:
+                if not minor in config[major]:
+                    raise ConfigError("Entry {} expected sub-entry {}".format(major, minor))
+    return config
+
+
+
+
 def main():
     """Entry point for server startup."""
 
@@ -103,16 +138,13 @@ def main():
         handler.push_application()
 
     # config file
-    # FIXME: do config file validation
     logger.debug('Loading configuration'.format(args.config))
     try:
-        with open(args.config) as s:
-            config = toml.load(s)
+        config = load_config_file(args.config)
     except Exception as err:
         logger.critical('Error while loading configuration: {}'.format(err))
         sys.exit(1)
     tozti.CONFIG = config
-
 
     # initialize app
     logger.debug('Initializing app')

@@ -1,11 +1,10 @@
-import Buefy from 'buefy'
 import Vue from 'vue'
+import Buefy from 'buefy'
 
 import App       from './components/App.vue'
 import Dashboard from './components/Dashboard.vue'
 import Taxonomy  from './components/Taxonomy.vue'
 import Summary from './components/Summary.vue'
-
 
 import store from './store'
 import api from './api'
@@ -53,7 +52,6 @@ export function polymorphic_component(name, fallback) {
 export let tozti = window.tozti = {
   store,
   api,
-
   App,
 
   uid: 'bc85c833-33d6-4dcb-87a9-2c1e5128dfba',
