@@ -4,6 +4,7 @@ import tozti
 from tozti.utils import APIError
 
 def create_macaroon(*args, **kwargs):
+    print(tozti.CONFIG['cookie']['private_key'])
     mac = Macaroon(
         location=tozti.CONFIG['http']['host'],
         identifier=tozti.CONFIG['cookie']['public_key'],

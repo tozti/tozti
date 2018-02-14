@@ -37,6 +37,7 @@ router = RouterDef()
 login = router.add_route('/login')
 is_logged = router.add_route('/is_logged')
 create_user = router.add_route('/create_user')
+me = router.add_route('/me')
 
 @login.post
 @decorators.restrict_not_logged_in
@@ -103,3 +104,8 @@ async def create_user(req):
         
     ans = json_response(rep)
     return ans
+
+@me.get
+@decorators.restrict_known_user
+async def me(req):
+    return json_response(req['user'])

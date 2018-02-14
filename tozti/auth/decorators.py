@@ -12,7 +12,7 @@ def restrict_known_user(func):
     created in the auth_middleware. It raises an error if no user is logged in
     """
     def function_logged(req, *args, **kwargs):
-        if req.user == None:
+        if req['user'] == None:
             raise LoginRequired('You must be logged to do this request') 
         return func(req, *args, **kwargs)
     return function_logged
@@ -26,7 +26,7 @@ def restrict_not_logged_in(func):
     created in the auth_middleware. It raises an error if an user is logged in
     """
     def function_not_logged(req, *args, **kwargs):
-        if req.user != None:
+        if req['user'] != None:
                 raise LoginForbidden('You must not be logged to do this request') 
         return func(req, *args, **kwargs)
     return function_not_logged
