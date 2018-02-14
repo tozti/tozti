@@ -26,6 +26,7 @@ from tozti.store import (UUID_RE, logger, NoResourceError, BadAttrError,
                          NoRelError, BadRelError, BadTypeError)
 from tozti.utils import BadDataError, ValidationError, validate
 
+from tozti.auth.utils import LoginUnknown as LoginUnknown
 
 #FIXME: how do we get the hostname? config file?
 RES_URL = lambda id: '/api/store/resources/%s' % id
@@ -219,7 +220,7 @@ class Store:
         """
 
         if type_hint is None:
-            rep = await self.find_one(id)
+            rep = await self._resource_by_id(id)
             type_id = rep['type']
         else:
             rep = None
@@ -230,7 +231,7 @@ class Store:
             return await self._render_auto(id, rel, *schema.autos[rel])
         else:
             if rep is None:
-                rep = await self.find_one(id)
+                rep = await self._resource_by_id(id)
             if rel in schema.to_one:
                 # at this point we are sure that 'rels' is in rep
                 # as the resource is typed
@@ -334,18 +335,45 @@ class Store:
 
         await self._resources.insert_one(sanitized)
         return sanitized['_id']
-    
-    async def find_one(self, id):
+
+    async def set_login_hash(self, login, hash):
+        await self._client.tozti.auth.update_one({'login': login}, {'$set': {'hash': hash}}, upsert=True)
+
+    async def _resource_by_id(self, id):
         """Returns the resource with given id.
 
-        `id` must be an instance of `uuid.UUID`. Raises `KeyError` if the
-        resource is not found.
+        `id` must be an instance of `uuid.UUID`. Raises `NoResourceError` if the id
+        is not found.
         """
 
         res = await self._resources.find_one({'_id': id})
         if res is None:
             raise NoResourceError(id=id)
         return res
+
+    async def hash_by_login(self, login):
+        """Returns the user_password resource with given login.
+
+        Raises `NoResourceError` if the login is not found.
+        """
+
+        res = await self._client.tozti.auth.find_one({'login': login},
+                                                     {'hash': 1})
+        if res is None:
+            raise LoginUnknown('User not found : {}'.format(login))
+        return res['hash']
+
+    async def user_uid_by_login(self, login):
+        """Returns the user resource with given login.
+
+        Raises `NoResourceError` if the login is not found.
+        """
+
+        res = await self._resources.find_one({'type': 'core/user', 'attrs.login': login}, {'_id': 1})
+        if res is None:
+            raise LoginUnknown('User not found : {}'.format(login))
+        
+        return res['_id']
 
     async def typeof(self, id):
         """Return the type URL of a given resource.
@@ -354,7 +382,7 @@ class Store:
         resource is not found.
         """
 
-        res = await self.find_one(id)
+        res = await self._resource_by_id(id)
         return res['type']
         
     async def get(self, id):
@@ -366,9 +394,10 @@ class Store:
         """
 
         logger.debug('querying DB for resource {}'.format(id))
-        resp = await self.find_one(id)
+        resp = await self._resource_by_id(id)
         return await self._render(resp)
-
+        
+        
     async def update(self, id, raw):
         """Update a resource in the DB.
 

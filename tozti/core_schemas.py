@@ -28,4 +28,5 @@ group_schema = {
 }
 
 
-SCHEMAS = {'user': user_schema, 'group': group_schema}
+SCHEMAS = {'user': user_schema,
+           'group': group_schema,}
