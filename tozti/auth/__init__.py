@@ -62,16 +62,16 @@ async def login_post(req):
         raise BadPasswordError('The login/password couple you submited seems to be unknown to our server')
 
     rep = {'logged': True}
-    
+
     if not tozti.PRODUCTION:
         rep['uid'] = str(user_uid)
 
     ans = json_response(rep)
     mac = create_macaroon({'login': login, 'uid': str(user_uid)})
     ans.set_cookie('auth-token', mac.serialize())
-        
+
     return ans
-    
+
 @is_logged.get
 @decorators.restrict_known_user
 async def is_logged(req):

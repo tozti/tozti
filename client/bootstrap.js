@@ -1,13 +1,11 @@
 import Vue from 'vue'
 import Buefy from 'buefy'
 
-import App       from './components/App.vue'
-import Dashboard from './components/Dashboard.vue'
-import Taxonomy  from './components/Taxonomy.vue'
-import Summary from './components/Summary.vue'
-
+import routes from './routes'
 import store from './store'
 import api from './api'
+
+import AppView from './components/App.vue'
 
 Vue.use(Buefy)
 
@@ -50,17 +48,13 @@ export function polymorphic_component(name, fallback) {
 }
 
 export let tozti = window.tozti = {
+  routes,
   store,
   api,
-  App,
+  App: AppView,
 
-  uid: 'bc85c833-33d6-4dcb-87a9-2c1e5128dfba',
-
-  routes: [
-    { name: 'home',      path: '/',      component: Dashboard },
-    { name: 'workspace', path: '/w/:id', component: Summary },
-    { path: '/w/:taxonomy+', component: Taxonomy },
-  ],
+  // current user
+  me: null,
 
   globalMenuItems: [
     { name: 'Accueil', route: '/', props: { icon: 'nc-home-52' } }

@@ -21,11 +21,14 @@ const store = {
     if (storage.has(id)) {
       return Promise.resolve(storage.get(id))
     }
-    else if (pending.has(id)) {
-      return pending.get(id)
-    }
     else {
-      return store.fetchResource(id)
+      let url = api.resourceURL(id)
+      if (pending.has(url)) {
+        return pending.get(url)
+      }
+      else {
+        return store.fetchResource(url)
+      }
     }
   },
 
@@ -36,30 +39,28 @@ const store = {
    *
    * @param {string} id - The uuid of the queried resource.
    */
-  fetchResource(id) {
+  fetchResource(url) {
     const promise = api
-      .get(api.resourceURL(id))
+      .get(url)
       .then(res => res.json())
       .then(({ data }) => {
-        cache.set(id, data)
-
-        if (storage.has(id)) {
-          updateProxy(id)
-          return storage.get(id)
+        if (storage.has(data.id)) {
+          updateProxy(data.id)
+          return storage.get(data.id)
         }
         else {
           let proxy = createProxy(data)
-          storage.set(id, proxy)
+          storage.set(data.id, proxy)
           return proxy
         }
       })
 
-    pending.set(id, promise)
+    pending.set(url, promise)
 
     // maybe move this inside the promise definition.
     // note that this is not very robust to other type of queries.
     promise.finally(_ => {
-      pending.delete(id)
+      pending.delete(url)
     })
 
     return promise

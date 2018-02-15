@@ -1,42 +1,30 @@
 <template>
   <div>
-    <header class="main-header">
-
-      <section class="branding">
-        <router-link to="/">
-          <img src="~assets/img/logo.svg" alt="tozti">
-        </router-link>
-      </section>
-
-      <search-bar></search-bar>
-
-      <section class="user">
-        <notification-center></notification-center>
-        <user-info></user-info>
-
-      </section>
-    </header>
-
-    <navigation></navigation>
-
-    <main class="main-content">
-      <router-view></router-view>
-    </main>
+    <b-loading :active="!ready"></b-loading>
+    <router-view v-if="ready"></router-view>
   </div>
 </template>
 
 <script>
-  import NotificationCenter from './NotificationCenter.vue'
-  import SearchBar from './SearchBar.vue'
-  import Navigation from './Navigation.vue'
-  import UserInfo from './UserInfo.vue'
-
   export default {
-    components: {
-      NotificationCenter,
-      Navigation,
-      SearchBar,
-      UserInfo,
-    }
+    data() {
+      return {
+        ready: false
+      }
+    },
+
+    beforeMount() {
+      tozti.store
+        .fetchResource(tozti.api.endpoints.me)
+        .then(user => {
+          tozti.me = user
+        })
+        .catch(err => {
+          this.$router.push('login')
+        })
+        .finally(_ => {
+          this.ready = true
+        })
+    },
   }
 </script>

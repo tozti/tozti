@@ -7,13 +7,13 @@ const API = {}
 API.origin = window.location.origin + '/api'
 
 API.endpoints = {
-  resources: API.origin + '/store/resources',
-  types: API.origin + '/types',
-  me: API.origin + '/store/me',
+  resources: `${API.origin}/store/resources`,
+  types: `${API.origin}/store/by_type`,
+  me: `${API.origin}/store/me`,
 }
 
-API.resourceURL = id => API.endpoints.resources + '/' + id
-API.typeURL = type => API.endpoints.types + '/' + type
+API.resourceURL = id => `${API.endpoints.resources}/${id}`
+API.typeURL = type => `${API.endpoints.types}/${type}`
 
 const config = {
   mode: 'same-origin',

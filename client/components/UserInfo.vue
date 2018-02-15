@@ -13,6 +13,7 @@
       tozti
         .store.get(tozti.uid)
         .then(user => {
+          console.log('ok')
           this.user = user
         })
     },
