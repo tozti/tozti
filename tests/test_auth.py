@@ -20,9 +20,26 @@ def test_macaroon():
     ({"name": "Alice", "login": "alice01", "passwd": None, "email": "a@a.com"}, False), # no passwd
     ({"name": "Alice", "login": None, "passwd": "passwd_a", "email": "a@a.com"}, False) # no login
     ])
-def test_login_post(db, json, expected, tozti):
+def test_user_format(db, json, expected, tozti):
     """ Test user format for create_user and login_post.
     """
     assert (make_call('POST', '/auth/create_user', json=json).status_code == 200) == expected
     assert (make_call("POST", "/auth/login", json=json).status_code == 200) == expected
-   
+
+@pytest.mark.parametrize("json, expected", [
+    ({"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"}, True),
+    ({"name": "Bob", "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"}, False), # Wrong name
+    ({"name": "Alice", "login": "bob01", "passwd": "passwd_a", "email": "a@a.com"}, False), # Wrong login
+    ({"name": "Alice", "login": "alice01", "passwd": "passwd_b", "email": "a@a.com"}, False), # Wrong passwd
+    ({"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": "b@b.com"}, False) # Wrong email
+    ])   
+def test_login(db, json, expected, tozti):
+    
+    req_A = make_call('POST', '/auth/create_user', json={"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"})
+    req_B = make_call('POST', '/auth/create_user', json={"name": "Bob", "login": "bob01", "passwd": "passwd_b", "email": "b@b.com"})
+
+    try:
+        req = make_call("POST", "/auth/login", json=json)
+        assert expected
+    except:
+        assert not expected
