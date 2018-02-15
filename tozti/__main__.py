@@ -51,6 +51,7 @@ def find_exts():
 
         mod_path = os.path.join(extpath, 'server.py')
         pkg_path = os.path.join(extpath, 'server', '__init__.py')
+
         if os.path.isfile(mod_path):
             spec = spec_from_file_location(ext, mod_path)
         elif os.path.isfile(pkg_path):

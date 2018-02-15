@@ -9,7 +9,9 @@ API.origin = window.location.origin + '/api'
 API.endpoints = {
   resources: `${API.origin}/store/resources`,
   types: `${API.origin}/store/by_type`,
-  me: `${API.origin}/store/me`,
+  me: `${API.origin}/auth/me`,
+  login: `${API.origin}/auth/login`,
+  signup: `${API.origin}/auth/signup`,
 }
 
 API.resourceURL = id => `${API.endpoints.resources}/${id}`
@@ -35,8 +37,11 @@ function request(url, config) {
     .then(res => res.ok ? Promise.resolve(res) : Promise.reject(res))
 }
 
-API.post = url => {
-  const conf = Object.assign({}, config, { method: 'POST' })
+API.post = (url, data) => {
+  const conf = Object.assign({
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, config)
   return request(url, conf)
 }
 

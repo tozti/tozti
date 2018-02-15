@@ -170,7 +170,7 @@ async def relationship_delete(req):
 async def types_get(req):
     """Request handler for ``GET /api/store/by-type/{type}``."""
     type = req.match_info['type']
-    
+
     from pprint import pprint
     pprint(req.GET)
 

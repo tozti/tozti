@@ -1,5 +1,8 @@
 import Vue from 'vue'
 import Buefy from 'buefy'
+import promiseFinally from 'promise.prototype.finally'
+
+promiseFinally.shim()
 
 import routes from './routes'
 import store from './store'

@@ -1,25 +1,16 @@
 <template>
-  <a v-if="user" href="#" class="logged">
-    <div class="avatar">
-    </div>
-    {{ user.attributes.name }}
-    <i class="material-icons">arrow_drop_down</i>
+  <a href="#" class="logged">
+    {{ me.attributes.name }} 
+    <b-icon icon="chevron-down" size="is-small"></b-icon>
   </a>
 </template>
 
 <script>
   export default {
-    mounted() {
-      tozti
-        .store.get(tozti.uid)
-        .then(user => {
-          console.log('ok')
-          this.user = user
-        })
-    },
-
-    data: _ => ({
-      user: null
-    })
+    data() {
+      return {
+        me: tozti.me
+      }
+    }
   }
 </script>
