@@ -15,8 +15,8 @@ def test_macaroon():
 
 @pytest.mark.parametrize("json, expected", [
     ({"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"}, True),
-    ({"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": None}, False),
     ({"name": None, "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"}, False), # noname
+    ({"name": None, "login": "alice01", "passwd": "passwd_a"}, False),
     ({"name": "Alice", "login": "alice01", "passwd": None, "email": "a@a.com"}, False), # no passwd
     ({"name": "Alice", "login": None, "passwd": "passwd_a", "email": "a@a.com"}, False) # no login
     ])
@@ -27,19 +27,13 @@ def test_user_format(db, json, expected, tozti):
     assert (make_call("POST", "/auth/login", json=json).status_code == 200) == expected
 
 @pytest.mark.parametrize("json, expected", [
-    ({"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"}, True),
-    ({"name": "Bob", "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"}, False), # Wrong name
-    ({"name": "Alice", "login": "bob01", "passwd": "passwd_a", "email": "a@a.com"}, False), # Wrong login
-    ({"name": "Alice", "login": "alice01", "passwd": "passwd_b", "email": "a@a.com"}, False), # Wrong passwd
-    ({"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": "b@b.com"}, False) # Wrong email
+    ({"login": "alice01", "passwd": "passwd_a"}, True),
+    ({"login": "bob01", "passwd": "passwd_a"}, False), # wrong login
+    ({"login": "alice01", "passwd": "passwd_b"}, False) # wrong passwd
     ])   
 def test_login(db, json, expected, tozti):
     
-    req_A = make_call('POST', '/auth/create_user', json={"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"})
-    req_B = make_call('POST', '/auth/create_user', json={"name": "Bob", "login": "bob01", "passwd": "passwd_b", "email": "b@b.com"})
+    make_call('POST', '/auth/create_user', json={"name": "Alice", "login": "alice01", "passwd": "passwd_a", "email": "a@a.com"})
 
-    try:
-        req = make_call("POST", "/auth/login", json=json)
-        assert expected
-    except:
-        assert not expected
+    print(make_call("POST", "/auth/login", json=json).text)
+    assert (make_call("POST", "/auth/login", json=json).status_code == 200) == expected
