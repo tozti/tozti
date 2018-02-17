@@ -1,0 +1,38 @@
+.login {
+  height: 100vh;
+  position: relative;
+
+  // ugly hack, should be removed long-term
+  ::after {
+    content: "";
+    opacity: .002;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    background: url(~assets/img/pattern.svg) center center;
+  }
+
+  .content {
+    max-width: 400px;
+    padding-top: 25vh;
+    margin: 0 auto 20px;
+  }
+
+  .content-header {
+    text-align: center;
+    // todo: why does prior definition have priority?
+    margin-bottom: 30px !important;
+  }
+
+  .box {
+    padding: 30px;
+    box-shadow: 0 2px 3px rgba(#edf2f4, 1);
+
+    .field.is-grouped {
+      margin-top: 25px;
+    }
+  }
+}

@@ -42,7 +42,6 @@ const store = {
   fetchResource(url) {
     const promise = api
       .get(url)
-      .then(res => res.json())
       .then(({ data }) => {
         if (storage.has(data.id)) {
           updateProxy(data.id)
@@ -83,17 +82,12 @@ const store = {
   fetchByType(type) {
     return api
       .get(API.origin + '/type/' + type)
-      .then(res => {
-        let data = res.json().data
+      .then(({ data }) => {
         if (data !== null)
           data.forEach(resource => saveResource(data))
         return data
       })
   },
-
-  registerSchema(name, schema) {
-    store.schemas[name] = schema
-  }
 
 }
 

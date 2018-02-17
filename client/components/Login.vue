@@ -1,9 +1,12 @@
 <template>
-  <section class="hero is-warning is-fullheight is-bold">
-    <div class="hero-body">
-      <div class="column is-half is-offset-one-quarter">
-        <form class="box is-shadowless" v-on:submit.prevent="attemptLogin">
-          <b-field label="Nom d'utilisateur·ice :">
+  <div class="login">
+    <section class="content">
+      <p class="content-header">
+        <img src="~assets/img/logo.svg" width="50">
+      </p>
+      <div class="box">
+        <form v-on:submit.prevent="attemptLogin">
+          <b-field label="Identifiant :">
             <b-input v-model="user.login"></b-input>
           </b-field>
 
@@ -24,8 +27,8 @@
 
         </form>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </template>
 
 <script>
@@ -43,9 +46,12 @@
       attemptLogin() {
         tozti.api
           .post(tozti.api.endpoints.login, this.user)
-          .then(res => {
-            this.$snackbar.open({
-              message: 'Connexion réussie !',
+          .then(({ uid }) => tozti.store.get(uid))
+          .then(user => {
+            tozti.me = user
+            this.$router.push('/')
+            this.$toast.open({
+              message: `Bienvenue, ${user.attributes.name} !`,
               type: 'is-success',
               position: 'is-top'
             })

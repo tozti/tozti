@@ -8,12 +8,15 @@ import TaxonomyView from './components/views/Taxonomy.vue'
 const routes =
   [ { path: '/login'
     , component: LoginView
+    , meta: { requiresNoAuth: true }
     },
     { path: '/signup'
     , component: SignUpView
+    , meta: { requiresNoAuth: true }
     }
   , { path: ''
     , component: ToztiLayout
+    , meta: { requiresAuth: true }
     , children:
         [ { path: '',      component: DashboardView }
         , { path: 'w/:id',  name: 'workspace', component: SummaryView }

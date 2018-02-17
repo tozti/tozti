@@ -10,6 +10,11 @@ $avatar-size: 43px;
 
 html {
 	background: #fcfcfc;
+  min-height: 100%;
+}
+
+body {
+  height: 100vh;
 }
 
 .main-header {

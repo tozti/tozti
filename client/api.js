@@ -34,7 +34,7 @@ function request(url, config) {
   // the fetch() Promise always resolves to the response,
   // whether it was successful or not
   return fetch(url, config)
-    .then(res => res.ok ? Promise.resolve(res) : Promise.reject(res))
+    .then(res => res.ok ? res.json() : Promise.reject(res))
 }
 
 API.post = (url, data) => {

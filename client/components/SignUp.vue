@@ -1,8 +1,11 @@
 <template>
-  <section class="hero is-warning is-fullheight is-bold">
-    <div class="hero-body">
-      <div class="column is-half is-offset-one-quarter">
-        <form class="box is-shadowless" v-on:submit.prevent="signin">
+  <div class="login">
+    <section class="content">
+      <p class="content-header">
+        <img src="~assets/img/logo.svg" width="50">
+      </p>
+      <div class="box">
+        <form v-on:submit.prevent="signin">
           <b-field label="Identifiant :">
             <b-input v-model="user.login"></b-input>
           </b-field>
@@ -28,8 +31,8 @@
           </div>
         </form>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </template>
 
 <script>
@@ -50,7 +53,8 @@
         tozti.api
           .post(tozti.api.endpoints.signup, this.user)
           .then(res => {
-            this.$snackbar.open({
+            this.$router.push('/login')
+            this.$toast.open({
               message: 'Votre inscription a réussi !',
               type: 'is-success',
               position: 'is-top'
