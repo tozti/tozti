@@ -43,14 +43,16 @@ class APIError(Exception):
         return msg
 
 
-def check_call(meth, path, json=None, prefix=API):
+def check_call(meth, path, json=None, prefix=API, session=None):
     """Make an API call.
 
     Raises APIError in case the api returns an error. Raises JSONDecodeError
     if the response is not valid JSON.
     """
-
-    resp = requests.request(meth, prefix + path, json=json)
+    if session is None:
+        session = request.Session()
+    
+    resp = session.request(meth, prefix + path, json=json)
     ans = resp.json()
     if 'errors' in ans:
         raise APIError(**ans['errors'][0])
@@ -59,65 +61,65 @@ def check_call(meth, path, json=None, prefix=API):
 
 ## Resource endpoints
 
-def resource_create(**kwargs):
+def resource_create(session=None, **kwargs):
     """Create and return a resource.
 
     You should pass `type`, `attributes` and optionally `relationships` as
     arguments.
     """
 
-    ans = check_call('POST', '/store/resources', json={'data': kwargs})
+    ans = check_call('POST', '/store/resources', json={'data': kwargs}, session=session)
     return ans['data']
 
 
-def resource_fetch(id):
+def resource_fetch(id, session=None):
     """Get a resource object by it's UUID."""
 
-    ans = check_call('GET', '/store/resources/%s' % id)
+    ans = check_call('GET', '/store/resources/%s' % id, session=session)
     return ans['data']
 
 
-def resource_update(id, **kwargs):
+def resource_update(id, session=None, **kwargs):
     """Partially update a resource.
 
     You can only change attributes and relationships.
     """
 
     ans = check_call('PATCH', '/store/resources/%s' % id,
-                             json={'data': kwargs})
+                             json={'data': kwargs}, session=session)
     return ans['data']
 
 
-def resource_delete(id):
+def resource_delete(id, session=None):
     """Delete a resource by it's UUID."""
 
-    check_call('DELETE', '/store/resources/%s' % id)
+    check_call('DELETE', '/store/resources/%s' % id, session=session)
 
 
 ## Relationship endpoints
 
-def relationship_get(id, rel):
+def relationship_get(id, rel, session=None):
     """Get a relationship."""
 
-    return check_call('GET', '/store/resources/%s/%s' % (id, rel))
+    return check_call('GET', '/store/resources/%s/%s' % (id, rel), session=session)
 
 
-def relationship_update(id, rel, data):
+def relationship_update(id, rel, data, session=None):
     """Overwrite a relationship."""
 
     return check_call('PUT', '/store/resources/%s/%s' % (id, rel),
-                      json={'data': data})
+                      json={'data': data}, session=session)
 
 
-def relationship_append(id, rel, *data):
+def relationship_append(id, rel, session=None, *data):
     """Append items to a to-many relationship."""
 
     return check_call('POST', '/store/resources/%s/%s' % (id, rel),
-                      json={'data': data})
+                      json={'data': data}, session=session)
 
 
-def relationship_delete(id, rel, *data):
+def relationship_delete(id, rel, session=None, *data):
     """Delete items from a to-many relationship."""
 
     return check_call('DELETE', '/store/resources/%s/%s' % (id, rel),
-                      json={'data': data})
+                      json={'data': data}, session=session)
