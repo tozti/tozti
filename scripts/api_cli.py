@@ -24,8 +24,10 @@ from pprint import pprint
 API = 'http://127.0.0.1:8080/api'
 
 
-def check_call(meth, path, json=None):
-    resp = requests.request(meth, API + path, json=json)
+def check_call(meth, path, json=None, session=None):
+    if session is None:
+        session = request.Session()
+    resp = session.request(meth, API + path, json=json)
     ans = resp.json()
     if len(resp.cookies)>0:
         print('Cookie(s) : ', requests.utils.dict_from_cookiejar(resp.cookies))
@@ -34,26 +36,26 @@ def check_call(meth, path, json=None):
     print('ERROR: %s (status: %s)' % (ans['errors'][0]['code'], resp.status_code))
     print(ans['errors'][0]['detail'])
 
-def create_resource(**kwargs):
-    ans = check_call('post', '/store/resources', json={'data': kwargs})
+def create_resource(session=None, **kwargs):
+    ans = check_call('post', '/store/resources', json={'data': kwargs}, session=session)
     if ans is not None:
         pprint(ans['data'])
         return ans['data']['id']
 
 
-def get_resource(id):
-    ans = check_call('get', '/store/resources/%s' % id)
+def get_resource(id, session=None):
+    ans = check_call('get', '/store/resources/%s' % id, session=session)
     if ans is not None:
         return ans['data']
 
 
-def update_resource(id, **kwargs):
+def update_resource(id, session=None, **kwargs):
     ans = check_call('patch', '/store/resources/%s' % id,
-                             json={'data': kwargs})
+                             json={'data': kwargs}, session=session)
     if ans is not None:
         pprint(ans['data'])
 
 
-def delete_resource(id):
-    check_call('delete', '/store/resources/%s' % id)
+def delete_resource(id, session=None):
+    check_call('delete', '/store/resources/%s' % id, session=session)
     
