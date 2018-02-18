@@ -123,3 +123,21 @@ def relationship_delete(id, rel, session=None, *data):
 
     return check_call('DELETE', '/store/resources/%s/%s' % (id, rel),
                       json={'data': data}, session=session)
+
+## Authentication endpoint
+# uses session 
+
+def create_user(login, name, passwd, email, session=None):
+    """Create an user."""
+
+    return check_call('POST', '/auth/create_user',
+                      json={'name':name, 'login':login,
+                            'passwd':passwd, 'email':email},
+                      session=session)
+
+def login(login, passwd, session):
+    """Log in."""
+    
+    return check_call('POST', '/auth/login',
+                      json={'passwd':passwd, 'login':login},
+                      session=session)
