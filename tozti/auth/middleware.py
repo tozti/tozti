@@ -45,7 +45,7 @@ async def auth_middleware(req, handler):
                     req['user'] = None
                 else:
                     req['user'] = user
-            except KeyError:
+            except (KeyError, NoResourceError):
                 req['user'] = None
 
     else:
