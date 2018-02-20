@@ -9,21 +9,27 @@ import Workspaces from './components/views/Workspaces.vue'
 import Groups from './components/views/Groups.vue'
 import GroupView from './components/views/Group.vue'
 
-const routes =
+// the readonly tag is present and express the fact 
+// that this route mustn't be modified
+let routes =
   [ { path: '/login'
     , component: LoginView
+    , readonly: true
     , meta: { requiresNoAuth: true }
     },
     { path: '/signup'
     , component: SignUpView
+    , readonly: true
     , meta: { requiresNoAuth: true }
-    }
-  , { path: ''
+    },
+    { path: ''
     , component: ToztiLayout
     , meta: { requiresAuth: true }
     , redirect: 'g/'
+    , readonly: true
     , children:
         [ { path: 'g/', component: Groups }
+         //, { path: 'foo/', component: Groups}
         , { path: 'g/:id', name: 'group', component: GroupView
           , props: route => ({ id: route.params.id }) }
         , { path: 'w/', component: Workspaces }

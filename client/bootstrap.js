@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Buefy from 'buefy'
+import ToztiLayout from './components/Tozti.vue'
 import promiseFinally from 'promise.prototype.finally'
 
 promiseFinally.shim()
@@ -84,6 +85,41 @@ export let tozti = window.tozti = {
    */
   addWorkspaceMenuItem(name, route, props = {}) {
     tozti.workspaceMenuItems.push({ name, route, props })
+  },
+
+  /**
+   * @param {string} route - The name of the route
+   * @param {Component} component - the component attached to the route
+   * @param {string} name (facultative) - the name of the route
+   * @param {array} meta (facultative) - other arguments to attach
+   *                                     to the route
+   */
+  addRoute(route, component, name = null, meta = {}) {
+    let new_route = { path: route, component: component }
+    if (name != null) {
+      new_route.name = name
+    }
+    let found = false
+    // either a route with the specified meta tag exists
+    // in which case we add our widget as a children of it
+    for (let route of tozti.routes) {
+      if (!('readonly' in route)) {
+        if (route.meta === meta) {
+          route.children.push(new_route)
+          found = true
+          break
+        }
+      }
+    }
+    // otherwise we must add a new tag
+    if (!found) {
+      tozti.routes.push({
+        path: ''
+        , component: ToztiLayout
+        , meta: meta
+        , children: [new_route]
+      })
+    }
   },
 
   postLaunchHooks: [],
