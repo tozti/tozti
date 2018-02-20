@@ -16,9 +16,7 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import requests
-from requests import get, post, put, patch, delete
-from pprint import pprint
+from requests import Session
 
 
 API = 'http://127.0.0.1:8080/api'
@@ -49,9 +47,10 @@ def check_call(meth, path, json=None, prefix=API, session=None):
     Raises APIError in case the api returns an error. Raises JSONDecodeError
     if the response is not valid JSON.
     """
+
     if session is None:
-        session = request.Session()
-    
+        session = Session()
+
     resp = session.request(meth, prefix + path, json=json)
     ans = resp.json()
     if 'errors' in ans:
@@ -125,7 +124,7 @@ def relationship_delete(id, rel, session=None, *data):
                       json={'data': data}, session=session)
 
 ## Authentication endpoint
-# uses session 
+# uses session
 
 def create_user(login, name, passwd, email, session=None):
     """Create an user."""
@@ -137,7 +136,7 @@ def create_user(login, name, passwd, email, session=None):
 
 def login(login, passwd, session):
     """Log in."""
-    
+
     return check_call('POST', '/auth/login',
                       json={'passwd':passwd, 'login':login},
                       session=session)
