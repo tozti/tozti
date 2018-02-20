@@ -49,12 +49,14 @@ class BadAttrError(APIError):
     code = 'BAD_ATTRIBUTE'
     title = 'an attribute is invalid'
     status = 400
+    template = 'attribute {key} is invalid: {err}'
 
 
 class NoRelError(APIError):
     code = 'BAD_RELATIONSHIP'
     title = 'a relationship is invalid'
     status = 400
+    template = 'relationship {key} is invalid: {err}'
 
 
 class BadRelError(APIError):
@@ -171,9 +173,6 @@ async def relationship_delete(req):
 async def types_get(req):
     """Request handler for ``GET /api/store/by-type/{type}``."""
     type = req.match_info['type']
-    
-    from pprint import pprint
-    pprint(req.GET)
 
     return json_response({'data': await req.app['tozti-store'].type_get(type)})
 

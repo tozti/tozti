@@ -1,28 +1,34 @@
 user_schema = {
-    'attributes': {
-        'name': { 'type': 'string' },
-        'email': { 'type': 'string', 'format': 'email' },
-        'login': { 'type': 'string' }
-    },
-    'relationships': {
+    'body': {
+        'name': {
+            'type': 'string'
+        },
+        'email': {
+            'type': 'string',
+            'format': 'email'
+        },
+        'login': {
+            'type': 'string'
+        },
         'groups': {
-            'reverse-of': {
-                'type': 'core/group',
-                'path': 'members'
-            }
+            'type': 'relationship',
+            'arity': 'auto',
+            'pred-type': 'core/group',
+            'pred-relationship': 'members',
         }
     }
 }
 
 
 group_schema = {
-    'attributes': {
-        'name': { 'type': 'string' }
-    },
-    'relationships': {
+    'body': {
+        'name': {
+            'type': 'string'
+        },
         'members': {
+            'type': 'relationship',
             'arity': 'to-many',
-            'type': 'core/user'
+            'targets': 'core/user'
         }
     }
 }
