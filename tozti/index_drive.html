@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <title>tozti</title>
+        <meta name="description" content="Organisez votre association avec tozti.">
+
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="apple-touch-icon" href="icon.png">
+
+        <link rel="stylesheet" href="dist/css/style.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Icons|Open+Sans">
+        <link rel="stylesheet" hret="sass/_sidebar.scss">
+    </head>
+    <body>
+        <header class="main-header">
+            <section class="branding">
+                <a href="#"><img src="assets/img/logo.svg" alt="tozti" /></a>
+            </section>
+
+            <section class="search">
+                <label for="search-field">
+                    <i class="nc-icon nc-zoom-2"></i>
+                </label>
+
+                <input type="text" id="search-field" placeholder="Rechercher des dossiers, des discussions, etc." />
+            </section>
+
+            <section class="user">
+                <a href="#" class="notifications">
+                    <i class="nc-icon nc-bell-53"></i>
+                </a>
+
+                <a href="#" class="logged">
+                    <div class="avatar">
+                        <img src="https://placeimg.com/60/60/people" alt="Avatar de Romain">
+                    </div>
+
+                    Romain
+
+                    <i class="material-icons">arrow_drop_down</i>
+                </a>
+            </section>
+        </header>
+
+        <aside class="sidebar">
+            <aside class="main-sidebar">
+            <nav>
+                <a href="#" class="active"><i class="nc-icon nc-home-52"></i> Accueil <span class="counter">6</span></a>
+                <a href="#"><i class="nc-icon nc-badge-13"></i> Annuaire</a>
+                <a href="#"><i class="nc-icon nc-calendar-60"></i> Calendrier</a>
+                <a href="#"><i class="nc-icon nc-settings-gear-63"></i> Préférences</a>
+            </nav>
+
+            <h3>ENScène</h3>
+            <nav>
+                <a href="#"><i class="nc-icon nc-grid-45"></i> Résumé</a>
+                <a href="#"><i class="nc-icon nc-calendar-60"></i> Calendrier</a>
+                <a href="#"><i class="nc-icon nc-folder-15"></i> Clubs</a>
+                <a href="#"><i class="nc-icon nc-folder-15"></i> Événements <span class="counter">3</span></a>
+                <a href="#"><i class="nc-icon nc-folder-15"></i> Administratif</a>
+            </nav>
+
+            <h3>BDE</h3>
+            <nav>
+                <a href="#"><i class="nc-icon nc-grid-45"></i> Résumé</a>
+                <a href="#"><i class="nc-icon nc-calendar-60"></i> Calendrier</a>
+                <a href="#"><i class="nc-icon nc-folder-15"></i> Dossiers <span class="counter">12</span></a>
+            </nav>
+            </aside>
+            
+            <aside class="right-sidebar">
+            <h2> DRIVE </h2>
+            <nav>
+            <ul>
+                <h3> Informations </h3>
+                <li> <a href="#" > Groupe</a> </li>
+                <li> <a href="#"> Users</a> </li>
+                <li> <a href="#"> Droits</a> </li>
+                <li> <a href="#"> Date</a> </li>
+            </ul>
+            </nav>
+            
+            <nav>
+                <ul>
+                    <h3> Gestion </h3>
+                    <li> <a href="#" > Partage</a> </li>
+                    <li> <a href="#"> Upload</a> </li>
+                    <li> <a href="#"> Download</a> </li>
+                </ul>
+            </nav>
+        </aside>
+            
+        </aside>
+
+        <main class="main-content">
+               <div class="previsu">
+                    <h2> Prévisualisation </h2>
+                </div>
+
+                <img src="mockup.png" alt="Mockup of drive previsualisation" width="400" height="400">
+                <!-- TODO: replace it with a tool  -->
+
+
+        </main>
+
+        
+
+        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+        <script src="dist/js/index.js"></script>
+    </body>
+</html>
