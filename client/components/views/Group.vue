@@ -50,13 +50,13 @@
           cancelText: 'Annuler',
           type: 'is-danger',
           onConfirm: () => {
-            let target = window.location.origin + tozti.me.relationships.groups.self
-            let target2 = tozti.api.resourceURL(this.id)
             this.deleting = true
-            tozti
-              .api.delete(target, { data: [ this.resource ]})
-              .then(() => tozti.api.delete(target2))
+
+            tozti.store
+              .rels.delete(tozti.me.relationships.groups, { id: this.id })
+              .then(() => tozti.store.delete(this.id))
               .then(() => {
+                this.$router.push('/g/')
                 this.$toast.open({
                   message: 'Le groupe a été supprimé.',
                   type: 'is-success'

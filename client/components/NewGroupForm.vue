@@ -52,30 +52,15 @@
       attemptNewGroup() {
         this.attempting = true
 
-        const data = {
-          type: 'core/group',
-          attributes: this.group,
-        }
+        tozti
+          // create the group
+          .store.create({ type: 'core/group', attributes: this.group }, false)
 
-        let group = null
+          // add the user as a member
+          .then(({ id }) => tozti.store.rels.add(tozti.me.relationships.groups, { id }))
 
-        tozti.api
-          // creating the group
-          .post(tozti.api.endpoints.resources, { data })
-
-          // then adding the current user to it
-          .then(({ data }) => {
-            let url = window.location.origin + tozti.me.relationships.groups.self
-            group = data
-            return tozti.api.post(url, {
-              data: [{ type: 'core/group', id: data.id }]
-            })
-          })
-
-          .then(res => {
+          .then(() => {
             this.attempting = false
-
-            tozti.me.relationships.groups.data.push(group)
 
             this.$parent.close()
             this.$toast.open({
