@@ -1,19 +1,16 @@
 foo_schema = {
-        'attributes': {
+        'body': {
             'foo': { 'type': 'string' },
-            },
-        'relationships': {
-            "members": {
+            "member": {
+                "type": "relationship",
                 "arity": "to-many",
-                "type": "rel02/bar",
+                "targets": "rel02/bar",
                 }
             }
         }
 bar_schema = {
-        'attributes': {
+        'body': {
             'bar': { 'type': 'string' },
-            },
-        'relationships': {
             }
         }
 MANIFEST = {"types": {"foo": foo_schema, "bar": bar_schema}}

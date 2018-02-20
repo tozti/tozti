@@ -58,7 +58,7 @@ class BadRelError(BadItemError):
     code = 'BAD_RELATIONSHIP'
     title = 'a relationship is invalid'
     status = 400
-    template = 'relationship {key} is invalid: {msg}'
+    template = 'relationship {key} is invalid: {err}'
 
 
 class NoTypeError(APIError):

@@ -83,8 +83,7 @@ def db_contains_object(db, obj):
         True if the object is in the db, False otherwize
     """
     for o in db.find():
-        if o["attrs"] == obj["attributes"] \
-           and o["rels"] == obj.get("relationships", {}):
+        if o["body"] == obj["body"] :
             return True
     return False
 

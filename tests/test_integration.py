@@ -15,7 +15,7 @@ def test_tozti_launch_and_runs(tozti):
 @pytest.mark.extensions("routing01")
 def test_tozti_routing(tozti):
     # check if tozti is running
-    answer = requests.get("http://0.0.0.0:8080/api/routing01/foo")
+    answer = requests.get("http://127.0.0.1:8080/api/routing01/foo")
     assert(answer.text == "foo")
     assert(tozti_still_running(tozti))
 
@@ -26,14 +26,14 @@ def test_tozti_routing(tozti):
 @pytest.mark.extensions("vue-routing01")
 def test_tozti_vue_routing(selenium, tozti):
     assert(tozti_still_running(tozti))
-    selenium.get("http://0.0.0.0:8080/counter")
+    selenium.get("http://127.0.0.1:8080/counter")
     assert("test success" in selenium.page_source)
 
 # vue menu item append
 @pytest.mark.extensions("vue-menu-item01")
 def test_tozti_vue_menu_item(selenium, tozti):
     assert(tozti_still_running(tozti))
-    selenium.get("http://0.0.0.0:8080/")
+    selenium.get("http://127.0.0.1:8080/")
     assert("test menu item" in selenium.page_source)
     assert(len(selenium.find_elements_by_xpath("//a[contains(text(), 'test menu item')]")) == 1)
 

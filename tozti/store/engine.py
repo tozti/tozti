@@ -22,7 +22,7 @@ import asyncio
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from tozti.store import logger, NoResourceError, NoTypeError, BadItemError
+from tozti.store import logger, NoResourceError, NoTypeError, BadItemError, NoItemError
 from tozti.store.schema import Schema
 from tozti.utils import BadDataError, ValidationError, validate
 
