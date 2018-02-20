@@ -132,7 +132,7 @@ class Store:
         schema = self._types[await self.type_by_id(id)]
 
         try:
-            data = schema.sanitize_item(key, raw)
+            data = await schema.sanitize_item(key, raw)
         except NoItemError as err:
             err.status = 404
             raise err
@@ -145,7 +145,7 @@ class Store:
         schema = self._types[await self.type_by_id(id)]
 
         try:
-            data = schema.sanitize_item(key, raw)
+            data = await schema.sanitize_item(key, raw)
         except NoItemError as err:
             err.status = 404
             raise err
@@ -158,7 +158,7 @@ class Store:
         schema = self._types[await self.type_by_id(id)]
 
         try:
-            data = schema.sanitize_item(key, raw)
+            data = await schema.sanitize_item(key, raw)
         except NoItemError as err:
             err.status = 404
             raise err
