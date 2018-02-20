@@ -24,7 +24,7 @@ async def auth_middleware(req, handler):
         uid = UUID(dictio['uid'])
         user_uid = uid
         return True
-    
+
     if 'auth-token' in req.cookies:
         token = req.cookies['auth-token']
         mac = Macaroon.deserialize(token)

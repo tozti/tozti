@@ -45,7 +45,7 @@ API.post = (url, data) => {
   return request(url, conf)
 }
 
-API.patch = url => {
+API.patch = (url, data) => {
   const conf = Object.assign({}, config, { method: 'PATCH' })
   return request(url, conf)
 }

@@ -5,6 +5,9 @@ import DashboardView from './components/views/Dashboard.vue'
 import SummaryView from './components/views/Summary.vue'
 import TaxonomyView from './components/views/Taxonomy.vue'
 
+import Workspaces from './components/views/Workspaces.vue'
+import Groups from './components/views/Groups.vue'
+
 const routes =
   [ { path: '/login'
     , component: LoginView
@@ -17,8 +20,11 @@ const routes =
   , { path: ''
     , component: ToztiLayout
     , meta: { requiresAuth: true }
+    , redirect: 'g/'
     , children:
-        [ { path: '',      component: DashboardView }
+        [ { path: 'g/', component: Groups }
+        , { path: 'g/:handle', name: 'group', component: Groups }
+        , { path: 'w/', component: Workspaces }
         , { path: 'w/:id',  name: 'workspace', component: SummaryView }
         , { path: 'w/:taxonomy+', component: TaxonomyView, props: true }
         ]

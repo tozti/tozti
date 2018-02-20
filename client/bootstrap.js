@@ -59,12 +59,13 @@ export let tozti = window.tozti = {
   // current user
   me: null,
 
-  globalMenuItems: [
-    { name: 'Accueil', route: '/', props: { icon: 'nc-home-52' } }
+  globalMenuItems:
+    [ { name: 'Mes groupes', route: '/g/', props: { icon: 'nc-multiple-11' } }
+    , { name: 'Mes espaces', route: '/w/', props: { icon: 'nc-grid-45' } }
   ],
 
   workspaceMenuItems: [
-    { name: 'Résumé', route: 'workspace', props: { icon: 'nc-grid-45' } }
+    { name: 'Résumé', route: 'workspace', props: { icon: 'nc-eye-19' } }
   ],
 
   /**

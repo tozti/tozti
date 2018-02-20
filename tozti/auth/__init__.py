@@ -46,7 +46,7 @@ async def login_post(req):
         raise NotJsonError()
     try:
         data = await req.json()
-        login = data['login']
+        login = data['handle']
         passwd = data['passwd']
     except (JSONDecodeError, IndexError, KeyError):
         raise BadJsonError()
@@ -67,7 +67,7 @@ async def login_post(req):
         rep['uid'] = str(user_uid)
 
     ans = json_response(rep)
-    mac = create_macaroon({'login': login, 'uid': str(user_uid)})
+    mac = create_macaroon({'handle': login, 'uid': str(user_uid)})
     ans.set_cookie('auth-token', mac.serialize())
 
     return ans
@@ -83,7 +83,7 @@ async def create_user(req):
         raise NotJsonError()
     try:
         data = await req.json()
-        login = data['login']
+        login = data['handle']
         name = data['name']
         passwd = data['passwd']
         email = data['email']
@@ -91,7 +91,7 @@ async def create_user(req):
         raise BadJsonError()
 
     uid_user = await req.app['tozti-store'].create({'data':{'type':'core/user', 'attributes':{
-    	'name':name, 'login':login, 'email':email
+    	'name':name, 'handle':login, 'email':email
     }}})
 
     hash = pwhash_str(passwd.encode('utf-8')).decode('utf-8')

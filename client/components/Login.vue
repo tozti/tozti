@@ -6,12 +6,12 @@
       </p>
       <div class="box">
         <form v-on:submit.prevent="attemptLogin">
-          <b-field label="Identifiant :">
-            <b-input v-model="user.login"></b-input>
+          <b-field label-for="handle" label="Identifiant :">
+            <b-input id="handle" v-model="user.handle"></b-input>
           </b-field>
 
-          <b-field label="Mot de passe :">
-            <b-input v-model="user.passwd" type="password"></b-input>
+          <b-field label-for="passwd" label="Mot de passe :">
+            <b-input id="passwd" v-model="user.passwd" type="password"></b-input>
           </b-field>
 
           <div class="field is-grouped is-grouped-left">
@@ -36,7 +36,7 @@
     data() {
       return {
         user: {
-          login: '',
+          handle: '',
           passwd: ''
         }
       }
@@ -57,7 +57,7 @@
             })
           })
           .catch(err => {
-            this.$snackbar.open({
+            this.$toast.open({
               message: 'Une erreur est survenue lors de la connexion',
               type: 'is-danger',
               position: 'is-top'

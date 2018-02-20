@@ -1,6 +1,7 @@
 .login {
-  height: 100vh;
+  min-height: 100vh;
   position: relative;
+  padding: 0 0 4em;
 
   // ugly hack, should be removed long-term
   ::after {
@@ -30,6 +31,15 @@
   .box {
     padding: 30px;
     box-shadow: 0 2px 3px rgba(#edf2f4, 1);
+
+    label {
+      margin-bottom: 0;
+      padding-bottom: .6em;
+    }
+
+    .field {
+      margin-bottom: 1.2em;
+    }
 
     .field.is-grouped {
       margin-top: 25px;

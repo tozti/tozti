@@ -1,22 +1,18 @@
-const resourceMixins = {}
+export let resourceMixin = {
+  props: { id: String },
 
-export function resourceMixin(type)  {
-  if (Object.keys(resourceMixins).includes(type)) {
-    return resourceMixins[type]
-  }
+  beforeMount() {
+    tozti.store.get(this.id)
+      .then(resource => {
+        this.resource = resource
+        this.loading = false
+      })
+  },
 
-  return resourceMixins[type] = {
-    props: { id: Number },
-
-    computed: {
-      attributes() { return this.resource.attributes },
-      relationships() { return this.resource.relationships },
-    },
-
-    data() {
-      return {
-        resource: tozti.store.get(type, this.id)
-      }
+  data() {
+    return {
+      loading: true,
+      resource: null,
     }
   }
 }

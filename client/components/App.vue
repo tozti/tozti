@@ -20,7 +20,7 @@
           tozti.me = user
         })
         .catch(err => {
-          this.$router.push('login')
+          this.$router.push('/login')
         })
         .finally(_ => {
           this.ready = true

@@ -6,20 +6,20 @@
       </p>
       <div class="box">
         <form v-on:submit.prevent="signin">
-          <b-field label="Identifiant :">
-            <b-input v-model="user.login"></b-input>
+          <b-field label-for="handle" label="Identifiant :">
+            <b-input id="handle" v-model="user.handle"></b-input>
           </b-field>
 
-          <b-field label="Adresse mail :">
-            <b-input type="mail" v-model="user.email"></b-input>
+          <b-field label-for="mail" label="Adresse mail :">
+            <b-input id="mail" type="mail" v-model="user.email"></b-input>
           </b-field>
 
-          <b-field label="Nom d'utilisateur·ice :">
-            <b-input v-model="user.name"></b-input>
+          <b-field label-for="name" label="Nom d'utilisateur·ice :">
+            <b-input id="name" v-model="user.name"></b-input>
           </b-field>
 
-          <b-field label="Mot de passe :">
-            <b-input v-model="user.passwd" type="password" password-reveal></b-input>
+          <b-field label-for="passwd" label="Mot de passe :">
+            <b-input id="passwd" v-model="user.passwd" type="password" password-reveal></b-input>
           </b-field>
 
           <div class="field is-grouped is-grouped-left">
@@ -40,7 +40,7 @@
     data() {
       return {
         user: {
-          login: '',
+          handle: '',
           name: '',
           passwd: '',
           email: '',
@@ -61,7 +61,7 @@
             })
           })
           .catch(err => {
-            this.$snackbar.open({
+            this.$toast.open({
               message: 'Une erreur est survenue lors de l\'inscription',
               type: 'is-danger',
               position: 'is-top'
