@@ -35,6 +35,11 @@ function request(url, config) {
   // whether it was successful or not
   return fetch(url, config)
     .then(res => res.ok ? res.json() : Promise.reject(res))
+  //  .then(res => new Promise(resolve => {
+  //    window.setTimeout(() => {
+  //      resolve(res)
+  //    }, Math.random() * 3000 + 1000)
+  //  }))
 }
 
 API.post = (url, data) => {
@@ -46,12 +51,18 @@ API.post = (url, data) => {
 }
 
 API.patch = (url, data) => {
-  const conf = Object.assign({}, config, { method: 'PATCH' })
+  const conf = Object.assign({
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }, config)
   return request(url, conf)
 }
 
-API.delete = url => {
-  const conf = Object.assign({}, config, { method: 'DELETE' })
+API.delete = (url, data) => {
+  const conf = Object.assign({
+    method: 'DELETE',
+    body: JSON.stringify(data),
+  }, config)
   return request(url, conf)
 }
 

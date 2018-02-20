@@ -7,7 +7,7 @@
       <div class="box">
         <form v-on:submit.prevent="signin">
           <b-field label-for="handle" label="Identifiant :">
-            <b-input id="handle" v-model="user.handle"></b-input>
+            <b-input ref="handle" id="handle" v-model="user.handle"></b-input>
           </b-field>
 
           <b-field label-for="mail" label="Adresse mail :">
@@ -46,6 +46,10 @@
           email: '',
         }
       }
+    },
+
+    mounted() {
+      this.$refs.handle.focus()
     },
 
     methods: {

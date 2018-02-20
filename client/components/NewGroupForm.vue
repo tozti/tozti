@@ -1,5 +1,5 @@
 <template>
-  <form action="">
+  <form v-on:submit.prevent="attemptNewGroup">
     <div class="modal-card" style="width: auto">
       <header>
         <p class="modal-card-head">Nouveau groupe</p>
@@ -8,6 +8,7 @@
         <b-field label-for="name" label="Nom">
           <b-input
             v-model="group.name"
+            ref="name"
             required>
           </b-input>
         </b-field>
@@ -19,8 +20,13 @@
         </b-field>
       </section>
       <footer class="modal-card-foot">
+        <input
+          class="button is-primary"
+          type="submit"
+          :disabled="attempting"
+          value="Créer">
         <button class="button" type="button" @click="$parent.close()">Annuler</button>
-        <a class="button is-primary" :class="{ 'is-loading': attempting }" @click="attemptNewGroup">Créer</a>
+        <i v-if="attempting" class="loading-spinner"></i>
       </footer>
     </div>
   </form>
@@ -38,6 +44,10 @@
       }
     },
 
+    mounted() {
+      this.$refs.name.focus()
+    },
+
     methods: {
       attemptNewGroup() {
         this.attempting = true
@@ -50,8 +60,10 @@
         let group = null
 
         tozti.api
+          // creating the group
           .post(tozti.api.endpoints.resources, { data })
 
+          // then adding the current user to it
           .then(({ data }) => {
             let url = window.location.origin + tozti.me.relationships.groups.self
             group = data

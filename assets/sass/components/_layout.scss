@@ -167,6 +167,28 @@ body {
 	border-color: lighten($primary, 17);
 }
 
+@keyframes swipe {
+  0% { background-position: 0 0; }
+  100% { background-position: 200px 0; }
+}
+
+.placeholder {
+  animation: 1s linear infinite swipe;
+  background: linear-gradient(to right, #eee 10px, #ddd 30px, #eee 60px);
+  background-size: 200px;
+}
+
+span.placeholder {
+  display: inline-block;
+  width: 5em;
+}
+
+p.placeholder,
+span.placeholder {
+  height: .6em;
+  border-radius: .2em;
+}
+
 .main-content {
 
 	padding: $content-padding;
@@ -244,3 +266,4 @@ body {
     transition: background-color 70ms linear;
   }
 }
+
