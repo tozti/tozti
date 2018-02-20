@@ -199,7 +199,6 @@ class App:
     def __init__(self):
         self._app = web.Application(middlewares=[error_handler, tozti.auth.middleware.auth_middleware])
         self._static_dirs = {}
-        self._includes_after = []
         self._dep_graph_includes = DependencyGraph()
         self._types = {}
 
@@ -246,7 +245,7 @@ class App:
 
     def _render_index(self):
         logger.debug('Rendering index.html')
-        incs = list(self._dep_graph_includes.toposort()) + self._includes_after
+        incs = list(self._dep_graph_includes.toposort())
 
         context = {
             'styles': [{'src': u} for u in incs if u.split('.')[-1] == 'css'],
@@ -264,7 +263,6 @@ class App:
             'auth',
             router=tozti.auth.router))
 
-
         self.register(Extension(
             'store',
             router=tozti.store.router,
@@ -274,10 +272,9 @@ class App:
         self.register(Extension(
             'core',
             static_dir=os.path.join(tozti.TOZTI_BASE, 'dist'),
-            includes=['bootstrap.js'],
+            includes=['main.js'],
             types=SCHEMAS))
 
-        self._includes_after.append('/static/core/launch.js')
 
     def main(self, loop=None):
         """Start the server."""

@@ -36,17 +36,17 @@ from pymacaroons import Macaroon, Verifier
 router = RouterDef()
 login = router.add_route('/login')
 is_logged = router.add_route('/is_logged')
-create_user = router.add_route('/create_user')
+create_user = router.add_route('/signup')
 me = router.add_route('/me')
 
 @login.post
 @decorators.restrict_not_logged_in
 async def login_post(req):
-    if req.content_type != 'application/json':
+    if req.content_type != 'application/vnd.api+json':
         raise NotJsonError()
     try:
         data = await req.json()
-        login = data['login']
+        login = data['handle']
         passwd = data['passwd']
     except (JSONDecodeError, IndexError, KeyError):
         raise BadJsonError()
@@ -62,16 +62,16 @@ async def login_post(req):
         raise BadPasswordError('The login/password couple you submited seems to be unknown to our server')
 
     rep = {'logged': True}
-    
+
     if not tozti.PRODUCTION:
         rep['uid'] = str(user_uid)
 
     ans = json_response(rep)
-    mac = create_macaroon({'login': login, 'uid': str(user_uid)})
+    mac = create_macaroon({'handle': login, 'uid': str(user_uid)})
     ans.set_cookie('auth-token', mac.serialize())
-        
+
     return ans
-    
+
 @is_logged.get
 @decorators.restrict_known_user
 async def is_logged(req):
@@ -79,11 +79,11 @@ async def is_logged(req):
 
 @create_user.post
 async def create_user(req):
-    if req.content_type != 'application/json':
+    if req.content_type != 'application/vnd.api+json':
         raise NotJsonError()
     try:
         data = await req.json()
-        login = data['login']
+        login = data['handle']
         name = data['name']
         passwd = data['passwd']
         email = data['email']
@@ -91,8 +91,9 @@ async def create_user(req):
         raise BadJsonError()
 
     uid_user = await req.app['tozti-store'].create({'data':{'type':'core/user', 'attributes':{
-    	'name':name, 'login':login, 'email':email
+    	'name':name, 'handle':login, 'email':email
     }}})
+
     hash = pwhash_str(passwd.encode('utf-8')).decode('utf-8')
     await req.app['tozti-store'].set_login_hash(login, hash)
 
@@ -101,11 +102,11 @@ async def create_user(req):
     if not tozti.PRODUCTION:
         rep['hash'] = hash
         rep['uid'] = str(uid_user)
-        
+
     ans = json_response(rep)
     return ans
 
 @me.get
 @decorators.restrict_known_user
 async def me(req):
-    return json_response(req['user'])
+    return json_response({ 'data': req['user'] })

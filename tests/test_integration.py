@@ -21,7 +21,7 @@ def test_tozti_routing(tozti):
 
 
 
-
+"""
 # vue routing
 @pytest.mark.extensions("vue-routing01")
 def test_tozti_vue_routing(selenium, tozti):
@@ -36,7 +36,7 @@ def test_tozti_vue_menu_item(selenium, tozti):
     selenium.get("http://0.0.0.0:8080/")
     assert("test menu item" in selenium.page_source)
     assert(len(selenium.find_elements_by_xpath("//a[contains(text(), 'test menu item')]")) == 1)
-
+"""
 
 # test than loading a bad define type fails
 @pytest.mark.extensions("type-baddefined01")

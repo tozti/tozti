@@ -49,10 +49,13 @@ def check_call(meth, path, json=None, prefix=API, session=None):
     Raises APIError in case the api returns an error. Raises JSONDecodeError
     if the response is not valid JSON.
     """
+
     if session is None:
         session = request.Session()
-    
-    resp = session.request(meth, prefix + path, json=json)
+
+    resp = session.request(meth, prefix + path, json=json,
+                            headers = { 'content-type': 'application/vnd.api+json' })
+
     ans = resp.json()
     if 'errors' in ans:
         raise APIError(**ans['errors'][0])

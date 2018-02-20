@@ -1,10 +1,17 @@
 import Vue from 'vue'
+import Buefy from 'buefy'
+import ToztiLayout from './components/Tozti.vue'
+import promiseFinally from 'promise.prototype.finally'
 
-import App       from './components/App.vue'
-import Dashboard from './components/Dashboard.vue'
-import Taxonomy  from './components/Taxonomy.vue'
+promiseFinally.shim()
 
+import { addRoutes, getRoutes } from './routes'
 import store from './store'
+import api from './api'
+
+import AppView from './components/App.vue'
+
+Vue.use(Buefy)
 
 // Create a 'polymorphic' component.
 // A polymorphic component is a component with a single prop `resource` that
@@ -44,17 +51,24 @@ export function polymorphic_component(name, fallback) {
     return table;
 }
 
-const tozti = window.tozti = {
-  App,
 
-  routes: [
-    { name: 'home',      path: '/',      component: Dashboard },
-    { name: 'workspace', path: '/w/:id', component: Taxonomy },
-    { path: '/g/:taxonomy+', component: Taxonomy },
+const tozti = window.tozti = {
+  addRoutes,
+  store,
+  api,
+
+  me:  null,
+  app: null,
+
+  globalMenuItems:
+    [ { name: 'Mes groupes', route: '/g/', props: { icon: 'nc-multiple-11' } }
+    , { name: 'Mes espaces', route: '/w/', props: { icon: 'nc-grid-45' } }
   ],
 
-  globalMenuItems: [{ name: 'Accueil', route: '/', props: { icon: 'nc-home-52' } }],
-  workspaceMenuItems: [{ name: 'Résumé', route: 'workspace', props: { icon: 'nc-grid-45' } }],
+  workspaceMenuItems: [
+    { name: 'Résumé', route: 'workspace', props: { icon: 'nc-eye-19' } }
+  ],
+
 
   /**
    * Define a global sidebar menu item.
@@ -65,6 +79,7 @@ const tozti = window.tozti = {
     tozti.globalMenuItems.push({ name, route, props})
   },
 
+
   /**
    * @param {string} name  - The name of the workspace menu item.
    * @param {string} route - The name of the route it is associated with.
@@ -74,7 +89,25 @@ const tozti = window.tozti = {
     tozti.workspaceMenuItems.push({ name, route, props })
   },
 
-  postLaunchHooks: [],
+
+  /**
+   * Start the tozti web app.
+   */
+  launch() {
+    this.app = new Vue({
+      el: '#app',
+
+      router: new VueRouter({
+        mode: "history",
+        routes: getRoutes()
+      }),
+
+      render: h => h(AppView)
+    })
+  }
+
 }
 
+
 export default tozti
+

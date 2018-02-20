@@ -78,13 +78,13 @@ relationship = router.add_route('/resources/{id:%s}/{rel}' % UUID_RE)
 types = router.add_route('/by-type/{type:%s}' % TYPE_RE)
 
 async def get_json_from_request(req):
-    if req.content_type != 'application/json':
+    if req.content_type != 'application/vnd.api+json':
         raise NotJsonError()
     try:
         data = await req.json()
     except JSONDecodeError:
         raise BadJsonError()
-    
+
     return data
 
 @resources.post
@@ -137,7 +137,6 @@ async def relationship_put(req):
     """Request handler for ``PUT /api/store/resources/{id}/{rel}``."""
 
     data = await get_json_from_request(req)
-    
     id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
 
@@ -148,7 +147,7 @@ async def relationship_put(req):
 @relationship.post
 async def relationship_post(req):
     """Request handler for ``POST /api/store/resources/{id}/{rel}``."""
-    
+
     data = await get_json_from_request(req)
     id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
@@ -171,7 +170,7 @@ async def relationship_delete(req):
 async def types_get(req):
     """Request handler for ``GET /api/store/by-type/{type}``."""
     type = req.match_info['type']
-    
+
     from pprint import pprint
     pprint(req.GET)
 

@@ -209,7 +209,7 @@ class Store:
                              % data['relationships'].pop())
 
         return {'type': data['type'], 'attrs': attrs, 'rels': rels}
-    
+
     async def _render_relationship(self, id, rel, type_hint=None):
         """Renders the relationship `rel` belonging to resource with given id. 
 
@@ -337,7 +337,7 @@ class Store:
         return sanitized['_id']
 
     async def set_login_hash(self, login, hash):
-        await self._client.tozti.auth.update_one({'login': login}, {'$set': {'hash': hash}}, upsert=True)
+        await self._client.tozti.auth.update_one({'handle': login}, {'$set': {'hash': hash}}, upsert=True)
 
     async def _resource_by_id(self, id):
         """Returns the resource with given id.
@@ -357,7 +357,7 @@ class Store:
         Raises `NoResourceError` if the login is not found.
         """
 
-        res = await self._client.tozti.auth.find_one({'login': login},
+        res = await self._client.tozti.auth.find_one({'handle': login},
                                                      {'hash': 1})
         if res is None:
             raise LoginUnknown('User not found : {}'.format(login))
@@ -369,10 +369,10 @@ class Store:
         Raises `NoResourceError` if the login is not found.
         """
 
-        res = await self._resources.find_one({'type': 'core/user', 'attrs.login': login}, {'_id': 1})
+        res = await self._resources.find_one({'type': 'core/user', 'attrs.handle': login}, {'_id': 1})
         if res is None:
             raise LoginUnknown('User not found : {}'.format(login))
-        
+
         return res['_id']
 
     async def typeof(self, id):
@@ -384,7 +384,7 @@ class Store:
 
         res = await self._resource_by_id(id)
         return res['type']
-        
+
     async def get(self, id):
         """Query the DB for a resource.
 
@@ -396,8 +396,8 @@ class Store:
         logger.debug('querying DB for resource {}'.format(id))
         resp = await self._resource_by_id(id)
         return await self._render(resp)
-        
-        
+
+
     async def update(self, id, raw):
         """Update a resource in the DB.
 
@@ -513,7 +513,7 @@ class Store:
             raise BadRelError('auto relationships cannot be deleted', status=403)
         else:
             raise BadRelError('unknown relationship: %s' % rel, status=404)
-        
+
         ids = await self._sanitize_to_many(data, types, ignore_missing_ids=True)
 
         res = await self._resources.update_one(
@@ -527,7 +527,7 @@ class Store:
         logger.debug('Querying type %s' % type)
         if type not in self._typecache:
             raise BadTypeError(type=type)
-        
+
         cursor = self._resources.find({'type': type}, ['_id'])
         ret = []
         async for hit in cursor:

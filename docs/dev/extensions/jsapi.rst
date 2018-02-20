@@ -19,10 +19,10 @@ to define new routes.
 Imagine you want to define a new 'page' displaying a component called ``Calendar`` that 
 can be accessed on ``<tozti>/mycalendar``. Then, you must add the following lines in your
 ``index.js``::
-    
-    tozti.routes.unshift(
-        { path: '/mycalendar', component: Calendar }
-    )
+
+    tozti.addRoutes([
+      { path: '/mycalendar', component: Calendar }
+    ])
 
 
 Adding items in the menu bar

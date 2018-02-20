@@ -4,7 +4,6 @@ import tozti
 from tozti.utils import APIError
 
 def create_macaroon(*args, **kwargs):
-    print(tozti.CONFIG['cookie']['private_key'])
     mac = Macaroon(
         location=tozti.CONFIG['http']['host'],
         identifier=tozti.CONFIG['cookie']['public_key'],
@@ -13,10 +12,10 @@ def create_macaroon(*args, **kwargs):
 
     for a in args:
         mac.add_first_party_caveat(json.dumps(a))
-            
+
     for key, value in kwargs.items():
         mac.add_first_party_caveat('{}={}'.format(json.dumps(key), json.dumps(value)))
-    
+
     return mac
 
 class BadPasswordError(tozti.utils.APIError):
@@ -43,4 +42,4 @@ class LoginUnknown(tozti.utils.APIError):
     code = 'Login_unknown'
     title = 'Login not known'
     status = 400
-    
+

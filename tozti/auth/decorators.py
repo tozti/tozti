@@ -30,4 +30,4 @@ def restrict_not_logged_in(func):
                 raise LoginForbidden('You must not be logged to do this request') 
         return func(req, *args, **kwargs)
     return function_not_logged
-    
+

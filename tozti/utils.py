@@ -165,7 +165,7 @@ def json_response(data, **kwargs):
 
 def validate(inst, schema):
     """Validate data against a JsonSchema."""
-    
+
     return jsonschema.validate(inst, schema, cls=jsonschema.Draft4Validator,
                                format_checker=jsonschema.FormatChecker())
 
@@ -207,7 +207,7 @@ class APIError(Exception):
 
 class NotJsonError(APIError):
     code = 'NOT_JSON'
-    title = "content type is not `application/json`"
+    title = "content type is not `application/vnd.api+json`"
     status = 400
 
 
