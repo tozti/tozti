@@ -35,7 +35,7 @@ logger = logbook.Logger('tozti.store')
 import tozti
 from tozti.utils import (RouterDef, APIError, NotJsonError, BadJsonError,
                          BadDataError, json_response)
-from tozti.store.type_schema import Schema
+from tozti.store.schema import Schema
 
 
 class NoResourceError(APIError):
