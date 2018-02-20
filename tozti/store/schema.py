@@ -28,13 +28,13 @@ from tozti.utils import validate, ValidationError, BadDataError
 
 
 def fmt_resource_url(id):
-    return 'http://%s:%s/api/store/resources/%s' % (
-        tozti.CONFIG['http']['host'], tozti.CONFIG['http']['port'], id)
+    return 'http://%s/api/store/resources/%s' % (
+        tozti.CONFIG['http']['hostname'], id)
 
 
 def fmt_relationship_url(id, rel):
-    return 'http://%s:%s/api/store/resources/%s/%s' % (
-        tozti.CONFIG['http']['host'], tozti.CONFIG['http']['port'], id, rel)
+    return 'http://%s/api/store/resources/%s/%s' % (
+        tozti.CONFIG['http']['hostname'], id, rel)
 
 
 class Schema:
