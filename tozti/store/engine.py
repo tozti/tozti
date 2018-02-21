@@ -23,7 +23,7 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from tozti.store import logger, NoResourceError, NoTypeError, BadItemError, NoItemError
-from tozti.store.schema import Schema
+from tozti.store.schema import Schema, fmt_resource_url
 from tozti.utils import BadDataError, ValidationError, validate
 
 from tozti.auth.utils import LoginUnknown as LoginUnknown
@@ -126,7 +126,7 @@ class Store:
             raise NoItemError(key=key, status=404)
 
         data = await self.resource_by_id(id, {'body.%s' % key: 1})
-        return await schema[key].render(id, key, data['body'].get(key))
+        return await schema[key].render(id, data['body'].get(key))
 
     async def item_update(self, id, key, raw):
         schema = self._types[await self.type_by_id(id)]
@@ -174,15 +174,19 @@ class Store:
     async def resources_by_type(self, type):
         logger.debug('Querying type %s' % type)
         if type not in self._types:
-            raise NoTypeError(type=type)
+            # in this case we want to send back a 404, not
+            # a 400
+            e = NoTypeError(type=type)
+            e.status = 404
+            raise e
 
-        cursor = self._resources.find({'type': type}, ['_id'])
+        cursor = self._db.resources.find({'type': type}, ['_id'])
         links = []
         async for hit in cursor:
             links.append({'id': hit['_id'],
                           'type': type,
                           'href': fmt_resource_url(hit['_id'])})
-        return {'data': links}
+        return links
 
     async def close(self):
         """Close the connection to the MongoDB server."""

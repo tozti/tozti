@@ -8,22 +8,23 @@ TYPE = "type/foo"
 
 @pytest.mark.extensions("type")
 @pytest.mark.parametrize("json, diff, expected", [
-    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"name": "g"},        True),
-    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {},                   False),
-    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"email": "b@b.com"}, True),
-    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"email": "a"},       False),
-    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}, {"bar": "a"},         False),
+    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}, {"name": "g"},        True),
+    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}, {},                   False),
+    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}, {"email": "b@b.com"}, True),
+    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}, {"email": "a"},       False),
+    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}, {"bar": "a"},         False),
     ])
 def test_storage_update(tozti, db, json, diff, expected):
+    assert(False) # several bugs are hidden here, TODO: fix
     try:
         uid = add_object_get_id(json)
-        result = make_call("PATCH", "/store/resources/{}".format(uid), json={"data": {"attributes": diff}})
+        result = make_call("PATCH", "/store/resources/{}".format(uid), json={"data": {"body": diff}})
         # test if the request succeeded
         if result.status_code == 200:
             theory = json
             for (k, v) in diff.items():
-                if k in theory["attributes"]:
-                    theory["attributes"][k] = v
+                if k in theory["body"]:
+                    theory["body"][k] = v
             if db.count() == 1:
                 assert db_contains_object(db, theory) == expected
             else:
@@ -35,7 +36,7 @@ def test_storage_update(tozti, db, json, diff, expected):
 
 @pytest.mark.extensions("type")
 def test_storage_update_no_content(tozti, db):
-    json = {"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}}
+    json = {"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}
     uid = add_object_get_id(json)
     assert make_call("PATCH", "/store/resources/{}".format(uid)).status_code == 400
 

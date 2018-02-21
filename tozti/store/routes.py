@@ -136,7 +136,7 @@ async def types_get(req):
     """Request handler for ``GET /api/store/by-type/{type}``."""
 
     type = req.match_info['type']
-    return json_response({'data': await req.app['tozti-store'].type_get(type)})
+    return json_response({'data': await req.app['tozti-store'].resources_by_type(type)})
 
 
 async def open_db(app, types):

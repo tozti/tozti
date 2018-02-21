@@ -8,7 +8,7 @@ TYPE = "type/foo"
 
 @pytest.mark.extensions("type")
 @pytest.mark.parametrize("json", [
-    {"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}},
+    {"type": TYPE, "body": {"name": "f", "email": "a@a.com"}},
     ])
 def test_storage_get_object(tozti, db, json):
     try:
@@ -16,7 +16,7 @@ def test_storage_get_object(tozti, db, json):
         result = make_call("GET", "/store/resources/{}".format(uid)).json()["data"]
         expected = json
         expected["id"] = uid
-        assert uid == result["id"] and json["attributes"] == result["attributes"]
+        assert uid == result["id"] and json["body"] == result["body"]
     except:
         assert False
 

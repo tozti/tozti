@@ -9,10 +9,10 @@ TYPE = "type/foo"
 
 @pytest.mark.extensions("rel01")
 def test_storage_rel_toone_get(tozti, db):
-    bar = {"attributes": {"bar": "bar"}}
-    uid_bar = add_object_get_id({"type": "rel01/bar", "attributes": {"bar": "bar"}})
-    foo = {"attributes": {"foo": "foo"}, "relationships": {"member": UUID(uid_bar)}}
-    uid_foo = add_object_get_id({"type": "rel01/foo", "attributes": {"foo": "foo"}, "relationships": {"member": {"data": {"id": uid_bar}}}})
+    bar = {"body": {"bar": "bar"}}
+    uid_bar = add_object_get_id({"type": "rel01/bar", "body": {"bar": "bar"}})
+    foo = {"body": {"foo": "foo", "member": UUID(uid_bar)}}
+    uid_foo = add_object_get_id({"type": "rel01/foo", "body": {"foo": "foo", "member": {"data": {"id": uid_bar}}}})
 
     result = make_call("GET", "/store/resources/{}/member".format(uid_foo))
     assert result.json()["data"]["data"]["id"] == uid_bar
@@ -23,10 +23,10 @@ def test_storage_rel_toone_get_from_nonexisting_ressource(tozti, db):
 
 @pytest.mark.extensions("rel01")
 def test_storage_rel_toone_get_deleted(tozti, db):
-    bar = {"attributes": {"bar": "bar"}}
-    uid_bar = add_object_get_id({"type": "rel01/bar", "attributes": {"bar": "bar"}})
-    foo = {"attributes": {"foo": "foo"}, "relationships": {"member": UUID(uid_bar)}}
-    uid_foo = add_object_get_id({"type": "rel01/foo", "attributes": {"foo": "foo"}, "relationships": {"member": {"data": {"id": uid_bar}}}})
+    bar = {"body": {"bar": "bar"}}
+    uid_bar = add_object_get_id({"type": "rel01/bar", "body": {"bar": "bar"}})
+    foo = {"body": {"foo": "foo", "member": UUID(uid_bar)}}
+    uid_foo = add_object_get_id({"type": "rel01/foo", "body": {"foo": "foo", "member": {"data": {"id": uid_bar}}}})
 
     make_call("DELETE", "/store/resources/{}".format(uid_bar))
 
@@ -34,27 +34,27 @@ def test_storage_rel_toone_get_deleted(tozti, db):
 
 @pytest.mark.extensions("rel01")
 def test_storage_rel_toone_get_badname(tozti, db):
-    bar = {"attributes": {"bar": "bar"}}
-    uid_bar = add_object_get_id({"type": "rel01/bar", "attributes": {"bar": "bar"}})
-    foo = {"attributes": {"foo": "foo"}, "relationships": {"member": UUID(uid_bar)}}
-    uid_foo = add_object_get_id({"type": "rel01/foo", "attributes": {"foo": "foo"}, "relationships": {"member": {"data": {"id": uid_bar}}}})
+    bar = {"body": {"bar": "bar"}}
+    uid_bar = add_object_get_id({"type": "rel01/bar", "body": {"bar": "bar"}})
+    foo = {"body": {"foo": "foo", "member": UUID(uid_bar)}}
+    uid_foo = add_object_get_id({"type": "rel01/foo", "body": {"foo": "foo", "member": {"data": {"id": uid_bar}}}})
     assert make_call("GET", "/store/resources/{}/member2".format(uid_foo)).status_code == 404
 
 @pytest.mark.extensions("rel02")
 def test_storage_rel_tomany_get(tozti, db):
-    bar = {"attributes": {"bar": "bar"}}
-    uid_bar = add_object_get_id({"type": "rel02/bar", "attributes": {"bar": "bar"}})
-    uid_bar2 = add_object_get_id({"type": "rel02/bar", "attributes": {"bar": "bar"}})
-    uid_foo = add_object_get_id({"type": "rel02/foo", "attributes": {"foo": "foo"}, "relationships": {"members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
+    bar = {"body": {"bar": "bar"}}
+    uid_bar = add_object_get_id({"type": "rel02/bar", "body": {"bar": "bar"}})
+    uid_bar2 = add_object_get_id({"type": "rel02/bar", "body": {"bar": "bar"}})
+    uid_foo = add_object_get_id({"type": "rel02/foo", "body": {"foo": "foo", "members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
 
     result = make_call("GET", "/store/resources/{}/members".format(uid_foo))
     assert set(x["id"] for x in result.json()["data"]["data"]) == set([uid_bar, uid_bar2])
 
 @pytest.mark.extensions("rel02")
 def test_storage_rel_tomany_get_deleted(tozti, db):
-    uid_bar = add_object_get_id({"type": "rel02/bar", "attributes": {"bar": "bar"}})
-    uid_bar2 = add_object_get_id({"type": "rel02/bar", "attributes": {"bar": "bar"}})
-    uid_foo = add_object_get_id({"type": "rel02/foo", "attributes": {"foo": "foo"}, "relationships": {"members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
+    uid_bar = add_object_get_id({"type": "rel02/bar", "body": {"bar": "bar"}})
+    uid_bar2 = add_object_get_id({"type": "rel02/bar", "body": {"bar": "bar"}})
+    uid_foo = add_object_get_id({"type": "rel02/foo", "body": {"foo": "foo", "members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
 
     make_call("DELETE", "/store/resources/{}".format(uid_bar))
 
@@ -62,7 +62,7 @@ def test_storage_rel_tomany_get_deleted(tozti, db):
 
 @pytest.mark.extensions("rel02")
 def test_storage_rel_tomany_get_empty(tozti, db):
-    uid_foo = add_object_get_id({"type": "rel02/foo", "attributes": {"foo": "foo"}, "relationships": {"members": {"data": []}}})
+    uid_foo = add_object_get_id({"type": "rel02/foo", "body": {"foo": "foo", "members": {"data": []}}})
     result = make_call("GET", "/store/resources/{}/members".format(uid_foo))
     assert len(result.json()["data"]["data"]) == 0
 
