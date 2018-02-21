@@ -6,33 +6,33 @@ from uuid import UUID, uuid4
 
 TYPE = "type/foo"
 
+
 @pytest.mark.extensions("type")
-@pytest.mark.parametrize("json, diff, expected", [
-    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}, {"name": "g"},        True),
-    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}, {},                   False),
-    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}, {"email": "b@b.com"}, True),
-    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}, {"email": "a"},       False),
-    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}}, {"bar": "a"},         False),
-    ])
-def test_storage_update(tozti, db, json, diff, expected):
-    assert(False) # several bugs are hidden here, TODO: fix
-    try:
-        uid = add_object_get_id(json)
-        result = make_call("PATCH", "/store/resources/{}".format(uid), json={"data": {"body": diff}})
-        # test if the request succeeded
-        if result.status_code == 200:
-            theory = json
-            for (k, v) in diff.items():
-                if k in theory["body"]:
-                    theory["body"][k] = v
-            if db.count() == 1:
-                assert db_contains_object(db, theory) == expected
-            else:
-                assert not expected
-        else:
-            assert not expected
-    except:
-        assert False
+def test_storage_update_empty(tozti, db):
+    uid = add_object_get_id({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}})
+    assert (False) # because server error
+    assert make_call("PATCH", "/store/resources/{}".format(uid), json={"data":{"body": {}}}).status_code == 500
+
+
+@pytest.mark.extensions("type")
+def test_storage_update_invalid_entry(tozti, db):
+    uid = add_object_get_id({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}})
+    assert make_call("PATCH", "/store/resources/{}".format(uid), json={"data":{"body": {"bar": "a"}}}).status_code == 400
+
+@pytest.mark.extensions("type")
+def test_storage_update_invalid_entry_type(tozti, db):
+    uid = add_object_get_id({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}})
+    assert make_call("PATCH", "/store/resources/{}".format(uid), json={"data":{"body": {"email": "a"}}}).status_code == 400
+
+
+@pytest.mark.extensions("type")
+def test_storage_update_valid(tozti, db):
+    uid = add_object_get_id({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}})
+    theory = {"type": TYPE, "body": {"name": "g", "email": "a@a.com"}}
+    assert make_call("PATCH", "/store/resources/{}".format(uid),
+                    json={"data": {"body": {"name": "g"}}}).status_code == 200
+    assert db.count() == 1
+    assert db_contains_object(db, theory)
 
 @pytest.mark.extensions("type")
 def test_storage_update_no_content(tozti, db):
@@ -45,4 +45,3 @@ def test_storage_update_object_fail_not_uuid(tozti, db):
 
 def test_storage_update_object_fail_uuid(tozti, db):
     assert make_call("PATCH", "/store/resources/00000000-0000-0000-0000-000000000000").status_code == 400
-

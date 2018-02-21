@@ -51,7 +51,7 @@ class BadAttrError(BadItemError):
     code = 'BAD_ATTRIBUTE'
     title = 'an attribute is invalid'
     status = 400
-    template = 'attribute {key} is invalid: {msg}'
+    template = 'attribute {key} is invalid: {err}'
 
 
 class BadRelError(BadItemError):
