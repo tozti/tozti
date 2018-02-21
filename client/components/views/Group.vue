@@ -54,6 +54,7 @@
 
             tozti.store
               .rels.delete(tozti.me.body.groups, { id: this.id })
+              .then(() => tozti.store.rels.delete(tozti.me.body.pinned, { id: this.id }))
               .then(() => tozti.store.delete(this.id))
               .then(() => {
                 this.$router.push('/g/')

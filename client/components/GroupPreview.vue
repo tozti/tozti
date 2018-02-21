@@ -6,8 +6,11 @@
         <p class="title is-5">{{resource.body.name}}</p>
         <p class="subtitle is-6">@{{resource.body.handle}}</p>
       </div>
+      <div class="group-actions">
+        <b-icon v-if="pinned" size="is-small" pack="mdi" icon="pin"></b-icon>
+      </div>
     </div>
-    <div v-if="!resource" class="group-item">
+    <div v-else class="group-item">
       <div class="group-media placeholder"></div>
       <div class="group-content">
         <p class="title is-5"><span class="placeholder"></span></p>
@@ -21,6 +24,12 @@
   import { resourceMixin } from '../mixins'
 
   export default {
-    mixins: [ resourceMixin ]
+    mixins: [ resourceMixin ],
+
+    computed: {
+      pinned() {
+        return tozti.me.relationships.pinned.data.some(group => group.id == this.id)
+      }
+    }
   }
 </script>

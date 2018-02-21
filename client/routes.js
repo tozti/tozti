@@ -1,9 +1,7 @@
+import ToztiLayout from './components/Tozti.vue'
+
 import LoginView from './components/Login.vue'
 import SignUpView from './components/SignUp.vue'
-import ToztiLayout from './components/Tozti.vue'
-import DashboardView from './components/views/Dashboard.vue'
-import SummaryView from './components/views/Summary.vue'
-import TaxonomyView from './components/views/Taxonomy.vue'
 
 import Workspaces from './components/views/Workspaces.vue'
 import Groups from './components/views/Groups.vue'
@@ -30,14 +28,12 @@ const enclosedRoutes =
   , { name: 'group'
     , path: 'g/:id'
     , component: GroupView
-    , props: route => ({ id: route.params.id }) 
+    , props: true
     }
 
   , { path: 'settings', component: SettingsView }
 
   , { path: 'w/', component: Workspaces }
-  , { path: 'w/:id',  name: 'workspace', component: SummaryView }
-  , { path: 'w/:taxonomy+', component: TaxonomyView, props: true }
   ]
 
 

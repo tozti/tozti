@@ -1,10 +1,8 @@
 <template>
   <aside class="main-sidebar">
 
-    <!-- global menu items -->
     <nav>
-      <router-link
-        v-for="{ name, route, props } in globalMenuItems"
+      <router-link v-for="{ name, route, props } in globalMenuItems"
         :to="route"
         :key="name"
         active-class="active"
@@ -13,19 +11,26 @@
       </router-link>
     </nav>
 
-    <!-- workspace items -->
-    <workspace-menu v-for="id in workspaces" :key="id" :id="id"></workspace-menu>
+    <nav v-if="pinned.length">
+      <h3>épinglé</h3>
+      <pinned-item v-for="pin in pinned"
+        :id="pin.id"
+        :key="pin.id">
+      </pinned-item>
+    </nav>
+
   </aside>
 </template>
 
 <script>
-  import WorkspaceMenu from './WorkspaceMenu.vue'
+  import PinnedItem from './PinnedItem.vue'
 
   export default {
-    components: { WorkspaceMenu },
+    components: { PinnedItem },
+
     data: _ => ({
       globalMenuItems: tozti.globalMenuItems,
-      workspaces: []
+      pinned: tozti.me.relationships.pinned.data
     })
   }
 </script>
