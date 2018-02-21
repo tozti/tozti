@@ -106,7 +106,8 @@ class Store:
 
         schema = self._types[await self.type_by_id(id)]
         data = await schema.sanitize(raw, is_create=False)
-        res = await self._db.resources.update_one({'_id': id}, {'$set': data})
+        if len(data) > 0:
+            await self._db.resources.update_one({'_id': id}, {'$set': data})
 
     async def delete(self, id):
         """Remove a resource from the DB.
