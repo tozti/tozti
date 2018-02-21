@@ -95,7 +95,15 @@ As a convention, all static assets must be put inside a folder ``dist`` inside
 your extension folder. Let's create a file called ``index.js`` inside
 ``extension-name/dist/``:
 
-TODO.
+.. code-block:: javascript
+
+   tozti.addRoutes([
+     { path: '/extension', component: {
+         template: '<div>my extensions</div>'
+       }
+     }
+   ])
+
 
 As you might have guessed, we need to inform *tozti* of the existence of this
 file, inside ``MANIFEST``::
@@ -105,8 +113,7 @@ file, inside ``MANIFEST``::
     'includes': ['index.js']
   }
 
-Once again, start the server and visit the URL ``<tozti>/``. A new widget
-should have appeared inside the Dashboard.
+Once again, start the server and visit the URL ``<tozti>/extension``. You should see some new content inside the usual layout.
 
 As stated below, adding CSS files in this ``includes`` list in exactly the same
 fashion allows the inclusion of custom CSS to *tozti*.

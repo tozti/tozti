@@ -85,7 +85,7 @@ const tozti = window.tozti = {
    * @param {string} route - The name of the route it is associated with.
    *                         This route should expect an id as a parameter.
    */
-  addWorkspaceMenuItem(ame, route, props = {}) {
+  addWorkspaceMenuItem(name, route, props = {}) {
     tozti.workspaceMenuItems.push({ name, route, props })
   },
 
