@@ -173,9 +173,9 @@ class LinkageModel:
         if self.targets is not None and type_url not in self.targets:
             raise BadRelError('unallowed type {given} for linked resource {target}',
                               given=type_url, target=target)
-        return target
+        return {'id': target, 'type': type_url}
 
-    async def render(self, target):
+    def render(self, target):
         """Render a resource object linkage.
 
         Does not catch KeyError in case the target is not found. The divergence
@@ -185,9 +185,9 @@ class LinkageModel:
         See https://jsonapi.org/format/#document-resource-object-linkage.
         """
 
-        return {'id': target,
-                'type': await self.db.type_by_id(target),
-                'href': fmt_resource_url(target)}
+        return {'id': target['id'],
+                'type': target['type'],
+                'href': fmt_resource_url(target['id'])}
 
 
 class AttributeModel:
@@ -326,12 +326,10 @@ class RelationshipModel:
         """
 
         if self.arity == 'to-one':
-            data = await self.link_model.render(link)
+            data = self.link_model.render(link)
 
         elif self.arity == 'to-many':
-            data = []
-            for l in link:
-                data.append(await self.link_model.render(l))
+            data = [self.link_model.render(l) for l in link]
 
         else:  # self.arity == 'auto'
             cursor = self.db._db.resources.find(

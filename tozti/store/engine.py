@@ -152,7 +152,7 @@ class Store:
 
         data = await schema[key].sanitize(key, raw)
 
-        await self._resources.update_one(
+        await self._db.resources.update_one(
             {'_id': id},
             {'$addToSet': {'body.%s' % key: {'$each': data}}})
 
@@ -174,11 +174,7 @@ class Store:
     async def resources_by_type(self, type):
         logger.debug('Querying type %s' % type)
         if type not in self._types:
-            # in this case we want to send back a 404, not
-            # a 400
-            e = NoTypeError(type=type)
-            e.status = 404
-            raise e
+            raise NoTypeError(type=type, status=404)
 
         cursor = self._db.resources.find({'type': type}, ['_id'])
         links = []
