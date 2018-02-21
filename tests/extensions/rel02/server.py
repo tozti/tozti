@@ -1,7 +1,7 @@
 foo_schema = {
         'body': {
             'foo': { 'type': 'string' },
-            "member": {
+            "members": {
                 "type": "relationship",
                 "arity": "to-many",
                 "targets": "rel02/bar",

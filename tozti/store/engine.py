@@ -122,17 +122,17 @@ class Store:
 
     async def item_read(self, id, key):
         schema = self._types[await self.type_by_id(id)]
-        if key not in schema._defs:
+        if key not in schema:
             raise NoItemError(key=key, status=404)
 
         data = await self.resource_by_id(id, {'body.%s' % key: 1})
-        return await schema.render_item(id, key, data['body'].get(key))
+        return await schema[key].render(id, key, data['body'].get(key))
 
     async def item_update(self, id, key, raw):
         schema = self._types[await self.type_by_id(id)]
 
         try:
-            data = await schema.sanitize_item(key, raw)
+            data = await schema[key].sanitize(key, raw)
         except NoItemError as err:
             err.status = 404
             raise err
@@ -144,11 +144,13 @@ class Store:
     async def item_append(self, id, key, raw):
         schema = self._types[await self.type_by_id(id)]
 
-        try:
-            data = await schema.sanitize_item(key, raw)
-        except NoItemError as err:
-            err.status = 404
-            raise err
+        if key not in schema:
+            raise NoItemError(key=key, status=404)
+
+        if not schema[key].is_array:
+            raise BadItemError('body item {key} is not an array', key=key)
+
+        data = await schema[key].sanitize(key, raw)
 
         await self._resources.update_one(
             {'_id': id},
@@ -157,11 +159,13 @@ class Store:
     async def item_remove(self, id, key, raw):
         schema = self._types[await self.type_by_id(id)]
 
-        try:
-            data = await schema.sanitize_item(key, raw)
-        except NoItemError as err:
-            err.status = 404
-            raise err
+        if key not in schema:
+            raise NoItemError(key=key, status=404)
+
+        if not schema[key].is_array:
+            raise BadItemError('body item {key} is not an array', key=key)
+
+        data = await schema[key].sanitize(raw)
 
         await self._db.resources.update_one(
             {'_id': id},

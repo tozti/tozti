@@ -109,7 +109,7 @@ class Schema:
 
         body = {}
         for (key, value) in data['body'].items():
-            body[key] = await self.sanitize_item(key, value)
+            body[key] = await self[key].sanitize(value)
 
         if is_create:
             return {'type': data['type'], 'body': body}
@@ -135,15 +135,13 @@ class Schema:
                 'meta': {'created': rep['created'],
                          'last-modified': rep['last-modified']}}
 
-    async def render_item(self, id, key, rep):
+    def __getitem__(self, key):
         if key not in self._defs:
             raise NoItemError(key=key)
-        return await self._defs[key].render(id, rep)
+        return self._defs[key]
 
-    async def sanitize_item(self, key, rep):
-        if key not in self._defs:
-            raise NoItemError(key=key)
-        return await self._defs[key].sanitize(rep)
+    def __contains__(self, key):
+        return key in self._defs
 
 
 class LinkageModel:
@@ -193,17 +191,18 @@ class LinkageModel:
 
 
 class AttributeModel:
-    writeable = True
-
     def __init__(self, name, schema, *, db):
-        self.writeable = True
-        self.name = name
         try:
             validate(schema, jsonschema.Draft4Validator.META_SCHEMA)
         except ValidationError as err:
             raise ValueError('invalid schema for %s: %s' % (name, err.message))
         self.schema = schema
+
+        self.name = name
         self.db = db
+
+        self.writeable = True
+        self.is_array = 'type' in schema and schema['type'] == 'array'
 
     async def sanitize(self, data):
         """Verify an attribute value and return it's content."""
@@ -283,15 +282,18 @@ class RelationshipModel:
             validate(schema, RelationshipModel.META_SCHEMA)
         except ValidationError:
             raise ValueError('invalid schema for relationship %s' % name)
-        self.name = name
         self.arity = schema['arity']
         if self.arity in ('to-one', 'to-many'):
             self.link_model = LinkageModel(schema.get('targets'), db=db)
         else:  # self.arity == 'auto'
             self.pred_type = schema['pred-type']
             self.pred_rel = schema['pred-relationship']
+
+        self.name = name
         self.db = db
+
         self.writeable = self.arity != 'auto'
+        self.is_array = self.arity == 'to-many'
 
     async def sanitize(self, data):
         """Verify the relationship object and return its internal format."""
