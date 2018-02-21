@@ -17,8 +17,7 @@ const fileLoader = {
 module.exports = {
 
   entry: {
-    launch: './client/launch.js',
-    bootstrap: './client/bootstrap.js',
+    main: './client/main.js',
     style: './assets/sass/style.scss',
   },
 

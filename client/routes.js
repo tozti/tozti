@@ -9,34 +9,58 @@ import Workspaces from './components/views/Workspaces.vue'
 import Groups from './components/views/Groups.vue'
 import GroupView from './components/views/Group.vue'
 
-// the readonly tag is present and express the fact 
-// that this route mustn't be modified
-let routes =
+
+const singleRoutes =
   [ { path: '/login'
     , component: LoginView
-    , readonly: true
     , meta: { requiresNoAuth: true }
-    },
-    { path: '/signup'
+    }
+
+  , { path: '/signup'
     , component: SignUpView
-    , readonly: true
     , meta: { requiresNoAuth: true }
-    },
+    }
+  ]
+
+
+const enclosedRoutes =
+  [ { path: 'g/', component: Groups }
+
+  , { name: 'group'
+    , path: 'g/:id'
+    , component: GroupView
+    , props: route => ({ id: route.params.id }) 
+    }
+
+  , { path: 'w/', component: Workspaces }
+  , { path: 'w/:id',  name: 'workspace', component: SummaryView }
+  , { path: 'w/:taxonomy+', component: TaxonomyView, props: true }
+  ]
+
+
+/**
+ * @param {Route[]} routes - The routes to add.
+ */
+export function addRoutes(routes) {
+  routes.forEach(route => {
+    if (route.meta && route.meta.single) {
+      singleRoutes.push(route)
+    }
+    else {
+      enclosedRoutes.push(route)
+    }
+  })
+}
+
+
+export function getRoutes() {
+  return singleRoutes.concat([
     { path: ''
     , component: ToztiLayout
     , meta: { requiresAuth: true }
     , redirect: 'g/'
     , readonly: true
-    , children:
-        [ { path: 'g/', component: Groups }
-         //, { path: 'foo/', component: Groups}
-        , { path: 'g/:id', name: 'group', component: GroupView
-          , props: route => ({ id: route.params.id }) }
-        , { path: 'w/', component: Workspaces }
-        , { path: 'w/:id',  name: 'workspace', component: SummaryView }
-        , { path: 'w/:taxonomy+', component: TaxonomyView, props: true }
-        ]
+    , children: enclosedRoutes
     }
-  ]
-
-export default routes
+  ])
+}
