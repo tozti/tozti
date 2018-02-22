@@ -110,14 +110,14 @@ def relationship_update(id, rel, data, session=None):
                       json={'data': data}, session=session)
 
 
-def relationship_append(id, rel, session=None, *data):
+def relationship_append(id, rel, *data, session=None):
     """Append items to a to-many relationship."""
 
     return check_call('POST', '/store/resources/%s/%s' % (id, rel),
                       json={'data': data}, session=session)
 
 
-def relationship_delete(id, rel, session=None, *data):
+def relationship_delete(id, rel, *data, session=None):
     """Delete items from a to-many relationship."""
 
     return check_call('DELETE', '/store/resources/%s/%s' % (id, rel),
