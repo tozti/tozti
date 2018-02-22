@@ -204,7 +204,7 @@ class AttributeModel:
         self.writeable = True
         self.is_array = 'type' in schema and schema['type'] == 'array'
 
-    async def sanitize(self, data):
+    async def sanitize(self, data, check_consistency=True):
         """Verify an attribute value and return it's content."""
 
         try:
@@ -295,7 +295,7 @@ class RelationshipModel:
         self.writeable = self.arity != 'auto'
         self.is_array = self.arity == 'to-many'
 
-    async def sanitize(self, data):
+    async def sanitize(self, data, check_consistency=True):
         """Verify the relationship object and return its internal format."""
 
         if self.arity == 'to-one':
@@ -303,17 +303,23 @@ class RelationshipModel:
                 validate(data, RelationshipModel.TO_ONE_SCHEMA)
             except ValidationError as err:
                 raise BadRelError(key=self.name, err=err.message)
-            return await self.link_model.sanitize(data['data'])
+            if check_consistency:
+                return await self.link_model.sanitize(data['data'])
+            else:
+                return {'id': data['data']['id']}
 
         elif self.arity == 'to-many':
             try:
                 validate(data, RelationshipModel.TO_MANY_SCHEMA)
             except ValidationError as err:
                 raise BadRelError(key=self.name, err=err.message)
-            links = []
-            for link in data['data']:
-                links.append(await self.link_model.sanitize(link))
-            return links
+            if check_consistency:
+                links = []
+                for link in data['data']:
+                    links.append(await self.link_model.sanitize(link))
+                return links
+            else:
+                return [{'id': link['id']} for link in data['data']]
 
         else:  # self.arity == 'auto'
             raise BadRelError('cannot write automatic relationship {key}',

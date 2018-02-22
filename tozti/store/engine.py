@@ -133,7 +133,7 @@ class Store:
         schema = self._types[await self.type_by_id(id)]
 
         try:
-            data = await schema[key].sanitize(key, raw)
+            data = await schema[key].sanitize(raw)
         except NoItemError as err:
             err.status = 404
             raise err
@@ -151,7 +151,9 @@ class Store:
         if not schema[key].is_array:
             raise BadItemError('body item {key} is not an array', key=key)
 
-        data = await schema[key].sanitize(key, raw)
+        print(raw)
+
+        data = await schema[key].sanitize(raw)
 
         await self._db.resources.update_one(
             {'_id': id},
@@ -166,11 +168,12 @@ class Store:
         if not schema[key].is_array:
             raise BadItemError('body item {key} is not an array', key=key)
 
-        data = await schema[key].sanitize(raw)
+        data = await schema[key].sanitize(raw, check_consistency=False)
+        print(data)
 
         await self._db.resources.update_one(
             {'_id': id},
-            {'$pullAll': {'body.%s' % key: data}})
+            {'$pull': {'body.%s' % key: {'id': {'$in': [UUID(x['id']) for x in data]}}}})
 
     async def resources_by_type(self, type):
         logger.debug('Querying type %s' % type)
