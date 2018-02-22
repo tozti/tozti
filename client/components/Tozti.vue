@@ -9,8 +9,8 @@
 </template>
 
 <script>
-  import ToztiHeader from './header'
-  import ToztiSidebar from './sidebar'
+  import ToztiHeader from './Header'
+  import ToztiSidebar from './Sidebar'
 
   export default {
     components: { ToztiHeader, ToztiSidebar }

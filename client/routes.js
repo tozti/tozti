@@ -1,12 +1,13 @@
-import ToztiLayout from './components/Tozti.vue'
+import ToztiLayout from './components/Tozti'
 
-import LoginView from './components/Login.vue'
-import SignUpView from './components/SignUp.vue'
+import LoginView from './components/Login'
+import SignUpView from './components/SignUp'
 
-import Workspaces from './components/views/Workspaces.vue'
-import Groups from './components/views/Groups.vue'
-import GroupView from './components/views/Group.vue'
-import SettingsView from './components/views/Settings.vue'
+import Workspaces from './components/views/Workspaces'
+import Groups from './components/views/Groups'
+import GroupView from './components/views/Group'
+import SettingsView from './components/views/Settings'
+import TaxonomyView from './components/views/Taxonomy'
 
 
 const singleRoutes =
@@ -30,6 +31,8 @@ const enclosedRoutes =
     , component: GroupView
     , props: true
     }
+
+  , { path: 'taxonomy', component: TaxonomyView }
 
   , { path: 'settings', component: SettingsView }
 

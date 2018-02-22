@@ -65,12 +65,13 @@ const tozti = window.tozti = {
   globalMenuItems:
     [ { name: 'Mes groupes', route: '/g/', props: { icon: 'nc-multiple-11' } }
     , { name: 'Mes espaces', route: '/w/', props: { icon: 'nc-grid-45' } }
+    , { name: 'Taxonomie', route: '/taxonomy', props: { icon: 'nc-folder-15' } }
     , { name: 'Paramètres', route: '/settings', props: { icon: 'nc-settings-gear-63' } }
-  ],
+    ],
 
-  workspaceMenuItems: [
-    { name: 'Résumé', route: 'workspace', props: { icon: 'nc-eye-19' } }
-  ],
+  workspaceMenuItems:
+    [ { name: 'Résumé', route: 'workspace', props: { icon: 'nc-eye-19' } }
+    ],
 
 
   /**

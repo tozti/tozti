@@ -23,7 +23,7 @@
 </template>
 
 <script>
-  import PinnedItem from './PinnedItem.vue'
+  import PinnedItem from './PinnedItem'
 
   export default {
     components: { PinnedItem },

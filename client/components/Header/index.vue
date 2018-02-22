@@ -16,9 +16,9 @@
 </template>
 
 <script>
-  import NotificationCenter from './NotificationCenter.vue'
-  import SearchBar from './SearchBar.vue'
-  import UserInfo from './UserInfo.vue'
+  import NotificationCenter from './NotificationCenter'
+  import SearchBar from './SearchBar'
+  import UserInfo from './UserInfo'
 
   export default {
     components: {
