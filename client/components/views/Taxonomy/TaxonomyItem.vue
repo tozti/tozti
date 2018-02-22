@@ -1,23 +1,41 @@
 <template>
   <div class="taxonomy-item">
     <div class="taxonomy-item-media">
-      <b-icon pack="mdi" icon="image"></b-icon>
+      <slot name="media">
+        <b-icon pack="mdi" :icon="icon"></b-icon>
+      </slot>
     </div>
-    <div class="taxonomy-item-info">
+    <div v-if="resource" class="taxonomy-item-info">
+      <p class="title">{{ title }}</p>
+      <p class="subtitle">{{ resource.meta['last-modified'] }}</span></p>
+    </div>
+    <div v-else class="taxonomy-item-info">
       <p class="title"><span class="placeholder"></span></p>
       <p class="subtitle"><span class="placeholder"></span></p>
     </div>
-    <div class="taxonomy-actions">
+    <div class="taxonomy-item-actions">
+      <b-icon pack="mdi" icon="dots-horizontal"></b-icon>
     </div>
   </div>
 </template>
 
 <script>
+  import { resourceMixin } from '../../../mixins.js'
+
   export default {
-    props: {},
+    mixins: [ resourceMixin ],
+
+    props: {
+      icon: {
+        type: String,
+        default: 'help-circle'
+      },
+    },
 
     data() {
-      return {}
+      return {
+        title: this.id
+      }
     }
   }
 </script>

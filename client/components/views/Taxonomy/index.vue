@@ -2,7 +2,7 @@
   <section class="section content">
     <h1>Taxonomy</h1>
     <div class="taxonomy">
-      <item v-for="id in children" :id="id" :key="id"></item>
+      <item v-for="item in children" :id="item.id" :key="item.id"></item>
     </div>
   </section>
 </template>
@@ -15,7 +15,7 @@
 
     data() {
       return {
-        children: [0, 1, 2, 3, 4]
+        children: tozti.me.relationships.groups.data
       }
     }
   }

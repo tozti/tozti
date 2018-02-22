@@ -2,9 +2,11 @@ $media-size: 50px;
 
 .taxonomy {
   .taxonomy-item {
-    display: grid;
-    grid-gap: 15px;
-    grid-template-columns: $media-size 1fr 1fr;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+
     padding: 10px;
     margin: 0;
     border-radius: 2px;
@@ -20,9 +22,10 @@ $media-size: 50px;
   }
 
   .taxonomy-item-media {
-    grid-column: 1;
-    grid-row: 1;
+    flex-shrink: 0;
     min-height: $media-size;
+    width: $media-size;
+    margin-right: 10px;
 
     .icon {
       width: 100%;
@@ -39,15 +42,23 @@ $media-size: 50px;
   }
 
   .taxonomy-item-info {
-    grid-column: 2;
-    grid-row: 1;
-    padding: 3px 0;
+    flex-grow: 1;
+    flex-shrink: 2;
+
+    padding: 5px 10px 5px 0;
+    box-sizing: border-box;
+
+    overflow: hidden;
+    white-space: nowrap;
 
     .title {
       cursor: default;
       font-size: 1.2em;
       font-weight: 600;
       margin-bottom: .1em;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .subtitle {
@@ -55,11 +66,15 @@ $media-size: 50px;
       margin-top: 0;
       font-size: .9em;
       opacity: .5;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
   }
  
   .taxonomy-item-actions {
-    grid-column: 3;
-    grid-row: 1;
+    .icon {
+      cursor: pointer;
+    }
   }
 }
