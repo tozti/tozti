@@ -6,7 +6,7 @@
       </slot>
     </div>
     <div v-if="resource" class="taxonomy-item-info">
-      <p class="title">{{ title }}</p>
+      <p class="title">{{ title ? title : id }}</p>
       <p class="subtitle">{{ resource.meta['last-modified'] }}</span></p>
     </div>
     <div v-else class="taxonomy-item-info">
@@ -25,16 +25,9 @@
   export default {
     mixins: [ resourceMixin ],
 
-    props: {
-      icon: {
-        type: String,
-        default: 'help-circle'
-      },
-    },
-
     data() {
       return {
-        title: this.id
+        icon: 'help-circle'
       }
     }
   }

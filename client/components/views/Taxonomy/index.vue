@@ -2,20 +2,44 @@
   <section class="section content">
     <h1>Taxonomy</h1>
     <div class="taxonomy">
-      <item v-for="item in children" :id="item.id" :key="item.id"></item>
+      <component v-for="linkage in children"
+                 :is="getItemComponent(linkage)"
+                 :id="linkage.id"
+                 :key="linkage.id">
+      </component>
     </div>
   </section>
 </template>
 
 <script>
-  import Item from './TaxonomyItem'
+
+  import DefaultItem from './TaxonomyItem'
+  import GroupItem from './GroupItem.js'
+  import FolderItem from './FolderItem.js'
+
+  const taxonomyItems = new Map(
+    [ ['core/group', GroupItem]
+    , ['core/folder', FolderItem]
+    ]
+  )
+
+  export function addTaxonomyItem(type, component) {
+    taxonomyItems.add(type, component)
+  }
 
   export default {
-    components: { Item },
-
     data() {
       return {
-        children: tozti.me.relationships.groups.data
+        children: tozti.me.relationships.pinned.data
+      }
+    },
+
+    methods: {
+      getItemComponent({ type }) {
+        if (taxonomyItems.has(type)) {
+          return taxonomyItems.get(type)
+        }
+        return DefaultItem
       }
     }
   }
