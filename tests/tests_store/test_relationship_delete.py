@@ -6,7 +6,6 @@ from uuid import UUID, uuid4
 
 TYPE = "type/foo"
 
-
 @pytest.mark.extensions("rel01")
 def test_storage_rel_toone_delete(tozti, db):
     # we can't delete a toone relationship
@@ -22,7 +21,6 @@ def test_storage_rel_delete_single_existing(tozti, db):
     uid_foo = add_object_get_id({"type": "rel02/foo", "body": {"foo": "foo", "members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
 
     resp = make_call("DELETE", "/store/resources/{}/members".format(uid_foo), json={'data':[{'id': uid_bar}]})
-    print(resp.text)
     resp_ids = {l['id'] for l in resp.json()['data']['data']}
 
     assert uid_bar not in resp_ids
@@ -41,18 +39,13 @@ def test_storage_rel_delete_multiple_existing(tozti, db):
 
 @pytest.mark.extensions("rel02")
 def test_storage_rel_delete_single_missing(tozti, db):
-    print("------------------")
     uid_bar = add_object_get_id({"type": "rel02/bar", "body": {"bar": "bar"}})
     uid_bar2 = add_object_get_id({"type": "rel02/bar", "body": {"bar": "bar"}})
     uid_foo = add_object_get_id({"type": "rel02/foo", "body": {"foo": "foo", "members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
 
     make_call("DELETE", "/store/resources/{}".format(uid_bar))
-    print(make_call("GET", "/store/resources/{}".format(uid_bar2)).json())
-    print(uid_bar, make_call("GET", "/store/resources/{}".format(uid_bar)).json())
-    print(uid_foo, make_call("GET", "/store/resources/{}".format(uid_foo)).json())
 
     resp = make_call("DELETE", "/store/resources/{}/members".format(uid_foo), {'data':[{'id': uid_bar}]})
-    print(resp.text)
     resp_ids = {l['id'] for l in resp.json()['data']['data']}
 
     assert {uid_bar2} == resp_ids
@@ -76,4 +69,3 @@ def test_storage_rel_delete_from_nonexisting_resource(tozti, db):
     random_uid = uuid4().hex
     resp = make_call("DELETE", "/store/resources/{}/members".format(random_uid), {'data':[{'id': uid_bar}]})
     assert resp.status_code == 404
-

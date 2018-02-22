@@ -30,7 +30,9 @@ def test_storage_rel_toone_get_deleted(tozti, db):
 
     make_call("DELETE", "/store/resources/{}".format(uid_bar))
 
-    assert make_call("GET", "/store/resources/{}/member".format(uid_foo)).status_code == 404
+    # getting an object with a to-one ressource whose target was deleted
+    # is fine
+    assert make_call("GET", "/store/resources/{}/member".format(uid_foo)).status_code == 200
 
 @pytest.mark.extensions("rel01")
 def test_storage_rel_toone_get_badname(tozti, db):

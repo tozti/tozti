@@ -10,7 +10,7 @@ TYPE = "type/foo"
 @pytest.mark.extensions("type")
 @pytest.mark.parametrize("json", [
     {"type": TYPE,
-         "attributes": {"name": "f", "email": "a@a.com"}},
+         "body": {"name": "f", "email": "a@a.com"}},
     ])
 def test_storage_delete_object(tozti, db, json):
     try:

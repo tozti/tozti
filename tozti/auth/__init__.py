@@ -90,7 +90,7 @@ async def create_user(req):
     except (JSONDecodeError, IndexError, KeyError):
         raise BadJsonError()
 
-    uid_user = await req.app['tozti-store'].create({'data':{'type':'core/user', 'attributes':{
+    uid_user = await req.app['tozti-store'].create({'data':{'type':'core/user', 'body':{
     	'name':name, 'login':login, 'email':email
     }}})
     hash = pwhash_str(passwd.encode('utf-8')).decode('utf-8')

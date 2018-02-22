@@ -10,8 +10,7 @@ TYPE = "type/foo"
 @pytest.mark.extensions("type")
 def test_storage_update_empty(tozti, db):
     uid = add_object_get_id({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}})
-    assert (False) # because server error
-    assert make_call("PATCH", "/store/resources/{}".format(uid), json={"data":{"body": {}}}).status_code == 500
+    assert make_call("PATCH", "/store/resources/{}".format(uid), json={"data":{"body": {}}}).status_code == 200
 
 
 @pytest.mark.extensions("type")
