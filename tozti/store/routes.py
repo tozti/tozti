@@ -41,7 +41,7 @@ by_handle = router.add_route('/by-handle/{handle}')
 
 
 async def get_json_from_request(req):
-    if req.content_type != 'application/json':
+    if req.content_type != 'application/vnd.api+json':
         raise NotJsonError()
     try:
         data = await req.json()

@@ -67,4 +67,3 @@ def test_storage_rel_tomany_get_empty(tozti, db):
     uid_foo = add_object_get_id({"type": "rel02/foo", "body": {"foo": "foo", "members": {"data": []}}})
     result = make_call("GET", "/store/resources/{}/members".format(uid_foo))
     assert len(result.json()["data"]["data"]) == 0
-
