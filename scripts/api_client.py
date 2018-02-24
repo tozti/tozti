@@ -123,6 +123,21 @@ def relationship_delete(id, rel, *data, session=None):
     return check_call('DELETE', '/store/resources/%s/%s' % (id, rel),
                       json={'data': data}, session=session)
 
+def by_handle_get(handle, session=None):
+    """Looks up an item by its handle."""
+
+    return check_call('GET', '/store/by-handle/%s' % handle, session=session)
+
+def by_handle_post(handle, data, session=None):
+    """Redirects the given handle to point to a given id. Creates the handle if necessary"""
+
+    return check_call('POST', '/store/by-handle/%s' % handle, json={'data': data}, session=session)
+
+def by_handle_delete(handle, session=None):
+    """Unassociates the handle from its target id."""
+
+    return check_call('DELETE', '/store/by-handle/%s' % handle, session=session)
+
 ## Authentication endpoint
 # uses session
 

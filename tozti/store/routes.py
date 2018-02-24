@@ -149,9 +149,27 @@ async def by_handle_get(req):
     return json_response({'data': await store.by_handle(handle)})
 
 
-@by_handle.put
-@by_handle.delete
+@by_handle.post
+async def by_handle_post(req):
+    """Request handler for ``POST /by-handle/{handle}``."""
 
+    handle = req.match_info['handle']
+    store = req.app['tozti-store']
+    data = await get_json_from_request(req)
+
+    await store.handle_set(handle, data)
+    return json_response({'data': await store.by_handle(handle)})
+
+
+@by_handle.delete
+async def by_handle_delete(req):
+    """Request handler for ``PUT /by-handle/{handle}``."""
+    
+    handle = req.match_info['handle']
+    store = req.app['tozti-store']
+    await store.handle_delete(handle)
+
+    return json_response({})
 
 async def open_db(app, types):
     """Initialize storage backend at app startup."""

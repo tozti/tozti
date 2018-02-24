@@ -189,15 +189,34 @@ class Store:
         return links
 
     async def by_handle(self, handle):
-        doc = self._db.handles.find_one({'_id': handle})
+        doc = await self._db.handles.find_one({'_id': handle})
         if doc is None:
             raise NoHandleError(handle=handle)
         return {'id': doc['target'],
                 'type': doc['type'],
                 'href': fmt_resource_url(doc['target'])}
 
-    async def set_handle(self, handle, id):
+    async def handle_set(self, handle, raw):
+        try:
+            assert len(raw) == 1
+            assert len(raw['data']) == 1
+            id = UUID(raw['data']['id'])
+        except:
+            raise BadDataError()
         
+        await self.handle_set_id(handle, id)
+
+    async def handle_set_id(self, handle, id):
+        type = await self.type_by_id(id)
+        await self._db.handles.update_one(
+            {'_id': handle},
+            {'$set': {'target':id, 'type':type}},
+            upsert=True)
+
+    async def handle_delete(self, handle):
+        res = await self._db.handles.delete_one({'_id': handle})
+        if res.deleted_count == 0:
+            raise NoHandleError(handle=handle)
 
     async def close(self):
         """Close the connection to the MongoDB server."""
