@@ -287,3 +287,12 @@ span.placeholder {
   }
 }
 
+.zoomIn-enter, .zoomIn-leave-to {
+  opacity: 0;
+  transform: scale3d(0.3, 0.3, 0.3);
+}
+
+.zoomIn-enter-active, .zoomIn-leave-active {
+  display: block;
+  transition: all .3s;
+}

@@ -17,6 +17,8 @@
   import GroupItem from './GroupItem.js'
   import FolderItem from './FolderItem.js'
 
+  export { DefaultItem as TaxonomyItemComponent }
+
   const taxonomyItems = new Map(
     [ ['core/group', GroupItem]
     , ['core/folder', FolderItem]

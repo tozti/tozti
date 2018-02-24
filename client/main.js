@@ -7,6 +7,7 @@ promiseFinally.shim()
 
 import { resourceMixin } from './mixins'
 import { addRoutes, getRoutes } from './routes'
+import { addTaxonomyItem, TaxonomyItemComponent } from './components/views/Taxonomy'
 import store from './store'
 import api from './api'
 
@@ -55,6 +56,10 @@ export function polymorphic_component(name, fallback) {
 
 const tozti = window.tozti = {
   resourceMixin,
+
+  addTaxonomyItem,
+  TaxonomyItemComponent,
+
   addRoutes,
   store,
   api,
