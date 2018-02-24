@@ -24,7 +24,7 @@ async def auth_middleware(req, handler):
         uid = UUID(dictio['uid'])
         user_uid = uid
         return True
-    
+
     if 'auth-token' in req.cookies:
         token = req.cookies['auth-token']
         mac = Macaroon.deserialize(token)
@@ -39,12 +39,12 @@ async def auth_middleware(req, handler):
             req['user'] = None
         else:
             try:
-                user = await storage.get(user_uid)
+                user = await storage.resource_by_id(user_uid)
                 print(user)
                 if user["type"] != "core/user":
                     req['user'] = None
                 else:
-                    req['user'] = user
+                    req['user'] = user['_id']
             except KeyError:
                 req['user'] = None
 

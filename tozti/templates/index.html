@@ -5,7 +5,8 @@
 	<title>tozti</title>
 	<link rel="icon" type="image/png" href="/static/core/img/icon.png">
 	<link rel="stylesheet" href="/static/core/css/style.css">
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Icons|Open+Sans">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
+	<link rel="stylesheet" href="https://cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css">
 {{#styles}}
 	<link rel="stylesheet" href="{{src}}">
 {{/styles}}
@@ -13,10 +14,11 @@
 <body>
 	<main id="app"></main>
 	<script src="https://unpkg.com/vue@2.5.9/dist/vue.js"></script>
-	<script src="https://unpkg.com/buefy@0.6.3/lib/index.js"></script>
 	<script src="https://unpkg.com/vue-router@3.0.1/dist/vue-router.js"></script>
+	<script src="https://unpkg.com/buefy@0.6.3/lib/index.js"></script>
 	{{#scripts}}
 	<script src="{{src}}"></script>
 	{{/scripts}}
+	<script>tozti.launch()</script>
 </body>
 </html>

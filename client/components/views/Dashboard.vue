@@ -1,8 +1,7 @@
 <template>
-  <div class="uk-container uk-padding">
+  <div>
     <h1 class="uk-heading-primary">Dashboard</h1>
     <h3>No widget available just yet :(</h3>
-    <p>Make sure you have installed some extensions providing new widgets.</p>
   </div>
 </template>
 

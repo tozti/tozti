@@ -1,5 +1,5 @@
 from pymacaroons import Macaroon, Verifier
-from tozti.auth.utils import (LoginRequired, UnauthorizedRequest)
+from tozti.auth.utils import (LoginRequired, UnauthorizedRequest, LoginForbidden)
 from tozti.utils import validate, ValidationError
 from tozti.core_schemas import SCHEMAS
 
@@ -30,4 +30,4 @@ def restrict_not_logged_in(func):
                 raise LoginForbidden('You must not be logged to do this request') 
         return func(req, *args, **kwargs)
     return function_not_logged
-    
+

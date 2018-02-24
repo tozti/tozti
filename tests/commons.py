@@ -70,7 +70,8 @@ def make_call(meth, path, json=None):
     Returns:
         a `requests` object
     """
-    return requests.request(meth, API + path, json=json)
+    return requests.request(meth, API + path, json=json,
+            headers = { 'Content-type': 'application/vnd.api+json' })
 
 def db_contains_object(db, obj):
     """Check if the database only contains object obj

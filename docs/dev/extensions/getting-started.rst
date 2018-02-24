@@ -41,7 +41,7 @@ some modules::
   logs.
 
 We define a logger, which will enable us to output useful information to the console::
-    
+
     logger = logbook.Logger("tozti-routing")
 
 Then, we create an empty router::
@@ -97,9 +97,13 @@ your extension folder. Let's create a file called ``index.js`` inside
 
 .. code-block:: javascript
 
-  tozti.store.commit('registerWidget', {
-    template: '<div class="uk-placeholder">A widget coming directly from our extension! :)</div>'
-  })
+   tozti.addRoutes([
+     { path: '/extension', component: {
+         template: '<div>my extensions</div>'
+       }
+     }
+   ])
+
 
 As you might have guessed, we need to inform *tozti* of the existence of this
 file, inside ``MANIFEST``::
@@ -109,8 +113,7 @@ file, inside ``MANIFEST``::
     'includes': ['index.js']
   }
 
-Once again, start the server and visit the URL ``<tozti>/``. A new widget
-should have appeared inside the Dashboard.
+Once again, start the server and visit the URL ``<tozti>/extension``. You should see some new content inside the usual layout.
 
 As stated below, adding CSS files in this ``includes`` list in exactly the same
 fashion allows the inclusion of custom CSS to *tozti*.
@@ -180,5 +183,6 @@ a bit too restrictive. As your extension grow you'll probably want to refactor
 it in several files. Tozti provide a way to do so. Instead of creating a
 ``server.py`` file, you could create a ``server/`` folder, and inside it write a
 file ``__init__.py`` defining (at least) the ``MANIFEST`` structure.
+
 
 .. _aiohttp server documentation: https://docs.aiohttp.org/en/stable/web.html

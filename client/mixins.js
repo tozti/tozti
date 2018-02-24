@@ -1,10 +1,18 @@
-// TODO(flupe): fill in the computed attributes & relationships
-//              ideally set up an alternative to VueX
 export let resourceMixin = {
-  props: { id: Number },
-  computed: {
-    resource: function() {
-      return { id: this.id }
-    },
+  props: { id: String },
+
+  beforeMount() {
+    tozti.store.get(this.id)
+      .then(resource => {
+        this.resource = resource
+        this.loading = false
+      })
+  },
+
+  data() {
+    return {
+      loading: true,
+      resource: null,
+    }
   }
 }

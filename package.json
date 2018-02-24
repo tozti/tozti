@@ -21,7 +21,8 @@
   },
   "homepage": "https://github.com/tozti/tozti#readme",
   "dependencies": {
-    "buefy": "^0.6.3"
+    "buefy": "^0.6.3",
+    "promise.prototype.finally": "^3.1.0"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^4.4.1",

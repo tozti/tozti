@@ -16,3 +16,35 @@ $size-normal: $size-6 * 0.98;
 // Import Bulma and Buefy styles
 @import "~bulma/bulma";
 @import "~buefy/src/scss/buefy";
+
+// General spinner usable outside buttons
+.loading-spinner {
+  position: relative;
+  pointer-events: none;
+  @include loader;
+  &:after {
+    position: absolute;
+    top: calc(50% - em);
+    left: calc(50% - 2.5em);
+    width: 1em;
+    height: 1em;
+    border-width: 0.25em;
+  }
+}
+
+.tabs ul {
+  margin-left: 0;
+}
+
+.tabs li .badge {
+  margin-left: 1em;
+  line-height: 1em;
+  font-size: .9em;
+  padding: .3em;
+  border-radius: .65em;
+  background: lighten($primary, 44);
+}
+
+.tabs li + li {
+  margin-top: 0;
+}
