@@ -28,9 +28,11 @@ import tozti
 
 from tozti.auth.utils import (BadPasswordError, create_macaroon, LoginUnknown)
 from tozti.utils import (RouterDef, NotJsonError, BadJsonError, json_response)
+from tozti.store import NoHandleError
 
 from tozti.auth import decorators
 from pymacaroons import Macaroon, Verifier
+from uuid import UUID
 
 
 router = RouterDef()
@@ -52,9 +54,9 @@ async def login_post(req):
         raise BadJsonError()
 
     try:
-        hash = await req.app['tozti-store'].hash_by_login(login)
-        user_uid = await req.app['tozti-store'].user_uid_by_login(login)
-    except LoginUnknown as err:
+        user_uid = (await req.app['tozti-store'].by_handle(login))['id']
+        hash = await req.app['tozti-store'].resource_by_id(uid)['hash']
+    except NoHandleError as err:
         raise err
     try:
         pwhash_verify(hash.encode('utf-8'), passwd.encode('utf-8'))
@@ -90,11 +92,13 @@ async def create_user(req):
     except (JSONDecodeError, IndexError, KeyError):
         raise BadJsonError()
 
-    uid_user = await req.app['tozti-store'].create({'data':{'type':'core/user', 'body':{
-    	'name':name, 'login':login, 'email':email
-    }}})
     hash = pwhash_str(passwd.encode('utf-8')).decode('utf-8')
-    await req.app['tozti-store'].set_login_hash(login, hash)
+    user_object = await req.app['tozti-store'].create({'data':{'type':'core/user', 'body':{
+    	'name':name, 'login':login, 'email':email, 'hash': hash
+    }}})
+    uid_user = UUID(user_object['id'])
+    await req.app['tozti-store'].handle_set_id(login, uid_user)
+
 
     rep = {'created': True}
 
