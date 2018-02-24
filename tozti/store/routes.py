@@ -37,6 +37,7 @@ resources = router.add_route('/resources')
 resources_single = router.add_route('/resources/{id:%s}' % UUID_RE)
 relationship = router.add_route('/resources/{id:%s}/{rel}' % UUID_RE)
 types = router.add_route('/by-type/{type:%s}' % TYPE_RE)
+by_handle = router.add_route('/by-handle/{handle}')
 
 
 async def get_json_from_request(req):
@@ -137,6 +138,19 @@ async def types_get(req):
 
     type = req.match_info['type']
     return json_response({'data': await req.app['tozti-store'].resources_by_type(type)})
+
+
+@by_handle.get
+async def by_handle_get(req):
+    """Request handler for ``GET /by-handle/{handle}``."""
+
+    handle = req.match_info['handle']
+    store = req.app['tozti-store']
+    return json_response({'data': await store.by_handle(handle)})
+
+
+@by_handle.put
+@by_handle.delete
 
 
 async def open_db(app, types):

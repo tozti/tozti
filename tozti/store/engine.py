@@ -22,7 +22,7 @@ import asyncio
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from tozti.store import logger, NoResourceError, NoTypeError, BadItemError, NoItemError
+from tozti.store import logger, NoResourceError, NoTypeError, BadItemError, NoItemError, NoHandleError
 from tozti.store.schema import Schema, fmt_resource_url
 from tozti.utils import BadDataError, ValidationError, validate
 
@@ -187,6 +187,17 @@ class Store:
                           'type': type,
                           'href': fmt_resource_url(hit['_id'])})
         return links
+
+    async def by_handle(self, handle):
+        doc = self._db.handles.find_one({'_id': handle})
+        if doc is None:
+            raise NoHandleError(handle=handle)
+        return {'id': doc['target'],
+                'type': doc['type'],
+                'href': fmt_resource_url(doc['target'])}
+
+    async def set_handle(self, handle, id):
+        
 
     async def close(self):
         """Close the connection to the MongoDB server."""

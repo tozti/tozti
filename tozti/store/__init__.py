@@ -66,3 +66,10 @@ class NoTypeError(APIError):
     title = 'unknown type'
     status = 400
     template = 'type {type} is unknown'
+
+
+class NoHandleError(APIError):
+    code = 'NO_HANDLE'
+    title = 'unknown handle'
+    status = 404
+    template = 'handle {handle} is unknown'
