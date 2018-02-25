@@ -44,7 +44,11 @@ class Schema:
             'body': {
                 'type': 'object',
                 'patternProperties': {'.*': {'type': 'object'}}
-            }
+            },
+            'required': {
+                'type': 'array',
+                'items': {'type': 'string'},
+            },
         },
         'additionalProperties': False,
         'required': ['body'],
@@ -77,8 +81,13 @@ class Schema:
         for (key, val_def) in raw['body'].items():
             if 'type' in val_def and val_def['type'] == 'relationship':
                 self._defs[key] = RelationshipModel(key, val_def, db=db)
+            elif 'type' in val_def and val_def['type'] == 'upload':
+                self._defs[key] = UploadModel(
+                    key, val_def['acceptable'], db=db)
             else:
                 self._defs[key] = AttributeModel(key, val_def, db=db)
+
+        self._required = raw.get('required', [])
 
         self.name = name
         self.db = db
@@ -101,7 +110,7 @@ class Schema:
 
         # check that all and only these attributes are present
         sub1 = data['body'].keys() - self._defs.keys()
-        sub2 = {k for (k, v) in self._defs.items() if v.writeable} - data['body'].keys()
+        sub2 = {k for (k, v) in self._defs.items() if v.writeable and k in self._required} - data['body'].keys()
         if len(sub1) > 0:
             raise NoItemError(key=sub1.pop())
         if is_create and len(sub2) > 0:
@@ -190,6 +199,23 @@ class LinkageModel:
                 'href': fmt_resource_url(target['id'])}
 
 
+class UploadModel:
+    def __init__(self, name, acceptable, *, db):
+        self.acceptable = acceptable
+        self.name = name
+        self.db = db
+        self.writeable = True
+        self.is_upload = True
+        self.is_array = False
+
+    async def sanitize(self, data):
+        assert False, 'this should not be called'
+
+    async def render(self, id, data):
+        return data
+
+
+
 class AttributeModel:
     def __init__(self, name, schema, *, db):
         try:
@@ -202,6 +228,7 @@ class AttributeModel:
         self.db = db
 
         self.writeable = True
+        self.is_upload = False
         self.is_array = 'type' in schema and schema['type'] == 'array'
 
     async def sanitize(self, data, check_consistency=True):
@@ -293,6 +320,7 @@ class RelationshipModel:
         self.db = db
 
         self.writeable = self.arity != 'auto'
+        self.is_upload = False
         self.is_array = self.arity == 'to-many'
 
     async def sanitize(self, data, check_consistency=True):
