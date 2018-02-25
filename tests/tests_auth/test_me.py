@@ -14,7 +14,7 @@ def test_me_succesfull(db, tozti):
             {"name": "a", "handle": "a", "passwd": "a", "email": "a@a.com"})
     cookies = result.cookies
     result = make_call('GET', '/auth/me', cookies=cookies)
-    assert result.json()["data"] == uid
+    assert result.json()["data"]["id"] == uid
 
 
 def test_me_empty(db, tozti):

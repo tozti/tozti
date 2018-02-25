@@ -57,7 +57,7 @@ def tozti_still_running(tozti):
     return tozti is not None and tozti.poll() is None
 
 
-API = 'http://127.0.0.1:8080/api'
+API = 'http://localhost:8080/api'
 
 def make_call(meth, path, json=None, content_type='application/vnd.api+json', cookies=None):
     """make a call to the storage API
