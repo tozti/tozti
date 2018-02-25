@@ -36,4 +36,4 @@ def test_login_incorrectcontenttype(db, tozti):
     assert make_call('POST', '/auth/signup', json=
             {"name": "a", "handle": "a", "passwd": "a", "email": "a@a.com"}).status_code == 200
     assert make_call('POST', '/auth/login', json=
-            {"name": None, "handle": "b", "passwd": "a", "email": "a@a.com"}, content_type="aé").status_code == 400
+        {"name": None, "handle": "b", "passwd": "a", "email": "a@a.com"}, content_type="aé").status_code == 406
