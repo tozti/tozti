@@ -43,6 +43,9 @@
     },
 
     mounted() {
+      if(tozti.me != null) {
+        this.$router.replace('/')
+      }
       this.$refs.handle.focus()
     },
 
