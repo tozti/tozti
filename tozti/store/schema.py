@@ -45,7 +45,7 @@ class Schema:
                 'type': 'object',
                 'patternProperties': {'.*': {'type': 'object'}}
             },
-            'required': {
+            'optional': {
                 'type': 'array',
                 'items': {'type': 'string'},
             },
@@ -87,7 +87,7 @@ class Schema:
             else:
                 self._defs[key] = AttributeModel(key, val_def, db=db)
 
-        self._required = raw.get('required', [])
+        self._optional = raw.get('optional', [])
 
         self.name = name
         self.db = db
@@ -110,7 +110,7 @@ class Schema:
 
         # check that all and only these attributes are present
         sub1 = data['body'].keys() - self._defs.keys()
-        sub2 = {k for (k, v) in self._defs.items() if v.writeable and k in self._required} - data['body'].keys()
+        sub2 = {k for (k, v) in self._defs.items() if v.writeable and k not in self._optional} - data['body'].keys()
         if len(sub1) > 0:
             raise NoItemError(key=sub1.pop())
         if is_create and len(sub2) > 0:
