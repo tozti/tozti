@@ -40,7 +40,7 @@ def load_db(request):
     Has the scope of a whole "module"
     """
     client = MongoClient(host="localhost", port=27017)
-    yield client.tozti.resources
+    yield client.tozti.resources, client.tozti.handles
     request.addfinalizer(lambda: client.close())
 
 
@@ -49,8 +49,9 @@ def db(load_db):
     """Fixture loading a database and reset the content.
     This allows us to start a new test with an empty db
     """
-    load_db.drop()
-    yield load_db
+    for collection in load_db:
+        collection.drop()
+    yield load_db[0]
 
 
 @pytest.fixture
