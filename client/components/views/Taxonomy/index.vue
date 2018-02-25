@@ -32,7 +32,7 @@
   export default {
     data() {
       return {
-        children: tozti.me.relationships.pinned.data
+        children: tozti.me.body.pinned.data
       }
     },
 

@@ -30,7 +30,7 @@
 
     data: _ => ({
       globalMenuItems: tozti.globalMenuItems,
-      pinned: tozti.me.relationships.pinned.data
+      pinned: tozti.me.body.pinned.data
     })
   }
 </script>

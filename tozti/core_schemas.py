@@ -14,7 +14,6 @@ user_schema = {
             'type': 'relationship',
             'arity': 'to-many',
             'targets': 'core/folder'
-            'type': ['core/group', 'core/folder']
         }
     }
 }

@@ -34,7 +34,7 @@
 
     computed: {
       members() {
-        return this.resource.relationships.members.data
+        return this.resource.body.members.data
       },
 
       memberCount() {

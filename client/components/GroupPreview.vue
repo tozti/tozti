@@ -28,7 +28,7 @@
 
     computed: {
       pinned() {
-        return tozti.me.relationships.pinned.data.some(group => group.id == this.id)
+        return tozti.me.body.pinned.data.some(group => group.id == this.id)
       }
     }
   }
