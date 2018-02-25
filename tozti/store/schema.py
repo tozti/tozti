@@ -60,7 +60,7 @@ class Schema:
                     'body': {'type': 'object'},
                 },
                 'required': ['body'],
-                'additionalProperties': False,
+                'additionalProperties': True, #possible security problem
             },
         },
         'additionalProperties': False,

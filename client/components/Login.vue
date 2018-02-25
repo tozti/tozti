@@ -55,7 +55,7 @@
             tozti.me = user
             this.$router.push('/')
             this.$toast.open({
-              message: `Bienvenue, ${user.attributes.name} !`,
+              message: `Bienvenue, ${user.body.name} !`,
               type: 'is-success',
               position: 'is-top'
             })

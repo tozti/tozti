@@ -1,6 +1,6 @@
 <template>
   <div href="#" class="logged">
-    {{ me.attributes.name }} 
+    {{ me.body.name }} 
     <b-icon icon="chevron-down" size="is-small"></b-icon>
     <a v-on:click="logout"><b-icon icon="power"></b-icon></a>
   </div>

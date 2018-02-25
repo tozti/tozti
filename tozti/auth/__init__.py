@@ -112,4 +112,6 @@ async def create_user(req):
 @me.get
 @decorators.restrict_known_user
 async def me(req):
-    return json_response({ 'data': req['user'] })
+    store = req.app['tozti-store']
+    user_object = await store.read(req['user'])
+    return json_response({ 'data': user_object})

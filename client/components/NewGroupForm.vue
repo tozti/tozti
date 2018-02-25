@@ -14,7 +14,7 @@
         </b-field>
         <b-field label-for="handle" label="Identifiant">
           <b-input
-            v-model="group.handle"
+            v-model="handle"
             required>
           </b-input>
         </b-field>
@@ -39,8 +39,9 @@
         attempting: false,
         group: {
           name: '',
-          handle: '',
-        }
+          members: {data: []},
+        },
+        handle: '',
       }
     },
 
@@ -51,13 +52,17 @@
     methods: {
       attemptNewGroup() {
         this.attempting = true
+        this.group.members.data = [{
+          'id': tozti.me.id,
+          'type': 'core/user'
+        }]
 
         tozti
           // create the group
-          .store.create({ type: 'core/group', attributes: this.group }, false)
+          .store.create({ type: 'core/group', body: this.group }, false)
 
           // add the user as a member
-          .then(({ id }) => tozti.store.rels.add(tozti.me.relationships.groups, { id }))
+          .then(({ id }) => tozti.store.rels.add(tozti.me.body.groups, { id }))
 
           .then(() => {
             this.attempting = false
