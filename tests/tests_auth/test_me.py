@@ -29,7 +29,7 @@ def test_me_forged_bad_uuid(db, tozti):
     jar = requests.cookies.RequestsCookieJar()
     jar.set('auth-token', mac.serialize()) 
     result = make_call('GET', '/auth/me', cookies=jar)
-    assert result.status_code == 404
+    assert result.status_code == 401
 
 @pytest.mark.extensions("rel01")
 def test_me_forged_bad_ressource_type(db, tozti):

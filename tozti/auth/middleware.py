@@ -1,9 +1,13 @@
-import tozti
-from aiohttp import web
-from pymacaroons import (Macaroon, Verifier)
+import asyncio
 import json
 from uuid import UUID
-import asyncio
+
+from aiohttp import web
+from pymacaroons import Macaroon, Verifier
+
+import tozti
+from tozti.store import NoResourceError
+
 
 @web.middleware
 async def auth_middleware(req, handler):
@@ -45,7 +49,7 @@ async def auth_middleware(req, handler):
                     req['user'] = None
                 else:
                     req['user'] = user['_id']
-            except KeyError:
+            except NoResourceError:
                 req['user'] = None
 
     else:
