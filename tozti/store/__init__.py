@@ -73,3 +73,9 @@ class NoHandleError(APIError):
     title = 'unknown handle'
     status = 404
     template = 'handle {handle} is unknown'
+
+class HandleExistsError(APIError):
+    code = 'HANDLE_EXISTS'
+    title = 'handle exists'
+    status = 409
+    template = 'handle {handle} already exists'

@@ -165,7 +165,19 @@ async def by_handle_post(req):
     store = req.app['tozti-store']
     data = await get_json_from_request(req)
 
-    await store.handle_set(handle, data)
+    await store.handle_set(handle, data, allow_overwrite=False)
+    return json_response({'data': await store.by_handle(handle)})
+
+
+@by_handle.put
+async def by_handle_put(req):
+    """Request handler for ``PUT /by-handle/{handle}``."""
+
+    handle = req.match_info['handle']
+    store = req.app['tozti-store']
+    data = await get_json_from_request(req)
+
+    await store.handle_set(handle, data, allow_overwrite=True)
     return json_response({'data': await store.by_handle(handle)})
 
 

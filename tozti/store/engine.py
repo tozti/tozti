@@ -23,8 +23,7 @@ import asyncio
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
-import tozti
-from tozti.store import logger, NoResourceError, NoTypeError, BadItemError, NoItemError, NoHandleError
+from tozti.store import logger, NoResourceError, NoTypeError, BadItemError, NoItemError, NoHandleError, HandleExistsError
 from tozti.store.schema import Schema, fmt_resource_url
 from tozti.utils import BadDataError, ValidationError, validate, NotAcceptableError
 
@@ -216,7 +215,7 @@ class Store:
                 'type': doc['type'],
                 'href': fmt_resource_url(doc['target'])}
 
-    async def handle_set(self, handle, raw):
+    async def handle_set(self, handle, raw, allow_overwrite):
         try:
             assert len(raw) == 1
             assert len(raw['data']) == 1
@@ -224,6 +223,8 @@ class Store:
         except:
             raise BadDataError()
         
+        if not allow_overwrite and (await self._db.handles.find({'_id': handle}).count()) > 0:
+            raise HandleExistsError(handle)
         await self.handle_set_id(handle, id)
 
     async def handle_set_id(self, handle, id):

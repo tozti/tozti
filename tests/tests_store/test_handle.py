@@ -6,11 +6,12 @@ from tests.commons import API, add_object_get_id, db_contains_object, make_call
 
 
 @pytest.mark.extensions("rel02")
-def test_storage_handle_create(tozti, db):
+@pytest.mark.parametrize("method", ['PUT', 'POST'])
+def test_storage_handle_create(method, tozti, db):
     type = "rel02/bar"
     uid_bar = add_object_get_id({"type": type, "body": {"bar": "bar"}})
 
-    make_call("POST", "/store/by-handle/foo", json={'data': {'id': uid_bar}})
+    make_call(method, "/store/by-handle/foo", json={'data': {'id': uid_bar}})
     result = make_call("GET", "/store/by-handle/foo")
 
     expected = {'data': {
@@ -23,10 +24,11 @@ def test_storage_handle_create(tozti, db):
 
 
 @pytest.mark.extensions("rel02")
-def test_storage_handle_create_invalid_id(tozti, db):
+@pytest.mark.parametrize("method", ['PUT', 'POST'])
+def test_storage_handle_create_invalid_id(method, tozti, db):
     uid_bar = str(UUID(int=0))
 
-    result = make_call("POST", "/store/by-handle/foo",
+    result = make_call(method, "/store/by-handle/foo",
                        json={'data': {'id': uid_bar}})
     assert result.status_code == 404
     assert result.json()['errors'][0]['code'] == 'NO_RESOURCE'
@@ -44,31 +46,49 @@ def test_storage_handle_query_invalid_handle(tozti, db):
 
 
 @pytest.mark.extensions("rel02")
-def test_storage_handle_replace_existing(tozti, db):
+def test_storage_handle_put_replace_existing(tozti, db):
     type = "rel02/bar"
 
     for _ in range(2):
         uid_bar = add_object_get_id({"type": type, "body": {"bar": "bar"}})
-        make_call("POST", "/store/by-handle/foo",
+        make_call("PUT", "/store/by-handle/foo",
                   json={'data': {'id': uid_bar}})
         result = make_call("GET", "/store/by-handle/foo")
         assert result.json()['data']['id'] == uid_bar
 
+
 @pytest.mark.extensions("rel02")
-def test_storage_handle_create_invalid_json(tozti, db):
-    result = make_call("POST", "/store/by-handle/foo", json={'data': 'something invalid'})
+def test_storage_handle_post_replace_existing(tozti, db):
+    type = "rel02/bar"
+
+    for _ in range(2):
+        uid_bar = add_object_get_id({"type": type, "body": {"bar": "bar"}})
+        result = make_call("POST", "/store/by-handle/foo",
+                           json={'data': {'id': uid_bar}})
+
+    assert result.status_code == 409
+    assert result.json()['errors'][0]['code'] == 'HANDLE_EXISTS'
+
+
+@pytest.mark.extensions("rel02")
+@pytest.mark.parametrize("method", ['PUT', 'POST'])
+def test_storage_handle_create_invalid_json(method, tozti, db):
+    result = make_call(method, "/store/by-handle/foo",
+                       json={'data': 'something invalid'})
     assert result.json()['errors'][0]['code'] == 'BAD_DATA'
 
     result = make_call("GET", "/store/by-handle/foo")
     assert result.json()['errors'][0]['code'] == 'NO_HANDLE'
 
+
 @pytest.mark.extensions("rel02")
-def test_storage_handle_delete(tozti, db):
+@pytest.mark.parametrize("method", ['PUT', 'POST'])
+def test_storage_handle_delete(method, tozti, db):
     type = "rel02/bar"
     uid_bar = add_object_get_id({"type": type, "body": {"bar": "bar"}})
 
-    make_call("POST", "/store/by-handle/foo", json={'data': {'id': uid_bar}})
-    
+    make_call(method, "/store/by-handle/foo", json={'data': {'id': uid_bar}})
+
     result = make_call("DELETE", "/store/by-handle/foo")
     assert result.json() == {}
 
@@ -76,9 +96,10 @@ def test_storage_handle_delete(tozti, db):
     assert result.status_code == 404
     assert result.json()['errors'][0]['code'] == 'NO_HANDLE'
 
+
 @pytest.mark.extensions("rel02")
 def test_storage_handle_delete_invalid(tozti, db):
     result = make_call("DELETE", "/store/by-handle/foo")
-    
+
     assert result.status_code == 404
     assert result.json()['errors'][0]['code'] == 'NO_HANDLE'
