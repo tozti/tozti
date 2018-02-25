@@ -368,7 +368,7 @@ class RelationshipModel:
         else:  # self.arity == 'auto'
             cursor = self.db._db.resources.find(
                 {'type': self.pred_type,
-                 'body.%s' % self.pred_rel: id},
+                 'body.%s.id' % self.pred_rel: id},
                 {'_id': 1, 'type': 1})
             data = []
             async for hit in cursor:
