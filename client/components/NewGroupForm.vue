@@ -39,7 +39,6 @@
         attempting: false,
         group: {
           name: '',
-          members: {data: []},
         },
         handle: '',
       }
@@ -52,10 +51,6 @@
     methods: {
       attemptNewGroup() {
         this.attempting = true
-        this.group.members.data = [{
-          'id': tozti.me.id,
-          'type': 'core/user'
-        }]
 
         tozti
           // create the group

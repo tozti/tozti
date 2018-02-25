@@ -26,8 +26,9 @@ group_schema = {
         },
         'members': {
             'type': 'relationship',
-            'arity': 'to-many',
-            'targets': 'core/user'
+            'arity': 'auto',
+            'pred-type': 'core/user',
+            'pred-relationship': 'groups'
         }
     }
 }

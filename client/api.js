@@ -36,6 +36,7 @@ function request(url, config) {
   // whether it was successful or not
   return fetch(url, config)
     .then(res => res.ok ? res.json() : Promise.reject(res))
+    .catch(err => console.log(err))
 }
 
 // TODO(flupe): factor this out?

@@ -151,7 +151,6 @@ class Store:
         if not schema[key].is_array:
             raise BadItemError('body item {key} is not an array', key=key)
 
-        print(raw)
 
         data = await schema[key].sanitize(raw)
 
