@@ -42,7 +42,6 @@ create_user = router.add_route('/signup')
 me = router.add_route('/me')
 
 @login.post
-@decorators.restrict_not_logged_in
 async def login_post(req):
     if req.content_type != 'application/vnd.api+json':
         raise NotJsonError()
