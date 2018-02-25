@@ -24,6 +24,9 @@ group_schema = {
         'name': {
             'type': 'string'
         },
+        'handle' : {
+            'type': 'string'
+        },
         'members': {
             'type': 'relationship',
             'arity': 'auto',

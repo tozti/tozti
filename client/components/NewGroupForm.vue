@@ -14,7 +14,7 @@
         </b-field>
         <b-field label-for="handle" label="Identifiant">
           <b-input
-            v-model="handle"
+            v-model="group.handle"
             required>
           </b-input>
         </b-field>
@@ -39,8 +39,8 @@
         attempting: false,
         group: {
           name: '',
+          handle: '',
         },
-        handle: '',
       }
     },
 
