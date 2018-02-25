@@ -49,7 +49,7 @@ def check_call(meth, path, json=None, prefix=API, session=None):
     """
 
     if session is None:
-        session = request.Session()
+        session = Session()
 
     resp = session.request(meth, prefix + path, json=json,
                             headers = { 'content-type': 'application/vnd.api+json' })
