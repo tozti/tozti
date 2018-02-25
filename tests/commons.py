@@ -59,7 +59,7 @@ def tozti_still_running(tozti):
 
 API = 'http://127.0.0.1:8080/api'
 
-def make_call(meth, path, json=None):
+def make_call(meth, path, json=None, content_type='application/vnd.api+json'):
     """make a call to the storage API
 
     Params:
@@ -71,7 +71,7 @@ def make_call(meth, path, json=None):
         a `requests` object
     """
     return requests.request(meth, API + path, json=json,
-            headers = { 'content-type': 'application/vnd.api+json' })
+            headers = { 'content-type': content_type })
 
 def db_contains_object(db, obj):
     """Check if the database only contains object obj

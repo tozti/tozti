@@ -11,6 +11,7 @@ TYPE = "type/foo"
 @pytest.mark.parametrize("json, expected", [
     ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}},   True),
     ({"type": TYPE, "THISISNOTATYPO": {"name": "f", "email": "a@a.com"}},  False),
+    ({"type": "oeihte", "THISISNOTATYPO": {"name": "f", "email": "a@a.com"}},  False),
     ({"type": TYPE, "body": {"name": "f", "email": "a"}},         False),
     ({"type": TYPE, "body": {"name": "f"}},                       False),
     ({"type": TYPE, "body": {"name": "f", "foo": "b"}},           False)

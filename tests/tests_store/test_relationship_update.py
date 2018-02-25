@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 TYPE = "type/foo"
 
-
+# using patch on a ressource
 @pytest.mark.extensions("rel01")
 def test_storage_rel_toone_post(tozti, db):
     bar = {"body": {"bar": "bar"}}
@@ -73,3 +73,4 @@ def test_storage_rel_tomany_owner_patch_empty(tozti, db):
 
     foo = {"body": {"foo": "foo", "members": []}}
     assert db_contains_object(db, foo)
+
