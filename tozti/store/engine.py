@@ -16,17 +16,24 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os.path
 from datetime import datetime, timezone
 from uuid import uuid4, UUID
 import asyncio
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
+import tozti
 from tozti.store import logger, NoResourceError, NoTypeError, BadItemError, NoItemError, NoHandleError
 from tozti.store.schema import Schema, fmt_resource_url
-from tozti.utils import BadDataError, ValidationError, validate
+from tozti.utils import BadDataError, ValidationError, validate, NotAcceptableError
 
 from tozti.auth.utils import LoginUnknown as LoginUnknown
+
+
+def fmt_upload_url(id):
+    return 'http://{hostname}/uploads/{id}'.format(
+        id=id, hostname=tozti.CONFIG['http']['hostname'])
 
 
 class Store:
@@ -142,6 +149,21 @@ class Store:
             {'_id': id},
             {'$set': {'body.%s' % key: data}})
 
+    async def item_upload(self, id, rel, content_type, content):
+        schema = self._types[await self.type_by_id(id)]
+
+        if content_type not in schema[rel].acceptable:
+            raise NotAcceptableError()
+        blob_id = uuid4()
+        path = os.path.join(tozti.CONFIG['http']['upload_dir'], str(blob_id))
+        with open(path, 'wb') as stream:
+            async for chunk, _ in content.iter_chunks():
+                stream.write(chunk)
+
+        await self._db.resources.update_one(
+            {'_id': id},
+            {'$set': {'body.%s' % rel: fmt_upload_url(blob_id)}})
+
     async def item_append(self, id, key, raw):
         schema = self._types[await self.type_by_id(id)]
 
@@ -150,7 +172,6 @@ class Store:
 
         if not schema[key].is_array:
             raise BadItemError('body item {key} is not an array', key=key)
-
 
         data = await schema[key].sanitize(raw)
 

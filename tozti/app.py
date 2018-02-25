@@ -290,10 +290,11 @@ class App:
         else:
             for (prefix, path) in self._static_dirs.items():
                 self._app.router.add_static('/static/{}'.format(prefix), path)
+            self._app.router.add_static('/uploads', tozti.CONFIG['http']['upload_dir'])
             async def index_handler(req):
                 return web.Response(text=index_html, content_type='text/html',
                                     charset='utf-8')
-            self._app.router.add_get('/{_:(?!api|static).*}', index_handler)
+            self._app.router.add_get('/{_:(?!api|static|uploads).*}', index_handler)
 
         for r in self._app.router.resources():
             logger.debug('route: {}'.format(r))

@@ -207,7 +207,7 @@ class APIError(Exception):
 class NotJsonError(APIError):
     code = 'NOT_JSON'
     title = "content type is not `application/vnd.api+json`"
-    status = 400
+    status = 406
 
 
 class BadJsonError(APIError):
@@ -220,3 +220,15 @@ class BadDataError(APIError):
     code = 'BAD_DATA'
     title = 'submitted data is invalid'
     status = 400
+
+
+class BadMethodError(APIError):
+    code = 'BAD_METHOD'
+    title = 'HTTP method not allowed'
+    status = 405
+
+
+class NotAcceptableError(APIError):
+    code = 'NOT_ACCEPTABLE'
+    title = 'data has bad content type'
+    status = 406

@@ -99,12 +99,20 @@ async def relationship_get(req):
 async def relationship_put(req):
     """Request handler for ``PUT /api/store/resources/{id}/{rel}``."""
 
-    data = await get_json_from_request(req)
-
     id = UUID(req.match_info['id'])
     rel = req.match_info['rel']
 
-    await req.app['tozti-store'].item_update(id, rel, data)
+    store = req.app['tozti-store']
+
+    type_name = await store.type_by_id(id)
+    schema = store._types[type_name]
+
+    if rel in schema and schema[rel].is_upload:
+        await store.item_upload(id, rel, req.content_type, req.content)
+
+    else:
+        data = await get_json_from_request(req)
+        await store.item_update(id, rel, data)
     return json_response({'data': await req.app['tozti-store'].item_read(id, rel)})
 
 
