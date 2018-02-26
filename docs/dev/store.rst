@@ -139,36 +139,42 @@ Let's show an example, we will consider two types: users and groups.
 
 ::
 
-   // http://localhost/types/user.json
-   {
-       "attributes": {
-           "login": {"type": "string"},
-           "email": {"type": "string", "format": "email"}
-       },
-       "relationships": {
-           "groups": {
-               "reverse-of": {
-                   "type": "group",
-                   "path": "members"
-               }
-           }
-       }
-   }
+   // user:
+    {
+        'body': {
+            'name': { 'type': 'string' },
+            'email': { 'type': 'string', 'format': 'email' },
+            'handle': { 'type': 'string' },
+            'hash': {'type': 'string'},
+            'groups': {
+                'type': 'relationship',
+                'arity': 'to-many',
+                'targets': 'core/group',
+            },
+
+            'pinned': {
+                'type': 'relationship',
+                'arity': 'to-many',
+                'targets': 'core/folder'
+            }
+        }
+    }
 
 ::
 
-   // http://localhost/types/group.json
-   {
-       "attributes": {
-           "name": {"type": "string"}
-       },
-       "relationships": {
-           "members": {
-               "arity": "to-many",
-               "type": "user"
-           }
-       }
-   }
+   // group:
+    {
+        'body': {
+            'name': { 'type': 'string' },
+            'handle' : { 'type': 'string' },
+            'members': {
+                'type': 'relationship',
+                'arity': 'auto',
+                'pred-type': 'core/user',
+                'pred-relationship': 'groups'
+            }
+        }
+    }
 
 Now when creating a user you cannot specify it's groups, but you can specify
 members when creating (or updating) a given group and the system will
@@ -182,21 +188,21 @@ Endpoints
 We remind that the API is quite similar to what `JSON API`_ proposes.
 In the following section, type ``warrior`` is the type defined as::
 
-        'attributes': {
-            'name': { 'type': 'string' },
-            'honor': { 'type': 'number'}
-        },
-        'relationships': {
+    {
+        "body": {
+            "name": { "type": "string" },
+            "honor": { "type": "number"}
             "weapon": {
+                "type": "relationship"
                 "arity": "to-one",
-                "type": "weapon",
+                "targets": "weapon"
             },
             "kitties": {
+                "type": "relationship"
                 "arity": "to-many",
-                "type": "cat"
+                "targets": "cat"
             }
-
-        }
+    }
 
 A warrior has a name and a certain quantity of honor. He also possesses a
 weapon, and can be the (proud) owner of several cats (or no cats).
@@ -227,34 +233,25 @@ Example:
         {
            'data':{
               'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
+              'href': 'http://tozti/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
               'type':'warrior',
-              'attributes':{
+              'body':{
                  'name':'Pierre',
                  'honor': 9000
-              },
-              'relationships':{
-                 'self':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/self',
-                    'data':{
-                       'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
-                       'type':'warrior',
-                       'href':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
-                    }
-                 },
                  'weapon':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
+                    'self':'http://tozti/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/weapon',
                     'data':{
                        'id':'1bb2ff78-cefb-4ce1-b057-333f5baed577',
                        'type':'weapon',
-                       'href':'/api/store/resources/1bb2ff78-cefb-4ce1-b057-333f5baed577'
+                       'href':'http://tozti/api/store/resources/1bb2ff78-cefb-4ce1-b057-333f5baed577'
                     }
                  },
                  'kitties':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
+                    'self':'http://tozti/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
                     'data':[{
                        'id':'6a4d05f1-f04a-4a94-923e-ad52a54456e6',
                        'type':'cat',
-                       'href':'/api/store/resources/6a4d05f1-f04a-4a94-923e-ad52a54456e6'
+                       'href':'http://tozti/api/store/resources/6a4d05f1-f04a-4a94-923e-ad52a54456e6'
                     }]
                  }
               },
@@ -288,8 +285,8 @@ Example:
     ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
 
         >> POST /api/store/resources {'data': {'type': 'warrior', 
-                        'attributes': {'name': Pierre, 'honor': 9000}, 
-                        'relationships': {
+                        'body': {
+                            'name': Pierre, 'honor': 9000,
                             'weapon': {'data': {'id': <id_weapon>}}, 
                             'kitties': {'data': [{'id': <kitty_1_id>}]}
                         }}}
@@ -298,19 +295,10 @@ Example:
            'data':{
               'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
               'type':'warrior',
-              'attributes':{
+              'href':'http://tozti/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/',
+              'body':{
                  'name':'Pierre',
                  'honor': 9000
-              },
-              'relationships':{
-                 'self':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/self',
-                    'data':{
-                       'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
-                       'type':'warrior',
-                       'href':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
-                    }
-                 },
                  'weapon':{
                     'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
                     'data':{
@@ -361,8 +349,8 @@ Example:
     exists in the database. Then::
 
         >> PATCH /api/store/resources {'data': {'type': 'warrior', 
-                        'attributes': {'name': Luc}, 
-                        'relationships': {
+                        'attributes': {
+                            'name': 'Luc',
                             'weapon': {'data': {'id': <id_weapon_more_powerfull>}}, 
                         }}}
         200
@@ -370,19 +358,10 @@ Example:
            'data':{
               'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
               'type':'warrior',
-              'attributes':{
+              'href':'http://tozti/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e',
+              'body':{
                  'name':'Luc',
                  'honor': 9000
-              },
-              'relationships':{
-                 'self':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/self',
-                    'data':{
-                       'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
-                       'type':'warrior',
-                       'href':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
-                    }
-                 },
                  'weapon':{
                     'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
                     'data':{
@@ -427,7 +406,7 @@ Example:
     We suppose the object with id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e``
     exists in the database. Then::
 
-        >> DELETE /api/store/resources
+        >> DELETE /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e
         200
         {}
 
