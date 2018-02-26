@@ -353,14 +353,17 @@ class RelationshipModel:
             raise BadRelError('cannot write automatic relationship {key}',
                               key=self.name)
 
-    async def render(self, id, link):
+    async def render(self, id, link=None):
         """Render the relationship object.
 
         See https://jsonapi.org/format/#document-resource-object-relationships.
         """
 
         if self.arity == 'to-one':
-            data = self.link_model.render(link)
+            if link is None:
+                data = None
+            else:
+                data = self.link_model.render(link)
 
         elif self.arity == 'to-many':
             data = [self.link_model.render(l) for l in link]
