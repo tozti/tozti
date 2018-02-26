@@ -12,9 +12,11 @@
             required>
           </b-input>
         </b-field>
-        <t-handle-form v-model="handle"
+
+        <t-handle-field v-model="handle"
                        :available.sync="available">
-        </t-handle-form>
+        </t-handle-field>
+
       </section>
       <footer class="modal-card-foot">
         <input

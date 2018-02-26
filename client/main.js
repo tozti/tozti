@@ -15,7 +15,7 @@ import AppView from './components/App'
 import HandleInput from './components/generic/HandleInput'
 
 Vue.use(Buefy)
-Vue.component('t-handle-form', HandleInput)
+Vue.component('t-handle-field', HandleInput)
 
 // Create a 'polymorphic' component.
 // A polymorphic component is a component with a single prop `resource` that

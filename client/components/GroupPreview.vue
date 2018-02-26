@@ -1,5 +1,5 @@
 <template>
-  <router-link :to="{ name: 'group', params: { id } }">
+  <router-link :to="resource ? { name: 'group', params: { handle: resource.body.handle } } : {}">
     <div v-if="resource" class="group-item">
       <div class="group-media"></div>
       <div class="group-content">

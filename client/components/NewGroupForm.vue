@@ -12,18 +12,15 @@
             required>
           </b-input>
         </b-field>
-        <b-field label-for="handle" label="Identifiant">
-          <b-input
-            v-model="group.handle"
-            required>
-          </b-input>
-        </b-field>
+        <t-handle-field v-model="group.handle"
+                        :available.sync="available">
+        </t-handle-field>
       </section>
       <footer class="modal-card-foot">
         <input
           class="button is-primary"
           type="submit"
-          :disabled="attempting"
+          :disabled="!available || attempting"
           value="Créer">
         <button class="button" type="button" @click="$parent.close()">Annuler</button>
         <i v-if="attempting" class="loading-spinner"></i>
@@ -41,6 +38,7 @@
           name: '',
           handle: '',
         },
+        available: false,
       }
     },
 
@@ -57,7 +55,11 @@
           .store.create({ type: 'core/group', body: this.group }, false)
 
           // add the user as a member
-          .then(({ id }) => tozti.store.rels.add(tozti.me.body.groups, { id }))
+          // and register the group in the handle store
+          .then(({ id }) => Promise.all([
+            tozti.store.rels.add(tozti.me.body.groups, { id }),
+            tozti.api.post(tozti.api.handleURL(this.group.handle), { data: { id } })
+          ]))
 
           .then(() => {
             this.attempting = false

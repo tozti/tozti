@@ -27,7 +27,7 @@ const enclosedRoutes =
   [ { path: 'g/', component: Groups }
 
   , { name: 'group'
-    , path: 'g/:id'
+    , path: 'g/:handle'
     , component: GroupView
     , props: true
     }

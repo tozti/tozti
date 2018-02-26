@@ -28,16 +28,17 @@
 </template>
 
 <script>
-  import { resourceMixin } from '../../mixins'
   import UserPreview from '../UserPreview.vue'
 
   export default {
-    mixins: [ resourceMixin ],
+    props: [ 'handle' ],
+
     components: { UserPreview },
 
     data() {
       return {
         deleting: false,
+        resource: null,
       }
     },
 
@@ -49,6 +50,14 @@
       memberCount() {
         return this.members.length
       }
+    },
+
+    beforeMount() {
+      tozti.store
+        .handle.get(this.handle)
+        .then(resource => {
+          this.resource = resource
+        })
     },
 
     methods: {

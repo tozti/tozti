@@ -15,31 +15,19 @@ const store = {
    * @param {string} id - The id of the queried resource.
    * @param {boolean} handle - Whether the id given is actually a handle.
    */
-  get(id, handle = false) {
+  get(id) {
     if (storage.has(id)) {
       return Promise.resolve(storage.get(id))
     }
     else {
       let url
 
-      if (handle)
-        url = api.handleURL(id)
-      else
-        url = api.resourceURL(id)
+      url = api.resourceURL(id)
 
       if (pending.has(url))
         return pending.get(url)
-
-      else {
-        if (handle)
-          return store.fetchResource(url)
-            .then(resource => {
-              storage.set(id, resource)
-            })
-        else {
-          return store.fetchResource(url)
-        }
-      }
+      else
+        return store.fetchResource(url)
     }
   },
 
@@ -173,6 +161,15 @@ const store = {
   fetchOfType(type) {
     return store.ofType(type)
       .then(resources => Promise.all(resources.map(res => store.get(res.id))))
+  },
+
+
+  handle: {
+    get(handle) {
+      return api
+        .get(api.handleURL(handle))
+        .then(({ data }) => tozti.store.get(data.id))
+    }
   },
 
 

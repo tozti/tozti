@@ -21,12 +21,8 @@ user_schema = {
 
 group_schema = {
     'body': {
-        'name': {
-            'type': 'string'
-        },
-        'handle' : {
-            'type': 'string'
-        },
+        'name': { 'type': 'string' },
+        'handle' : { 'type': 'string' },
         'members': {
             'type': 'relationship',
             'arity': 'auto',

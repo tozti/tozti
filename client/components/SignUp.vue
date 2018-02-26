@@ -6,9 +6,9 @@
       </p>
       <div class="box">
         <form v-on:submit.prevent="signin">
-          <t-handle-form v-model="user.handle"
-                         :available.sync="available">
-          </t-handle-form>
+          <t-handle-field v-model="user.handle"
+                          :available.sync="available">
+          </t-handle-field>
 
           <b-field label-for="mail" label="Adresse mail :">
             <b-input id="mail" type="mail" v-model="user.email"></b-input>
@@ -50,7 +50,7 @@
     },
 
     mounted() {
-      this.$refs.handle.focus()
+      // this.$refs.handle.focus()
     },
 
     methods: {
