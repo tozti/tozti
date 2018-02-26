@@ -11,9 +11,11 @@ import { addTaxonomyItem, TaxonomyItemComponent } from './components/views/Taxon
 import store from './store'
 import api from './api'
 
-import AppView from './components/App.vue'
+import AppView from './components/App'
+import HandleInput from './components/generic/HandleInput'
 
 Vue.use(Buefy)
+Vue.component('t-handle-form', HandleInput)
 
 // Create a 'polymorphic' component.
 // A polymorphic component is a component with a single prop `resource` that
