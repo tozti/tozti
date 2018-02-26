@@ -1,22 +1,22 @@
+function fetch() {
+  tozti.store.get(this.id)
+    .then(resource => {
+      this.resource = resource
+      this.loading = false
+    })
+}
+
 export let resourceMixin = {
   props: { id: String },
 
   watch: {
     id() {
-      tozti.store.get(this.id)
-        .then(resource => {
-          this.resource = resource
-          this.loading = false
-        })
+      fetch.call(this)
     }
   },
 
   mounted() {
-    tozti.store.get(this.id)
-      .then(resource => {
-        this.resource = resource
-        this.loading = false
-      })
+    fetch.call(this)
   },
 
   data() {

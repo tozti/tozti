@@ -8,13 +8,22 @@
     </p>
     <div class="tabs">
       <ul>
-        <li class="is-active"><a>Membres <span class="badge">{{ memberCount }}</span></a></li>
+        <li class="is-active"><a>Espaces</a></li>
+        <li><a>Membres <span class="badge">{{ memberCount }}</span></a></li>
         <li><a>Paramètres</a></li>
       </ul>
     </div>
-    <div class="group-list">
-      <user-preview v-for="user in members" :key="user.id" :id="user.id"></user-preview>
+
+    <div class="content has-text-grey has-text-centered has-vertical-space">
+      <p>
+      <i class="nc-icon nc-grid-45 x3"></i>
+      </p>
+      <p>Ce groupe ne possède pas d'espace de travail.</p>
+      <p>
+        <a class="button" @click="createWorkspace">Créer un espace de travail</a>
+      </p>
     </div>
+
   </section>
 </template>
 
@@ -43,6 +52,10 @@
     },
 
     methods: {
+      createWorkspace() {
+
+      },
+
       deleteGroup() {
         this.$dialog.confirm({
           message: 'Voulez-vous supprimer définitivement ce groupe ?',

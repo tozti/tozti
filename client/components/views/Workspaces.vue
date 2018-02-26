@@ -6,12 +6,25 @@
       </p>
       <p>Vous ne faites partie d'aucun espace de travail.</p>
       <p>
-        <a class="button">Créer un espace de travail</a>
+        <a class="button" @click="displayCreationModal">Créer un espace de travail</a>
       </p>
     </div>
   </section>
 </template>
 
 <script>
-  export default {}
+  import { ModalProgrammatic } from 'buefy'
+  import WorkspaceForm from '../NewWorkspaceForm.vue'
+
+  export default {
+    methods: {
+      displayCreationModal() {
+        ModalProgrammatic.open({
+          parent: this,
+          component: WorkspaceForm,
+          scroll: 'keep'
+        })
+      }
+    }
+  }
 </script>

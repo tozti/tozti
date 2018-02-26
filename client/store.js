@@ -12,19 +12,33 @@ const store = {
    * Returns a Promise resolving to the proxied queried resource.
    * It rejects to the server response, giving access to status codes.
    *
-   * @param {string} id - The uuid of the queried resource.
+   * @param {string} id - The id of the queried resource.
+   * @param {boolean} handle - Whether the id given is actually a handle.
    */
-  get(id) {
+  get(id, handle = false) {
     if (storage.has(id)) {
       return Promise.resolve(storage.get(id))
     }
     else {
-      let url = api.resourceURL(id)
-      if (pending.has(url)) {
+      let url
+
+      if (handle)
+        url = api.handleURL(id)
+      else
+        url = api.resourceURL(id)
+
+      if (pending.has(url))
         return pending.get(url)
-      }
+
       else {
-        return store.fetchResource(url)
+        if (handle)
+          return store.fetchResource(url)
+            .then(resource => {
+              storage.set(id, resource)
+            })
+        else {
+          return store.fetchResource(url)
+        }
       }
     }
   },
