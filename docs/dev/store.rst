@@ -49,13 +49,10 @@ properties:
 ``type``
    The name of a `type object`_.
 
-``attributes``
-   An arbitrary JSON object where each attribute is constrained by the
-   type of the resource.
-
-``relationships``
-   A JSON object where the keys are relationship names (just strings) and
-   values are `relationship objects`_.
+``body``
+   A JSON object where the keys are relationship (just strings) and
+   values are either `relationship objects`_ or arbitrary JSON value
+   (ie *attributes*).
 
 ``meta``
    A JSON object containing some metadata about the resource. For now it
@@ -103,37 +100,46 @@ Types
 
 A *type object* is simply a JSON object with the following properties:
 
-``attributes``
-    A JSON object where keys are allowed (and required) attribute names for
+``body``
+    A JSON object where keys are allowed (and required) item names for
     resource objects and values are JSON Schemas. A `JSON Schema`_ is a
     format for doing data validation on JSON. For now we support the Draft-04
     version of the specification (which is the latest supported by the library
     we use).
 
-``relationships``
-    A JSON object where the keys are allowed (and required) relationship names
-    and keys are relationship description objects.
+To the usual JSON schema types, we add the following ones:
 
-Relationship description objects are of 2 kinds, let's start with the simple
-one:
+``"type": "relationship"``
+    This type specifies that the body-item should be a *relationship object*.
+    It supports the following options:
 
-``arity``
-   Either ``"to-one"`` or ``"to-many"``, self-explanatory.
+    * ``arity``, either ``to-one``, ``to-many`` or ``auto``.
+    * ``targets``, this option is only valid with ``"arity": "to-one"`` or
+      ``"arity": "to-many"``. It should be the name of a resource type or an
+      array of such names that define which kind of resources can be pointed to
+      by this relationship. If left undefined every type is allowed.
+    * ``pred-type``, this option is only valid with ``"arity": "auto"``. It
+      should be a resource type. See more info below.
+    * ``pred-relationship``, this option is only valid with ``"arity":
+      "auto"``. See more info below.
 
-``type``
-   This property is optional and can be used to restrict what types the targets
-   of this relationship can be. It can be either the name of a type object or
-   an array of names of allowed type objects.
+``"type": "upload"``
+    This type specifies that the body-item should be a *blob*. It supports
+    the ``acceptable`` option that should be an array of content-types that
+    should be accepted.
 
-The other kind of relationship description exists because relationships are
-directed. As such, because sometimes bidirectional relationships are useful, we
-would want to specify that some relationship is the reverse of another one. To
-solve that, instead of giving ``arity`` and ``type``, you may give
-``reverse-of`` property is a JSON object with two properties: ``type`` (a type
-URL) and ``path`` (a valid relationship name for that type). This will specify
-a new *to-many* relationship that will not be writeable and automatically
-filled by the Store engine. It will contain as target any resource of the given
-type that have the current resource as target in the given relationship name.
+Automatic relationships
+-----------------------
+
+This of relationship description exists because relationships are directed. As
+such, because sometimes bidirectional relationships are useful, we would want
+to specify that some relationship is the reverse of another one. To solve that,
+instead of giving ``arity`` and ``type``, you may give ``reverse-of`` property
+is a JSON object with two properties: ``type`` (a type URL) and ``path`` (a
+valid relationship name for that type). This will specify a new *to-many*
+relationship that will not be writeable and automatically filled by the Store
+engine. It will contain as target any resource of the given type that have the
+current resource as target in the given relationship name.
 
 Let's show an example, we will consider two types: users and groups.
 
@@ -219,14 +225,16 @@ To fetch an object, you must execute a ``GET`` request on
 
 Error code:
    - ``404`` if ``id`` corresponds to no known objects.
-   - ``400`` if an error occurred when processing the object (for example, one of the object linked to it doesn't exists anymore in the database).
+   - ``400`` if an error occurred when processing the object (for example, one
+     of the object linked to it doesn't exists anymore in the database).
    - ``200`` if the request was successful.
 
 Returns:
    If the request is successful, the server will send back a `resource object`_ under JSON format.
 
 Example:
-   Suppose that an object of type ``warrior`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
+   Suppose that an object of type ``warrior`` and id
+   ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
 
         >> GET /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e
         200
