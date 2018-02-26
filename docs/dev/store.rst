@@ -10,8 +10,8 @@ Error format
 ============
 
 The format of the errors follows `JSON API errors`_. If a request raised an
-error, the server will send back a response with status code ``500``, ``404``
-or ``400``. This response might send back a json object with an entry
+error, the server will send back a response with status code ``500``, ``404``, ``406``
+``409`` or ``400``. This response might send back a json object with an entry
 ``errors`` containing a list of json objects with the following properties:
 
 ``code``
@@ -46,11 +46,14 @@ properties:
 ``id``
    An UUIDv4_ which uniquely identifies a resource.
 
+``href``
+    A URL to the object itself.
+
 ``type``
    The name of a `type object`_.
 
 ``body``
-   A JSON object where the keys are relationship (just strings) and
+   A JSON object where the keys are strings and
    values are either `relationship objects`_ or arbitrary JSON value
    (ie *attributes*).
 
@@ -134,12 +137,13 @@ Automatic relationships
 This of relationship description exists because relationships are directed. As
 such, because sometimes bidirectional relationships are useful, we would want
 to specify that some relationship is the reverse of another one. To solve that,
-instead of giving ``arity`` and ``type``, you may give ``reverse-of`` property
-is a JSON object with two properties: ``type`` (a type URL) and ``path`` (a
-valid relationship name for that type). This will specify a new *to-many*
+we introduced the `auto` relationships. This will specify a new
 relationship that will not be writeable and automatically filled by the Store
 engine. It will contain as target any resource of the given type that have the
-current resource as target in the given relationship name.
+current resource as target in the given relationship name. In order to fully
+specify an ``auto`` relationship, you need to specify the type of the related object
+in ``pred-type``, as well as ``pred-relationship``, the name of the relationship in that
+object, that should be reversed.
 
 Let's show an example, we will consider two types: users and groups.
 
@@ -182,9 +186,9 @@ Let's show an example, we will consider two types: users and groups.
         }
     }
 
-Now when creating a user you cannot specify it's groups, but you can specify
-members when creating (or updating) a given group and the system will
-automagically take care of filling the ``groups`` relationship with the current
+Now when creating a group you cannot specify it's users, but you can specify
+the ``groups`` when creating (or updating) a given user and the system will
+automagically take care of filling the ``members`` relationship with the current
 up-to-date content.
 
 
@@ -210,7 +214,7 @@ In the following section, type ``warrior`` is the type defined as::
             }
     }
 
-A warrior has a name and a certain quantity of honor. He also possesses a
+A warrior has a name and a certain amount of honor. He also possesses a
 weapon, and can be the (proud) owner of several cats (or no cats).
 
 
