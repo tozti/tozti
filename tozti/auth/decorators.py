@@ -1,5 +1,5 @@
 from pymacaroons import Macaroon, Verifier
-from tozti.auth.utils import (LoginRequired, UnauthorizedRequest)
+from tozti.auth.utils import (LoginRequired, UnauthorizedRequest, LoginForbidden)
 from tozti.utils import validate, ValidationError
 from tozti.core_schemas import SCHEMAS
 

@@ -181,18 +181,17 @@ class APIError(Exception):
     title = 'error'
     status = 400
 
-    def __init__(self, msg=None, status=None, **kwargs):
-        if msg is not None:
-            args = (msg,)
-        elif hasattr(self, 'template'):
+    def __init__(self, template=None, status=None, **kwargs):
+        if template is not None:
+            self.template = template
+        if status is not None:
+            self.status = status
+        if hasattr(self, 'template'):
             args = (self.template.format(**kwargs),)
         else:
             args = ()
 
         super().__init__(*args)
-
-        if status is not None:
-            self.status = status
 
     def to_response(self):
         """Create an `aiohttp.web.Response` signifiying the error."""
@@ -208,7 +207,7 @@ class APIError(Exception):
 class NotJsonError(APIError):
     code = 'NOT_JSON'
     title = "content type is not `application/vnd.api+json`"
-    status = 400
+    status = 406
 
 
 class BadJsonError(APIError):
@@ -218,6 +217,18 @@ class BadJsonError(APIError):
 
 
 class BadDataError(APIError):
-    code = 'Bad_DATA'
+    code = 'BAD_DATA'
     title = 'submitted data is invalid'
     status = 400
+
+
+class BadMethodError(APIError):
+    code = 'BAD_METHOD'
+    title = 'HTTP method not allowed'
+    status = 405
+
+
+class NotAcceptableError(APIError):
+    code = 'NOT_ACCEPTABLE'
+    title = 'data has bad content type'
+    status = 406

@@ -27,14 +27,14 @@
   export default {
     data() {
       return {
-        user: { name: tozti.me.attributes.name }
+        user: { name: tozti.me.body.name }
       }
     },
 
     methods: {
       updateProfile() {
         tozti.store
-          .update({ id: tozti.me.id, attributes: this.user })
+          .update({ id: tozti.me.id, body: this.user })
           .then(() => {
             this.$toast.open({
               message: 'Votre profil a été mis à jour !',

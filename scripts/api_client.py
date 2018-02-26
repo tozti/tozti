@@ -16,9 +16,7 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import requests
-from requests import get, post, put, patch, delete
-from pprint import pprint
+from requests import Session
 
 
 API = 'http://127.0.0.1:8080/api'
@@ -51,7 +49,7 @@ def check_call(meth, path, json=None, prefix=API, session=None):
     """
 
     if session is None:
-        session = request.Session()
+        session = Session()
 
     resp = session.request(meth, prefix + path, json=json,
                             headers = { 'content-type': 'application/vnd.api+json' })
@@ -114,21 +112,36 @@ def relationship_update(id, rel, data, session=None):
                       json={'data': data}, session=session)
 
 
-def relationship_append(id, rel, session=None, *data):
+def relationship_append(id, rel, *data, session=None):
     """Append items to a to-many relationship."""
 
     return check_call('POST', '/store/resources/%s/%s' % (id, rel),
                       json={'data': data}, session=session)
 
 
-def relationship_delete(id, rel, session=None, *data):
+def relationship_delete(id, rel, *data, session=None):
     """Delete items from a to-many relationship."""
 
     return check_call('DELETE', '/store/resources/%s/%s' % (id, rel),
                       json={'data': data}, session=session)
 
+def by_handle_get(handle, session=None):
+    """Looks up an item by its handle."""
+
+    return check_call('GET', '/store/by-handle/%s' % handle, session=session)
+
+def by_handle_post(handle, data, session=None):
+    """Redirects the given handle to point to a given id. Creates the handle if necessary"""
+
+    return check_call('POST', '/store/by-handle/%s' % handle, json={'data': data}, session=session)
+
+def by_handle_delete(handle, session=None):
+    """Unassociates the handle from its target id."""
+
+    return check_call('DELETE', '/store/by-handle/%s' % handle, session=session)
+
 ## Authentication endpoint
-# uses session 
+# uses session
 
 def create_user(login, name, passwd, email, session=None):
     """Create an user."""
@@ -140,7 +153,7 @@ def create_user(login, name, passwd, email, session=None):
 
 def login(login, passwd, session):
     """Log in."""
-    
+
     return check_call('POST', '/auth/login',
                       json={'passwd':passwd, 'login':login},
                       session=session)

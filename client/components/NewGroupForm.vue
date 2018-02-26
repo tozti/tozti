@@ -40,7 +40,7 @@
         group: {
           name: '',
           handle: '',
-        }
+        },
       }
     },
 
@@ -54,10 +54,10 @@
 
         tozti
           // create the group
-          .store.create({ type: 'core/group', attributes: this.group }, false)
+          .store.create({ type: 'core/group', body: this.group }, false)
 
           // add the user as a member
-          .then(({ id }) => tozti.store.rels.add(tozti.me.relationships.groups, { id }))
+          .then(({ id }) => tozti.store.rels.add(tozti.me.body.groups, { id }))
 
           .then(() => {
             this.attempting = false

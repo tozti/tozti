@@ -9,11 +9,12 @@ TYPE = "type/foo"
 
 @pytest.mark.extensions("type")
 @pytest.mark.parametrize("json, expected", [
-    ({"type": TYPE, "attributes": {"name": "f", "email": "a@a.com"}},   True),
+    ({"type": TYPE, "body": {"name": "f", "email": "a@a.com"}},   True),
     ({"type": TYPE, "THISISNOTATYPO": {"name": "f", "email": "a@a.com"}},  False),
-    ({"type": TYPE, "attributes": {"name": "f", "email": "a"}},         False),
-    ({"type": TYPE, "attributes": {"name": "f"}},                       False),
-    ({"type": TYPE, "attributes": {"name": "f", "foo": "b"}},           False)
+    ({"type": "oeihte", "THISISNOTATYPO": {"name": "f", "email": "a@a.com"}},  False),
+    ({"type": TYPE, "body": {"name": "f", "email": "a"}},         False),
+    ({"type": TYPE, "body": {"name": "f"}},                       False),
+    ({"type": TYPE, "body": {"name": "f", "foo": "b"}},           False)
     ])
 def test_storage_post_request(tozti, db, json, expected):
     ret_val = make_call("POST", '/store/resources', json={"data": json})

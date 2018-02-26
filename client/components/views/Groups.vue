@@ -32,7 +32,7 @@
 
     data() {
       return {
-        groups: tozti.me.relationships.groups.data
+        groups: tozti.me.body.groups.data
       }
     },
 

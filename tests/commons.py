@@ -57,9 +57,9 @@ def tozti_still_running(tozti):
     return tozti is not None and tozti.poll() is None
 
 
-API = 'http://127.0.0.1:8080/api'
+API = 'http://localhost:8080/api'
 
-def make_call(meth, path, json=None):
+def make_call(meth, path, json=None, content_type='application/vnd.api+json', cookies=None):
     """make a call to the storage API
 
     Params:
@@ -71,7 +71,8 @@ def make_call(meth, path, json=None):
         a `requests` object
     """
     return requests.request(meth, API + path, json=json,
-            headers = { 'Content-type': 'application/vnd.api+json' })
+            headers = { 'content-type': content_type },
+            cookies = cookies)
 
 def db_contains_object(db, obj):
     """Check if the database only contains object obj
@@ -84,8 +85,7 @@ def db_contains_object(db, obj):
         True if the object is in the db, False otherwize
     """
     for o in db.find():
-        if o["attrs"] == obj["attributes"] \
-           and o["rels"] == obj.get("relationships", {}):
+        if o["body"] == obj["body"] :
             return True
     return False
 

@@ -30,12 +30,13 @@ from aiohttp import web
 
 import tozti
 from tozti.utils import APIError, json_response
-from tozti.store import Schema
-from tozti.core_schemas import SCHEMAS
+import tozti.store.routes
+import tozti.auth
 from tozti.auth.middleware import auth_middleware
+from tozti.core_schemas import SCHEMAS
+
 
 logger = logbook.Logger('tozti.app')
-
 
 
 class DependencyCycle(Exception):
@@ -82,7 +83,7 @@ class Extension:
         self.on_startup = on_startup
         self.on_cleanup = on_cleanup
         self.on_shutdown = on_shutdown
-        self.types = {k: Schema(v) for (k, v) in types.items()}
+        self.types = types
 
         if len(kwargs) > 0:
             # TODO do something here. If kwargs is not empty, that means the manifest 
@@ -197,7 +198,7 @@ class App:
     """The Tozti server."""
 
     def __init__(self):
-        self._app = web.Application(middlewares=[error_handler, tozti.auth.middleware.auth_middleware])
+        self._app = web.Application(middlewares=[error_handler, auth_middleware])
         self._static_dirs = {}
         self._dep_graph_includes = DependencyGraph()
         self._types = {}
@@ -265,9 +266,9 @@ class App:
 
         self.register(Extension(
             'store',
-            router=tozti.store.router,
-            on_startup=partial(tozti.store.open_db, types=self._types),
-            on_shutdown=tozti.store.close_db))
+            router=tozti.store.routes.router,
+            on_startup=partial(tozti.store.routes.open_db, types=self._types),
+            on_shutdown=tozti.store.routes.close_db))
 
         self.register(Extension(
             'core',
@@ -289,10 +290,11 @@ class App:
         else:
             for (prefix, path) in self._static_dirs.items():
                 self._app.router.add_static('/static/{}'.format(prefix), path)
+            self._app.router.add_static('/uploads', tozti.CONFIG['http']['upload_dir'])
             async def index_handler(req):
                 return web.Response(text=index_html, content_type='text/html',
                                     charset='utf-8')
-            self._app.router.add_get('/{_:(?!api|static).*}', index_handler)
+            self._app.router.add_get('/{_:(?!api|static|uploads).*}', index_handler)
 
         for r in self._app.router.resources():
             logger.debug('route: {}'.format(r))

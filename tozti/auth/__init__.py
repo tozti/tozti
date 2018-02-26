@@ -28,9 +28,11 @@ import tozti
 
 from tozti.auth.utils import (BadPasswordError, create_macaroon, LoginUnknown)
 from tozti.utils import (RouterDef, NotJsonError, BadJsonError, json_response)
+from tozti.store import NoHandleError
 
 from tozti.auth import decorators
 from pymacaroons import Macaroon, Verifier
+from uuid import UUID
 
 
 router = RouterDef()
@@ -40,7 +42,6 @@ create_user = router.add_route('/signup')
 me = router.add_route('/me')
 
 @login.post
-@decorators.restrict_not_logged_in
 async def login_post(req):
     if req.content_type != 'application/vnd.api+json':
         raise NotJsonError()
@@ -52,9 +53,9 @@ async def login_post(req):
         raise BadJsonError()
 
     try:
-        hash = await req.app['tozti-store'].hash_by_login(login)
-        user_uid = await req.app['tozti-store'].user_uid_by_login(login)
-    except LoginUnknown as err:
+        user_uid = (await req.app['tozti-store'].by_handle(login))['id']
+        hash = (await req.app['tozti-store'].resource_by_id(user_uid))['body']['hash']
+    except NoHandleError as err:
         raise err
     try:
         pwhash_verify(hash.encode('utf-8'), passwd.encode('utf-8'))
@@ -90,12 +91,13 @@ async def create_user(req):
     except (JSONDecodeError, IndexError, KeyError):
         raise BadJsonError()
 
-    uid_user = await req.app['tozti-store'].create({'data':{'type':'core/user', 'attributes':{
-    	'name':name, 'handle':login, 'email':email
-    }}})
-
     hash = pwhash_str(passwd.encode('utf-8')).decode('utf-8')
-    await req.app['tozti-store'].set_login_hash(login, hash)
+    user_object = await req.app['tozti-store'].create({'data':{'type':'core/user', 'body':{
+    	'name':name, 'handle':login, 'email':email, 'hash': hash, 'groups':{'data':[]}, 'pinned':{'data':[]}
+    }}})
+    uid_user = user_object['id']
+    await req.app['tozti-store'].handle_set_id(login, uid_user)
+
 
     rep = {'created': True}
 
@@ -109,4 +111,6 @@ async def create_user(req):
 @me.get
 @decorators.restrict_known_user
 async def me(req):
-    return json_response({ 'data': req['user'] })
+    store = req.app['tozti-store']
+    user_object = await store.read(req['user'])
+    return json_response({ 'data': user_object})

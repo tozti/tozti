@@ -9,9 +9,9 @@ TYPE = "type/foo"
 
 @pytest.mark.extensions("rel02")
 def test_storage_type_get(tozti, db):
-    uid_bar = add_object_get_id({"type": "rel02/bar", "attributes": {"bar": "bar"}})
-    uid_bar2 = add_object_get_id({"type": "rel02/bar", "attributes": {"bar": "bar"}})
-    uid_foo = add_object_get_id({"type": "rel02/foo", "attributes": {"foo": "foo"}, "relationships": {"members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
+    uid_bar = add_object_get_id({"type": "rel02/bar", "body": {"bar": "bar"}})
+    uid_bar2 = add_object_get_id({"type": "rel02/bar", "body": {"bar": "bar"}})
+    uid_foo = add_object_get_id({"type": "rel02/foo", "body": {"foo": "foo", "members": {"data": [{"id": uid_bar}, {"id": uid_bar2}]}}})
 
     resp = make_call("GET", "/store/by-type/rel02/bar")
     data = resp.json()['data']
@@ -21,7 +21,7 @@ def test_storage_type_get(tozti, db):
 
 @pytest.mark.extensions("rel02")
 def test_storage_type_get_empty(tozti, db):
-    uid_foo = add_object_get_id({"type": "rel02/foo", "attributes": {"foo": "foo"}, "relationships": {"members": {"data": []}}})
+    uid_foo = add_object_get_id({"type": "rel02/foo", "body": {"foo": "foo", "members": {"data": []}}})
 
     resp = make_call("GET", "/store/by-type/rel02/bar")
     data = resp.json()['data']
@@ -29,12 +29,16 @@ def test_storage_type_get_empty(tozti, db):
     assert len(data) == 0
 
 @pytest.mark.extensions("rel02")
-def test_storage_type_get_nonexistent(tozti, db):
+def test_storage_type_get_notype(tozti, db):
     resp = make_call("GET", "/store/by-type/")
     assert resp.status_code == 404
 
+@pytest.mark.extensions("rel02")
+def test_storage_type_get_nonexistent(tozti, db):
     resp = make_call("GET", "/store/by-type/nonexistent")
     assert resp.status_code == 404
 
+@pytest.mark.extensions("rel02")
+def test_storage_type_get_nonexistent_long(tozti, db):
     resp = make_call("GET", "/store/by-type/a/bit/long")
     assert resp.status_code == 404

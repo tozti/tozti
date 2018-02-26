@@ -12,5 +12,6 @@ package-lock.json
 docs/_build
 extensions/*
 data/
+.pytest_cache/
 
 !tests/extensions/*/dist/

@@ -1,6 +1,6 @@
 <template>
   <section v-if="resource" class="section content">
-    <h1>{{ resource.attributes.name }}</h1>
+    <h1>{{ resource.body.name }}</h1>
     <p class="grouped">
       <button class="button" @click="deleteGroup" :disabled="deleting">
         Supprimer
@@ -53,7 +53,7 @@
             this.deleting = true
 
             tozti.store
-              .rels.delete(tozti.me.relationships.groups, { id: this.id })
+              .rels.delete(tozti.me.body.groups, { id: this.id })
               .then(() => tozti.store.delete(this.id))
               .then(() => {
                 this.$router.push('/g/')

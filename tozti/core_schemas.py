@@ -1,64 +1,53 @@
 user_schema = {
-    'attributes': {
+    'body': {
         'name': { 'type': 'string' },
         'email': { 'type': 'string', 'format': 'email' },
         'handle': { 'type': 'string' },
-    },
-    'relationships': {
+        'hash': {'type': 'string'},
         'groups': {
+            'type': 'relationship',
             'arity': 'to-many',
-            'type': 'core/group',
+            'targets': 'core/group',
         },
 
         'pinned': {
+            'type': 'relationship',
             'arity': 'to-many',
-            'type': 'core/folder'
+            'targets': 'core/folder'
         }
     }
 }
 
 
 group_schema = {
-    'attributes': {
-        'name': { 'type': 'string' },
-        'handle': { 'type': 'string' },
-    },
-
-    'relationships': {
+    'body': {
+        'name': {
+            'type': 'string'
+        },
+        'handle' : {
+            'type': 'string'
+        },
         'members': {
-            'reverse-of': {
-                'type': 'core/user',
-                'path': 'groups'
-            }
-        },
-
-        'groups': {
-            'arity': 'to-many',
-            'type': 'core/group',
-        },
-
-        'pinned': {
-            'arity': 'to-many',
-            'type': 'core/folder'
+            'type': 'relationship',
+            'arity': 'auto',
+            'pred-type': 'core/user',
+            'pred-relationship': 'groups'
         }
     }
 }
 
 folder_schema = {
-    'attributes': {
-        'name': { 'type': 'string' }
-    },
-
-    'relationships': {
+    'body': {
+        'name': { 'type': 'string' },
         'children': {
             'arity': 'to-many'
         },
 
         'parents': {
-            'reverse-of': {
-                'type': 'core/folder',
-                'path': 'children'
-            }
+            'type': 'relationship',
+            'arity': 'auto',
+            'pred-type': 'core/folder',
+            'pred-relationship': 'children'
         }
     }
 }

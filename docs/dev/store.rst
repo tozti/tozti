@@ -10,8 +10,8 @@ Error format
 ============
 
 The format of the errors follows `JSON API errors`_. If a request raised an
-error, the server will send back a response with status code ``500``, ``404``
-or ``400``. This response might send back a json object with an entry
+error, the server will send back a response with status code ``500``, ``404``, ``406``
+``409`` or ``400``. This response might send back a json object with an entry
 ``errors`` containing a list of json objects with the following properties:
 
 ``code``
@@ -46,16 +46,16 @@ properties:
 ``id``
    An UUIDv4_ which uniquely identifies a resource.
 
+``href``
+    A URL to the object itself.
+
 ``type``
    The name of a `type object`_.
 
-``attributes``
-   An arbitrary JSON object where each attribute is constrained by the
-   type of the resource.
-
-``relationships``
-   A JSON object where the keys are relationship names (just strings) and
-   values are `relationship objects`_.
+``body``
+   A JSON object where the keys are strings and
+   values are either `relationship objects`_ or arbitrary JSON value
+   (ie *attributes*).
 
 ``meta``
    A JSON object containing some metadata about the resource. For now it
@@ -103,76 +103,92 @@ Types
 
 A *type object* is simply a JSON object with the following properties:
 
-``attributes``
-    A JSON object where keys are allowed (and required) attribute names for
+``body``
+    A JSON object where keys are allowed (and required) item names for
     resource objects and values are JSON Schemas. A `JSON Schema`_ is a
     format for doing data validation on JSON. For now we support the Draft-04
     version of the specification (which is the latest supported by the library
     we use).
 
-``relationships``
-    A JSON object where the keys are allowed (and required) relationship names
-    and keys are relationship description objects.
+To the usual JSON schema types, we add the following ones:
 
-Relationship description objects are of 2 kinds, let's start with the simple
-one:
+``"type": "relationship"``
+    This type specifies that the body-item should be a *relationship object*.
+    It supports the following options:
 
-``arity``
-   Either ``"to-one"`` or ``"to-many"``, self-explanatory.
+    * ``arity``, either ``to-one``, ``to-many`` or ``auto``.
+    * ``targets``, this option is only valid with ``"arity": "to-one"`` or
+      ``"arity": "to-many"``. It should be the name of a resource type or an
+      array of such names that define which kind of resources can be pointed to
+      by this relationship. If left undefined every type is allowed.
+    * ``pred-type``, this option is only valid with ``"arity": "auto"``. It
+      should be a resource type. See more info below.
+    * ``pred-relationship``, this option is only valid with ``"arity":
+      "auto"``. See more info below.
 
-``type``
-   This property is optional and can be used to restrict what types the targets
-   of this relationship can be. It can be either the name of a type object or
-   an array of names of allowed type objects.
+``"type": "upload"``
+    This type specifies that the body-item should be a *blob*. It supports
+    the ``acceptable`` option that should be an array of content-types that
+    should be accepted.
 
-The other kind of relationship description exists because relationships are
-directed. As such, because sometimes bidirectional relationships are useful, we
-would want to specify that some relationship is the reverse of another one. To
-solve that, instead of giving ``arity`` and ``type``, you may give
-``reverse-of`` property is a JSON object with two properties: ``type`` (a type
-URL) and ``path`` (a valid relationship name for that type). This will specify
-a new *to-many* relationship that will not be writeable and automatically
-filled by the Store engine. It will contain as target any resource of the given
-type that have the current resource as target in the given relationship name.
+Automatic relationships
+-----------------------
+
+This of relationship description exists because relationships are directed. As
+such, because sometimes bidirectional relationships are useful, we would want
+to specify that some relationship is the reverse of another one. To solve that,
+we introduced the `auto` relationships. This will specify a new
+relationship that will not be writeable and automatically filled by the Store
+engine. It will contain as target any resource of the given type that have the
+current resource as target in the given relationship name. In order to fully
+specify an ``auto`` relationship, you need to specify the type of the related object
+in ``pred-type``, as well as ``pred-relationship``, the name of the relationship in that
+object, that should be reversed.
 
 Let's show an example, we will consider two types: users and groups.
 
 ::
 
-   // http://localhost/types/user.json
-   {
-       "attributes": {
-           "login": {"type": "string"},
-           "email": {"type": "string", "format": "email"}
-       },
-       "relationships": {
-           "groups": {
-               "reverse-of": {
-                   "type": "group",
-                   "path": "members"
-               }
-           }
-       }
-   }
+   // user:
+    {
+        'body': {
+            'name': { 'type': 'string' },
+            'email': { 'type': 'string', 'format': 'email' },
+            'handle': { 'type': 'string' },
+            'hash': {'type': 'string'},
+            'groups': {
+                'type': 'relationship',
+                'arity': 'to-many',
+                'targets': 'core/group',
+            },
+
+            'pinned': {
+                'type': 'relationship',
+                'arity': 'to-many',
+                'targets': 'core/folder'
+            }
+        }
+    }
 
 ::
 
-   // http://localhost/types/group.json
-   {
-       "attributes": {
-           "name": {"type": "string"}
-       },
-       "relationships": {
-           "members": {
-               "arity": "to-many",
-               "type": "user"
-           }
-       }
-   }
+   // group:
+    {
+        'body': {
+            'name': { 'type': 'string' },
+            'handle' : { 'type': 'string' },
+            'members': {
+                'type': 'relationship',
+                'arity': 'auto',
+                'pred-type': 'core/user',
+                'pred-relationship': 'groups'
+            }
+        }
+    }
 
-Now when creating a user you cannot specify it's groups, but you can specify
-members when creating (or updating) a given group and the system will
-automagically take care of filling the ``groups`` relationship with the current
+Now when creating a group you cannot specify it's users, but you can specify
+the ``groups`` when creating (or updating) a given user and the system will
+automagically take care of filling the ``members`` relationship with the current
 up-to-date content.
 
 
@@ -182,23 +198,23 @@ Endpoints
 We remind that the API is quite similar to what `JSON API`_ proposes.
 In the following section, type ``warrior`` is the type defined as::
 
-        'attributes': {
-            'name': { 'type': 'string' },
-            'honor': { 'type': 'number'}
-        },
-        'relationships': {
+    {
+        "body": {
+            "name": { "type": "string" },
+            "honor": { "type": "number"}
             "weapon": {
+                "type": "relationship"
                 "arity": "to-one",
-                "type": "weapon",
+                "targets": "weapon"
             },
             "kitties": {
+                "type": "relationship"
                 "arity": "to-many",
-                "type": "cat"
+                "targets": "cat"
             }
+    }
 
-        }
-
-A warrior has a name and a certain quantity of honor. He also possesses a
+A warrior has a name and a certain amount of honor. He also possesses a
 weapon, and can be the (proud) owner of several cats (or no cats).
 
 
@@ -213,48 +229,41 @@ To fetch an object, you must execute a ``GET`` request on
 
 Error code:
    - ``404`` if ``id`` corresponds to no known objects.
-   - ``400`` if an error occurred when processing the object (for example, one of the object linked to it doesn't exists anymore in the database).
+   - ``400`` if an error occurred when processing the object (for example, one
+     of the object linked to it doesn't exists anymore in the database).
    - ``200`` if the request was successful.
 
 Returns:
    If the request is successful, the server will send back a `resource object`_ under JSON format.
 
 Example:
-   Suppose that an object of type ``warrior`` and id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
+   Suppose that an object of type ``warrior`` and id
+   ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
 
         >> GET /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e
         200
         {
            'data':{
               'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
+              'href': 'http://tozti/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
               'type':'warrior',
-              'attributes':{
+              'body':{
                  'name':'Pierre',
                  'honor': 9000
-              },
-              'relationships':{
-                 'self':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/self',
-                    'data':{
-                       'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
-                       'type':'warrior',
-                       'href':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
-                    }
-                 },
                  'weapon':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
+                    'self':'http://tozti/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/weapon',
                     'data':{
                        'id':'1bb2ff78-cefb-4ce1-b057-333f5baed577',
                        'type':'weapon',
-                       'href':'/api/store/resources/1bb2ff78-cefb-4ce1-b057-333f5baed577'
+                       'href':'http://tozti/api/store/resources/1bb2ff78-cefb-4ce1-b057-333f5baed577'
                     }
                  },
                  'kitties':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
+                    'self':'http://tozti/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
                     'data':[{
                        'id':'6a4d05f1-f04a-4a94-923e-ad52a54456e6',
                        'type':'cat',
-                       'href':'/api/store/resources/6a4d05f1-f04a-4a94-923e-ad52a54456e6'
+                       'href':'http://tozti/api/store/resources/6a4d05f1-f04a-4a94-923e-ad52a54456e6'
                     }]
                  }
               },
@@ -288,8 +297,8 @@ Example:
     ``a0d8959e-f053-4bb3-9acc-cec9f73b524e`` exists in the database. Then::
 
         >> POST /api/store/resources {'data': {'type': 'warrior', 
-                        'attributes': {'name': Pierre, 'honor': 9000}, 
-                        'relationships': {
+                        'body': {
+                            'name': Pierre, 'honor': 9000,
                             'weapon': {'data': {'id': <id_weapon>}}, 
                             'kitties': {'data': [{'id': <kitty_1_id>}]}
                         }}}
@@ -298,19 +307,10 @@ Example:
            'data':{
               'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
               'type':'warrior',
-              'attributes':{
+              'href':'http://tozti/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/',
+              'body':{
                  'name':'Pierre',
                  'honor': 9000
-              },
-              'relationships':{
-                 'self':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/self',
-                    'data':{
-                       'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
-                       'type':'warrior',
-                       'href':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
-                    }
-                 },
                  'weapon':{
                     'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
                     'data':{
@@ -361,8 +361,8 @@ Example:
     exists in the database. Then::
 
         >> PATCH /api/store/resources {'data': {'type': 'warrior', 
-                        'attributes': {'name': Luc}, 
-                        'relationships': {
+                        'attributes': {
+                            'name': 'Luc',
                             'weapon': {'data': {'id': <id_weapon_more_powerfull>}}, 
                         }}}
         200
@@ -370,19 +370,10 @@ Example:
            'data':{
               'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
               'type':'warrior',
-              'attributes':{
+              'href':'http://tozti/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e',
+              'body':{
                  'name':'Luc',
                  'honor': 9000
-              },
-              'relationships':{
-                 'self':{
-                    'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/self',
-                    'data':{
-                       'id':'a0d8959e-f053-4bb3-9acc-cec9f73b524e',
-                       'type':'warrior',
-                       'href':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e'
-                    }
-                 },
                  'weapon':{
                     'self':'/api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e/friend',
                     'data':{
@@ -427,7 +418,7 @@ Example:
     We suppose the object with id ``a0d8959e-f053-4bb3-9acc-cec9f73b524e``
     exists in the database. Then::
 
-        >> DELETE /api/store/resources
+        >> DELETE /api/store/resources/a0d8959e-f053-4bb3-9acc-cec9f73b524e
         200
         {}
 

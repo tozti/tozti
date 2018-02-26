@@ -29,23 +29,17 @@ Therefore, our ``MANIFEST`` (defined in ``server.py``) should look like::
 
   MANIFEST = {
     'types': {
-
       'entity': {
-
-        'attributes': {
+        'body': {
           'name': { 'type': 'string' },
           'age': { 'type': 'integer' },
-        },
-
-        'relationships': {
           'friends': {
+            'type': 'relationship'
             'arity': 'to-many',
-            'type': 'dummy-extension/entity',
+            'targets': 'dummy-extension/entity',
           }
         }
-
       }
-
     }
   }
 
@@ -88,7 +82,7 @@ we can print the name of said entity by doing:
    tozti.store
      .get(uuid)
      .then(resource => {
-       console.log(resource.attributes.name)
+       console.log(resource.body.name)
      })
      .catch(response => {
        console.error('An error occured while fetching the resource.')
@@ -110,9 +104,12 @@ to the server store. First define a new resource object:
 
    let resource = {
      type: 'dummy-extension/entity',
-     attributes: {
+     body: {
        name: 'Some Entity',
        age: 15,
+       friends: {
+        data: []
+       }
      }
    }
 
@@ -128,8 +125,9 @@ Then, you can create the resource and send it to the store with the ``create`` m
 
 
 This method also returns a javascript **promise**, that resolves to the full store resource object, or rejects to the HTTP response object.
-The resolved resource is a fully defined store resource, so it contains a ``meta`` field with meta information, and ``attributes`` and ``relationships`` objects in accordance with the resource type.
-It also has an ``id`` field, which contains the uuid of the resource inside the remote store.
+The resolved resource is a fully defined store resource, so it contains ``href``-- a URL to itself,
+a ``meta`` field with meta information, and a ``body`` filled with the actual properties of the resource.
+It also has an ``id`` field, which contains the UUID of the resource inside the remote store.
 
 .. code-block:: javascript
 
@@ -157,7 +155,7 @@ and at the very least an ``id``.
 
    let changes = {
      id: 'some-resource-id',
-     attributes: {
+     body: {
        name: 'A new name for the entity',
      }
    }
@@ -176,7 +174,7 @@ Again, this method returns a javascript **promise**, that resolves to the full s
    tozti.store
      .update(changes)
      .then(resource => {
-       console.log(resource.attributes.name)
+       console.log(resource.body.name)
        // expected output: A new name for the entity
      })
      .catch(response => {
@@ -231,11 +229,11 @@ Assume that we have a resource ``resource`` of type ``dummy-extension/entity``, 
 .. code-block:: javascript
 
    tozti.store.rels
-     .fetch(resource.relationships.friends)
+     .fetch(resource.body.friends)
      .then(friends => {
        // log the name of every friend in the relationship
        friends.forEach(friend => {
-         console.log(friend.attributes.name)
+         console.log(friend.body.name)
        })
      })
      .catch(response => {
@@ -259,7 +257,7 @@ adding ``poire`` and ``abricot`` to the relationship ``friends`` of resource ``p
 .. code-block:: javascript
 
    tozti.store.rels
-     .add(pomme.relationships.friends, { id: poire.id }, abricot)
+     .add(pomme.body.friends, { id: poire.id }, abricot)
 
 If some linkages already exist inside the relationship, they will not be added twice but the promise will still resolve correctly to the relationship object.
 
@@ -279,7 +277,7 @@ Using the same exemple as before, we now want to remove ``poire`` and ``abricot`
 .. code-block:: javascript
 
    tozti.store.rels
-     .delete(pomme.relationships.friends, poire, { id: abricot.id })
+     .delete(pomme.body.friends, poire, { id: abricot.id })
 
 If some linkages do not exist inside the relationship, they will simply be ignored, and the promise will still resolve correctly to the relationship object.
 
@@ -328,8 +326,8 @@ This would give something similar in the vein of:
    <template>
      <div>
        <p v-if="resource">
-         Name: {{ resource.attributes.name }} <b>
-         Age:  {{ resource.attributes.name }}
+         Name: {{ resource.body.name }} <b>
+         Age:  {{ resource.body.name }}
        </p>
        <p v-else>
          The resource is being loaded.
@@ -371,8 +369,8 @@ To make it easier for developers to define this kind of components, we provide a
    <template>
      <div>
        <p v-if="!loading">
-         Name: {{ resource.attributes.name }} <b>
-         Age:  {{ resource.attributes.name }}
+         Name: {{ resource.body.name }} <b>
+         Age:  {{ resource.body.name }}
        </p>
        <p v-else>
          The resource is being loaded.
@@ -433,7 +431,7 @@ In our example, we assume that we are defining a global component, that displays
          friends() {
            // this.friends will contain an array of linkages
            // and will be computed when the main resource is finally ready
-           return this.resource.relationships.friends.data
+           return this.resource.body.friends.data
          }
        }
 

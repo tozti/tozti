@@ -16,26 +16,14 @@
 # along with Tozti.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__all__ = ('UUID_RE', 'router', 'open_db', 'close_db', 'Store')
+#__all__ = ('UUID_RE', 'router', 'open_db', 'close_db', 'Store')
 
-
-from json import JSONDecodeError
-from uuid import UUID
 import logbook
 
-UUID_RE = '-'.join('[0-9a-fA-F]{%d}' % i for i in (8, 4, 4, 4, 12))
+from tozti.utils import APIError
 
-# Regex for validating whether a string is a valid type name. 
-# Here, valid type names are arbitrary alphanumeric strings
-# with '-', '_' and at most one '/'
-TYPE_RE = '([\w-]+/)?[\w-]+' 
 
 logger = logbook.Logger('tozti.store')
-
-import tozti
-from tozti.utils import (RouterDef, APIError, NotJsonError, BadJsonError,
-                         BadDataError, json_response)
-from tozti.store.type_schema import Schema
 
 
 class NoResourceError(APIError):
@@ -45,144 +33,49 @@ class NoResourceError(APIError):
     template = 'resource {id} not found'
 
 
-class BadAttrError(APIError):
+class NoItemError(APIError):
+    code = 'NO_ITEM'
+    title = 'unknown body item'
+    status = 400
+    template = 'item {key} is unknown'
+
+
+class BadItemError(APIError):
+    code = 'BAD_ITEM'
+    title = 'a body item is invalid'
+    status = 400
+    template = 'item {key} is invalid: {msg}'
+
+
+class BadAttrError(BadItemError):
     code = 'BAD_ATTRIBUTE'
     title = 'an attribute is invalid'
     status = 400
+    template = 'attribute {key} is invalid: {err}'
 
 
-class NoRelError(APIError):
+class BadRelError(BadItemError):
     code = 'BAD_RELATIONSHIP'
     title = 'a relationship is invalid'
     status = 400
+    template = 'relationship {key} is invalid: {err}'
 
 
-class BadRelError(APIError):
-    code = 'BAD_RELATIONSHIP'
-    title = 'a relationship is invalid'
+class NoTypeError(APIError):
+    code = 'NO_TYPE'
+    title = 'unknown type'
     status = 400
+    template = 'type {type} is unknown'
 
-class BadTypeError(APIError):
-    code = 'BAD_TYPE'
-    title = 'invalid type'
+
+class NoHandleError(APIError):
+    code = 'NO_HANDLE'
+    title = 'unknown handle'
     status = 404
-    template = 'type {type} not found'
+    template = 'handle {handle} is unknown'
 
-from tozti.store.engine import Store
-
-
-router = RouterDef()
-resources = router.add_route('/resources')
-resources_single = router.add_route('/resources/{id:%s}' % UUID_RE)
-relationship = router.add_route('/resources/{id:%s}/{rel}' % UUID_RE)
-types = router.add_route('/by-type/{type:%s}' % TYPE_RE)
-
-async def get_json_from_request(req):
-    if req.content_type != 'application/vnd.api+json':
-        raise NotJsonError()
-    try:
-        data = await req.json()
-    except JSONDecodeError:
-        raise BadJsonError()
-
-    return data
-
-@resources.post
-async def resources_post(req):
-    """Request handler for ``POST /api/store/resources``."""
-
-    data = await get_json_from_request(req)
-    id = await req.app['tozti-store'].create(data)
-    return json_response({'data': await req.app['tozti-store'].get(id)})
-
-
-@resources_single.get
-async def resources_get(req):
-    """Request handler for ``GET /api/store/resources/{id}``."""
-
-    id = UUID(req.match_info['id'])
-    return json_response({'data': await req.app['tozti-store'].get(id)})
-
-
-@resources_single.patch
-async def resources_patch(req):
-    """Request handler for ``PATCH /api/store/resources/{id}``."""
-
-    data = await get_json_from_request(req)
-    id = UUID(req.match_info['id'])
-    await req.app['tozti-store'].update(id, data)
-    return json_response({'data': await req.app['tozti-store'].get(id)})
-
-
-@resources_single.delete
-async def resources_delete(req):
-    """Request handler for ``DELETE /api/store/resources/{id}``."""
-
-    id = UUID(req.match_info['id'])
-    await req.app['tozti-store'].remove(id)
-    return json_response({})
-
-
-@relationship.get
-async def relationship_get(req):
-    """Request handler for ``GET /api/store/resources/{id}/{rel}``."""
-
-    id = UUID(req.match_info['id'])
-    rel = req.match_info['rel']
-    return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
-
-
-@relationship.put
-async def relationship_put(req):
-    """Request handler for ``PUT /api/store/resources/{id}/{rel}``."""
-
-    data = await get_json_from_request(req)
-    id = UUID(req.match_info['id'])
-    rel = req.match_info['rel']
-
-    await req.app['tozti-store'].rel_replace(id, rel, data)
-    return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
-
-
-@relationship.post
-async def relationship_post(req):
-    """Request handler for ``POST /api/store/resources/{id}/{rel}``."""
-
-    data = await get_json_from_request(req)
-    id = UUID(req.match_info['id'])
-    rel = req.match_info['rel']
-
-    await req.app['tozti-store'].rel_append(id, rel, data)
-    return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
-
-@relationship.delete
-async def relationship_delete(req):
-    """Request handler for ``DELETE /api/store/resources/{id}/{rel}``"""
-
-    data = await get_json_from_request(req)
-    id = UUID(req.match_info['id'])
-    rel = req.match_info['rel']
-
-    await req.app['tozti-store'].rel_delete(id, rel, data)
-    return json_response({'data': await req.app['tozti-store'].rel_get(id, rel)})
-
-@types.get
-async def types_get(req):
-    """Request handler for ``GET /api/store/by-type/{type}``."""
-    type = req.match_info['type']
-
-    from pprint import pprint
-    pprint(req.GET)
-
-    return json_response({'data': await req.app['tozti-store'].type_get(type)})
-
-async def open_db(app, types):
-    """Initialize storage backend at app startup."""
-
-    app['tozti-store'] = Store(types, **tozti.CONFIG['mongodb'])
-
-
-async def close_db(app):
-    """Close storage backend at app cleanup."""
-
-    await app['tozti-store'].close()
+class HandleExistsError(APIError):
+    code = 'HANDLE_EXISTS'
+    title = 'handle exists'
+    status = 409
+    template = 'handle {handle} already exists'

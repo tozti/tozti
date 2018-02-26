@@ -193,7 +193,7 @@ const store = {
      */
     add(rel, ...linkages) {
       return api
-        .post(api.origin + rel.self, { data: linkages })
+        .post( rel.self, { data: linkages })
         .then(() => {
           rel.data.push(...linkages)
           return rel
