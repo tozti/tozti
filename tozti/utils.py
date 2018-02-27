@@ -171,7 +171,7 @@ def validate(inst, schema):
 
 
 def current_time():
-    datetime.utcnow().replace(microsecond=0)
+    return datetime.utcnow().replace(microsecond=0)
 
 
 class ConfigError(Exception):

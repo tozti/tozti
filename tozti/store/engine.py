@@ -70,7 +70,7 @@ class Store:
         res = await self.resource_by_id(id, {'type': 1})
         return res['type']
 
-    async def create(self, raw):
+    async def create(self, raw, user=None):
         """Create a new resource and return it's rendered form.
 
         The passed data must be the content of the request as specified by
@@ -88,11 +88,15 @@ class Store:
 
         data = await schema.sanitize(raw)
         data['_id'] = uuid4()
+
         time = current_time()
         data['meta'] = {
             'created': time,
             'last-modified': time
         }
+        if user is not None:
+            data['meta']['author'] = user
+
         await self._db.resources.insert_one(data)
 
         return await schema.render(data)
