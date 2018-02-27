@@ -20,6 +20,10 @@ def test_tozti_routing(tozti):
     assert(tozti_still_running(tozti))
 
 
+@pytest.mark.extensions("bad_name")
+def test_tozti_bad_name(tozti):
+    # check if tozti is running
+    assert(tozti_still_running(tozti))
 
 """
 # vue routing

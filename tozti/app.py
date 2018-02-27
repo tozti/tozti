@@ -63,7 +63,7 @@ class Extension:
         on_shutdown (function): A function to be executed when the hook\
             on_shutdown is executed by aiohttp
     """
-    def __init__(self, name, router=None, includes=(), static_dir=None,
+    def __init__(self, name, folder_name=None, router=None, includes=(), static_dir=None,
                  dependencies=(), _god_mode=None, on_response_prepare=None,
                  on_startup=None, on_cleanup=None, on_shutdown=None, types={},
                  **kwargs):
@@ -73,6 +73,10 @@ class Extension:
         """
 
         self.name = name
+        if folder_name is None:
+            self.folder_name = name
+        else:
+            self.folder_name = folder_name
 
         self.router = router
         self.includes = includes if isinstance(includes, list) else list(includes) 

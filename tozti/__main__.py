@@ -81,7 +81,7 @@ def find_exts():
                                  'does not contain the `name`'
                                  'property'.format(extname))
 
-            yield tozti.app.Extension(**mod.MANIFEST)
+            yield tozti.app.Extension(folder_name = extname, **mod.MANIFEST)
         except AttributeError:
             logger.exception('Error while loading extension {}, skipping: no '
                              'MANIFEST found'.format(extname))
@@ -170,7 +170,7 @@ def main():
                 if extension.static_dir is None :
                     extension.static_dir = 'dist'
                 extension.set_static_dir_absolute(
-                    os.path.join(tozti.TOZTI_BASE, 'extensions', extension.name))
+                    os.path.join(tozti.TOZTI_BASE, 'extensions', extension.folder_name))
             app.register(extension)
     except Exception as err:
         logger.critical('Error while loading extensions: {}'
