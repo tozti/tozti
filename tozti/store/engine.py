@@ -25,7 +25,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from tozti.store import logger, NoResourceError, NoTypeError, BadItemError, NoItemError, NoHandleError, HandleExistsError
 from tozti.store.schema import Schema, fmt_resource_url
-from tozti.utils import BadDataError, ValidationError, validate, NotAcceptableError
+from tozti.utils import BadDataError, ValidationError, validate, NotAcceptableError, current_time
 
 from tozti.auth.utils import LoginUnknown as LoginUnknown
 
@@ -52,6 +52,11 @@ class Store:
         res = await self._db.resources.find_one({'_id': id}, projection=projection)
         if res is None:
             raise NoResourceError(id=id)
+
+        handle = await self._db.handles.find_one({'target': id})
+        if handle is not None:
+            res['handle'] = handle['_id']
+
         return res
 
     async def type_by_id(self, id):
@@ -83,9 +88,11 @@ class Store:
 
         data = await schema.sanitize(raw)
         data['_id'] = uuid4()
-        current_time = datetime.utcnow().replace(microsecond=0)
-        data['created'] = current_time
-        data['last-modified'] = current_time
+        time = current_time()
+        data['meta'] = {
+            'created': time,
+            'last-modified': time
+        }
         await self._db.resources.insert_one(data)
 
         return await schema.render(data)
@@ -113,7 +120,14 @@ class Store:
         schema = self._types[await self.type_by_id(id)]
         data = await schema.sanitize(raw, is_create=False)
         if len(data) > 0:
-            await self._db.resources.update_one({'_id': id}, {'$set': data})
+            await self._db.resources.update_one({'_id': id},
+                                                {'$set':
+                                                 {
+                                                     **data,
+                                                     'meta': {'last-modified': current_time()}
+                                                 }
+                                                 }
+                                                )
 
     async def delete(self, id):
         """Remove a resource from the DB.
@@ -237,7 +251,7 @@ class Store:
             id = UUID(raw['data']['id'])
         except:
             raise BadDataError()
-        
+
         if not allow_overwrite and (await self._db.handles.find({'_id': handle}).count()) > 0:
             raise HandleExistsError(handle)
         await self.handle_set_id(handle, id)
@@ -246,7 +260,7 @@ class Store:
         type = await self.type_by_id(id)
         await self._db.handles.update_one(
             {'_id': handle},
-            {'$set': {'target':id, 'type':type}},
+            {'$set': {'target': id, 'type': type}},
             upsert=True)
 
     async def handle_delete(self, handle):

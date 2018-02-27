@@ -64,7 +64,7 @@ class Schema:
                     'body': {'type': 'object'},
                 },
                 'required': ['body'],
-                'additionalProperties': True, #possible security problem
+                'additionalProperties': True,  # possible security problem
             },
         },
         'additionalProperties': False,
@@ -110,7 +110,8 @@ class Schema:
 
         # check that all and only these attributes are present
         sub1 = data['body'].keys() - self._defs.keys()
-        sub2 = {k for (k, v) in self._defs.items() if v.writeable and k not in self._optional} - data['body'].keys()
+        sub2 = {k for (k, v) in self._defs.items(
+        ) if v.writeable and k not in self._optional} - data['body'].keys()
         if len(sub1) > 0:
             raise NoItemError(key=sub1.pop())
         if is_create and len(sub2) > 0:
@@ -137,12 +138,16 @@ class Schema:
         for (key, schema) in self._defs.items():
             body[key] = await schema.render(id, rep['body'].get(key))
 
+        meta = rep['meta']
+        if 'handle' in rep:
+            meta['handle'] = rep['handle']
+
         return {'id': id,
                 'href': fmt_resource_url(id),
                 'type': rep['type'],
                 'body': body,
-                'meta': {'created': rep['created'],
-                         'last-modified': rep['last-modified']}}
+                'meta': meta
+                }
 
     def __getitem__(self, key):
         if key not in self._defs:
@@ -173,7 +178,7 @@ class LinkageModel:
             type_url = await self.db.type_by_id(target)
         except NoResourceError:
             raise BadRelError('linked resource %s does not exist' % target)
-        #FIXME: this error leaks type information, check if user can read
+        # FIXME: this error leaks type information, check if user can read
         # linked resource first
         if 'type' in linkage and linkage['type'] != type_url:
             raise BadRelError('mismatched type for linked resource {target}: '
@@ -214,7 +219,6 @@ class UploadModel:
 
     async def render(self, id, data):
         return data
-
 
 
 class AttributeModel:
@@ -279,8 +283,8 @@ class RelationshipModel:
             'data': {
                 'type': 'object',
                 'properties': {
-                    'id': { 'type': 'string', 'pattern': '^%s$' % UUID_RE },
-                    'type': { 'type': 'string', 'format': 'uri' },
+                    'id': {'type': 'string', 'pattern': '^%s$' % UUID_RE},
+                    'type': {'type': 'string', 'format': 'uri'},
                 },
                 'required': ['id'],
             },
@@ -296,8 +300,8 @@ class RelationshipModel:
                 'items': {
                     'type': 'object',
                     'properties': {
-                        'id': { 'type': 'string', 'pattern': '^%s$' % UUID_RE },
-                        'type': { 'type': 'string', 'format': 'uri' },
+                        'id': {'type': 'string', 'pattern': '^%s$' % UUID_RE},
+                        'type': {'type': 'string', 'format': 'uri'},
                     },
                     'required': ['id'],
                 },
