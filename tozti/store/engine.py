@@ -124,14 +124,8 @@ class Store:
         schema = self._types[await self.type_by_id(id)]
         data = await schema.sanitize(raw, is_create=False)
         if len(data) > 0:
-            await self._db.resources.update_one({'_id': id},
-                                                {'$set':
-                                                 {
-                                                     **data,
-                                                     'meta': {'last-modified': current_time()}
-                                                 }
-                                                 }
-                                                )
+            data['meta.last-modified'] = current_time()
+            await self._db.resources.update_one({'_id': id}, {'$set': data})
 
     async def delete(self, id):
         """Remove a resource from the DB.
@@ -179,7 +173,8 @@ class Store:
 
         await self._db.resources.update_one(
             {'_id': id},
-            {'$set': {'body.%s' % rel: fmt_upload_url(blob_id)}})
+            {'$set': {'body.%s' % rel: fmt_upload_url(blob_id),
+                      'meta.last-modified': current_time()}})
 
     async def item_append(self, id, key, raw):
         schema = self._types[await self.type_by_id(id)]
@@ -192,14 +187,16 @@ class Store:
 
             await self._db.resources.update_one(
                 {'_id': id},
-                {'$addToSet': {'body.%s' % key: {'$each': data}}})
+                {'$addToSet': {'body.%s' % key: {'$each': data}},
+                 '$set': {'meta.last-modified': current_time()}})
 
         elif schema[key].is_dict:
             data = await schema[key].sanitize(raw)
 
             await self._db.resources.update_one(
                 {'_id': id},
-                {'$set': {'body.%s.%s' % (key, k): v for (k, v) in data.items()}})
+                {'$set': {'body.%s.%s' % (key, k): v for (k, v) in data.items(),
+                          'meta.last-modified': current_time()}})
 
         else:
             raise BadItemError('body item {key} is not an array', key=key)
@@ -215,14 +212,16 @@ class Store:
 
             await self._db.resources.update_one(
                 {'_id': id},
-                {'$pull': {'body.%s' % key: {'id': {'$in': [UUID(x['id']) for x in data]}}}})
+                {'$pull': {'body.%s' % key: {'id': {'$in': [UUID(x['id']) for x in data]}}},
+                 '$set': {'meta.last-modified': current_time()}})
 
         elif schema[key].is_dict:
             data = await schema[key].sanitize(raw, check_consistency=False)
 
             await self._db.resources.update_one(
                 {'_id': id},
-                {'$unset': {'body.%s.%s' % (key, k): '' for k in data}})
+                {'$unset': {'body.%s.%s' % (key, k): '' for k in data},
+                 '$set': {'meta.last-modified': current_time()}})
 
         else:
             raise BadItemError('body item {key} is not an array', key=key)
