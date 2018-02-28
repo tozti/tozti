@@ -195,7 +195,7 @@ class Store:
 
             await self._db.resources.update_one(
                 {'_id': id},
-                {'$set': {'body.%s.%s' % (key, k): v for (k, v) in data.items(),
+                {'$set': {**{'body.%s.%s' % (key, k): v for (k, v) in data.items()},
                           'meta.last-modified': current_time()}})
 
         else:

@@ -138,9 +138,12 @@ class Schema:
         for (key, schema) in self._defs.items():
             body[key] = await schema.render(id, rep['body'].get(key))
 
-        meta = rep['meta']
+        meta = {'created': rep['meta']['created'].isoformat() + 'Z',
+                'last-modified': rep['meta']['last-modified'].isoformat() + 'Z'}
         if 'handle' in rep:
             meta['handle'] = rep['handle']
+        if 'author' in rep['meta']:
+            meta['author-id'] = rep['meta']['author']
 
         return {'id': id,
                 'href': fmt_resource_url(id),
