@@ -59,12 +59,47 @@ async def resources_post(req):
     return json_response({'data': resource})
 
 
+async def resources_get_include(resource, included_fields, app):
+    loaded_includes = {}
+    included_uid = {}
+
+    type_ress = resource['type']
+
+    schema = app['tozti-store']._types[type_ress]
+
+    for field in included_fields:
+        if field in schema and isinstance(schema[field], tozti.store.schema.RelationshipModel):
+            field_data = resource['body'][field]['data']
+            included_uid[field] = []
+            if schema[field].is_array:
+                for inc in field_data:
+                    included_uid[field].append(inc['id'])
+            else:
+                included_uid[field] = [field_data['id']]
+    
+    for field in included_uid:
+        loaded_includes[field] = {}
+        for uid in included_uid[field]:
+            loaded_includes[field][str(uid)] = (await (app['tozti-store'].read(uid)))
+    return loaded_includes
+        
+    
+
 @resources_single.get
 async def resources_get(req):
     """Request handler for ``GET /api/store/resources/{id}``."""
-
+        
     id = UUID(req.match_info['id'])
-    return json_response({'data': await req.app['tozti-store'].read(id)})
+    data = await req.app['tozti-store'].read(id)
+    response_dict = {'data': data}
+
+    if 'includes' in req.query:
+        included_field = req.GET['includes']
+        
+        included_data = await resources_get_include(data, [included_field], req.app)
+        response_dict['included'] = included_data
+        
+    return json_response(response_dict)
 
 
 @resources_single.patch
