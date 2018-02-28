@@ -96,7 +96,7 @@ async def resources_get(req):
     if 'includes' in req.query:
         included_field = req.GET['includes']
         
-        included_data = await resources_get_include(data, [included_field], req.app)
+        included_data = await resources_get_include(data, included_field.split(','), req.app)
         response_dict['included'] = included_data
         
     return json_response(response_dict)
