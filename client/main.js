@@ -13,9 +13,12 @@ import api from './api'
 
 import AppView from './components/App'
 import HandleInput from './components/generic/HandleInput'
+import NewResourceForm from './components/generic/NewResourceForm'
 
 Vue.use(Buefy)
 Vue.component('t-handle-field', HandleInput)
+Vue.component('t-new-resource-form', NewResourceForm)
+
 
 // Create a 'polymorphic' component.
 // A polymorphic component is a component with a single prop `resource` that

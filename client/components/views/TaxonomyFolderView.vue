@@ -1,13 +1,16 @@
 <template>
   <div v-if="resource" class="taxonomy">
     <p>
-      <a class="button" @click="displayCreationModal">Nouveau dossier</a>
+      <a class="button" @click="displayCreationModal('core/folder')">Nouveau dossier</a>
       <b-dropdown style="margin-left: 10px;">
         <a class="button" slot="trigger">
           <b-icon pack="mdi" icon="file-plus"></b-icon>
         </a>
 
-        <b-dropdown-item v-for="{ type, name, gender, creationForm } in resourceTypes">
+        <b-dropdown-item 
+          v-for="{ type, name, gender } in resourceTypes"
+          @click="displayCreationModal(type)"
+          :key="type">
           <template v-if="gender == 'm'">Nouveau</template>
           <template v-else>Nouvelle</template>
           {{ name }}
@@ -82,10 +85,22 @@
         return DefaultItem
       },
 
-      displayCreationModal() {
+      getFormForType(type) {
+        if (type == 'core/folder') {
+          return NewFolderForm
+        }
+
+        for (let res of this.resourceTypes) {
+          if (type == res.type) {
+            return res.creationForm
+          }
+        }
+      },
+
+      displayCreationModal(type) {
         ModalProgrammatic.open({
           parent: this,
-          component: NewFolderForm,
+          component: this.getFormForType(type),
           scroll: 'keep',
           props: {
             root: this.resource
