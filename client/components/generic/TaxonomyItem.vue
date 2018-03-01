@@ -12,7 +12,8 @@
     <div v-else class="taxonomy-item-info">
       <router-link :to="to" append>
         <p class="title">{{ title }}</p>
-        <p class="subtitle">{{ subtitle }}</span></p>
+        <p class="subtitle"><timeago :since="date"></timeago></span></p>
+        <!-- <p class="subtitle">{{ subtitle }}</span></p> -->
       </router-link>
     </div>
     <div class="taxonomy-item-actions">
@@ -48,6 +49,11 @@
       },
 
       subtitle: {
+        type: String,
+        default: '',
+      },
+
+      date: {
         type: String,
         default: '',
       },

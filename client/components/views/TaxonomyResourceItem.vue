@@ -1,5 +1,5 @@
 <template>
-  <t-taxonomy-item :loading="loading" :title="title" :subtitle="subtitle" :resource="resource" :root="root"/>
+  <t-taxonomy-item :loading="loading" :title="title" :date="date" :subtitle="subtitle" :resource="resource" :root="root"/>
 </template>
 
 <script>
@@ -29,6 +29,7 @@
     watch: {
       loading() {
         this.title = this.id
+        this.date = this.resource.meta['last-modified']
         this.subtitle = this.resource.meta['last-modified']
       }
     }

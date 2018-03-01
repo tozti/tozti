@@ -3,6 +3,7 @@
     :loading="loading"
     :to="handle"
     :title="title"
+    :date="date"
     :subtitle="subtitle"
     :resource="resource"
     :root="root" />
@@ -24,6 +25,7 @@
     methods: {
       onLoaded() {
         this.title = this.resource.body.name
+        this.date = this.resource.meta['last-modified']
         this.subtitle = this.resource.meta['last-modified']
       }
     }

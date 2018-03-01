@@ -4,6 +4,7 @@
     :loading="loading"
     :title="title"
     :to="handle"
+    :date="date"
     :subtitle="date"
     :resource="resource"
     :root="root"
