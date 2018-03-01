@@ -9,7 +9,7 @@
       <p>
       <i class="nc-icon nc-grid-45 x3"></i>
       </p>
-      <p>Cet espace est vide.</p>
+      <p>Ce dossier est vide.</p>
     </div>
     <div v-else>
       <component
@@ -28,7 +28,7 @@
   import DefaultItem from './TaxonomyResourceItem'
   import GroupItem from './TaxonomyGroupItem'
   import FolderItem from './TaxonomyFolderItem'
-  import NewWorkspaceForm from '../NewWorkspaceForm'
+  import NewFolderForm from '../NewFolderForm'
 
   export { DefaultItem as TaxonomyItemComponent }
 
@@ -69,7 +69,7 @@
       displayCreationModal() {
         ModalProgrammatic.open({
           parent: this,
-          component: NewWorkspaceForm,
+          component: NewFolderForm,
           scroll: 'keep',
           props: {
             root: this.resource

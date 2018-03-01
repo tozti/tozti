@@ -11,6 +11,12 @@
       </router-link>
     </nav>
 
+    <workspace-menu
+        v-for="workspace in workspaces"
+        :key="workspace.id"
+        :id="workspace.id">
+    </workspace-menu>
+
     <nav v-if="pinned.length">
       <h3>épinglé</h3>
       <pinned-item v-for="pin in pinned"
@@ -24,13 +30,15 @@
 
 <script>
   import PinnedItem from './PinnedItem'
+  import WorkspaceMenu from './WorkspaceMenu'
 
   export default {
-    components: { PinnedItem },
+    components: { PinnedItem, WorkspaceMenu },
 
     data: _ => ({
       globalMenuItems: tozti.globalMenuItems,
-      pinned: tozti.me.body.pinned.data
+      pinned: tozti.me.body.pinned.data,
+      workspaces: tozti.me.body.groups.data
     })
   }
 </script>

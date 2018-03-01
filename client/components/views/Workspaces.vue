@@ -14,14 +14,14 @@
 
 <script>
   import { ModalProgrammatic } from 'buefy'
-  import WorkspaceForm from '../NewWorkspaceForm.vue'
+  import NewFolderForm from '../NewFolderForm.vue'
 
   export default {
     methods: {
       displayCreationModal() {
         ModalProgrammatic.open({
           parent: this,
-          component: WorkspaceForm,
+          component: NewFolderForm,
           scroll: 'keep'
         })
       }
