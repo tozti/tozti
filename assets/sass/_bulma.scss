@@ -46,6 +46,10 @@ $size-normal: $size-6 * 0.98;
 
 }
 
+.tabs li a {
+  transition: border-color .15s;
+}
+
 .tabs li.is-active .badge {
   background: lighten($primary, 44);
 }

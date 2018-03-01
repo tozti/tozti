@@ -37,6 +37,7 @@
         group: {
           name: '',
           handle: '',
+          children: { data: {} },
         },
         available: false,
       }

@@ -1,4 +1,5 @@
 function fetch() {
+  this.loading = true
   tozti.store.get(this.id)
     .then(resource => {
       this.resource = resource

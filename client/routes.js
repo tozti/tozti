@@ -7,7 +7,7 @@ import Workspaces from './components/views/Workspaces'
 import Groups from './components/views/Groups'
 import GroupView from './components/views/Group'
 import SettingsView from './components/views/Settings'
-import TaxonomyView from './components/views/Taxonomy'
+import TaxonomyView from './components/views/TaxonomyView'
 
 
 const singleRoutes =
@@ -24,17 +24,12 @@ const singleRoutes =
 
 
 const enclosedRoutes =
-  [ { path: 'g/', component: Groups }
+  [ { path: 'g', component: Groups }
 
-  , { name: 'group'
-    , path: 'g/:handle'
-    , component: GroupView
-    , props: true
-    }
-
-  , { path: 'taxonomy', component: TaxonomyView }
+  , { name: 'taxonomy', path: 't/:taxonomy+', component: TaxonomyView }
 
   , { path: 'settings', component: SettingsView }
+
 
   , { path: 'w/', component: Workspaces }
   ]

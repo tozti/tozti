@@ -194,7 +194,7 @@ const store = {
 
 
     /** 
-     * Add linkages to a to-many relationship.
+     * Add linkages to to-many and keyed relationships.
      * Returns a Promise resolving to the relationship itself.
      *
      *  A linkage is simply an object with an id.
@@ -203,12 +203,26 @@ const store = {
      * @param {...Object} linkages - The linkages to be added.
      */
     add(rel, ...linkages) {
-      return api
-        .post( rel.self, { data: linkages })
-        .then(() => {
-          rel.data.push(...linkages)
-          return rel
-        })
+      // to-many relationship
+      if (Array.isArray(rel.data)) {
+        return api
+          .post( rel.self, { data: linkages })
+          .then(() => {
+            rel.data.push(...linkages)
+            return rel
+          })
+      }
+      else {
+        linkages = linkages[0] 
+        return api
+          .post( rel.self, { data: linkages})
+          .then(() => {
+            for (let k in linkages) {
+              Vue.set(rel.data, k, linkages[k])
+            }
+            return rel
+          })
+      }
     },
 
 

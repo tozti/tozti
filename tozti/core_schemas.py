@@ -28,6 +28,10 @@ group_schema = {
             'arity': 'auto',
             'pred-type': 'core/user',
             'pred-relationship': 'groups'
+        },
+        'children': {
+            'type': 'relationship',
+            'arity': 'keyed'
         }
     }
 }
@@ -35,11 +39,11 @@ group_schema = {
 folder_schema = {
     'body': {
         'name': { 'type': 'string' },
+        'handle': { 'type': 'string' },
         'children': {
             'type': 'relationship',
             'arity': 'keyed'
         },
-
         'parents': {
             'type': 'relationship',
             'arity': 'auto',

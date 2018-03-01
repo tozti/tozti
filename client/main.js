@@ -7,7 +7,7 @@ promiseFinally.shim()
 
 import { resourceMixin } from './mixins'
 import { addRoutes, getRoutes } from './routes'
-import { addTaxonomyItem, TaxonomyItemComponent } from './components/views/Taxonomy'
+import { addTaxonomyItem, TaxonomyItemComponent } from './components/views/TaxonomyFolderView'
 import store from './store'
 import api from './api'
 
@@ -71,8 +71,6 @@ const tozti = window.tozti = {
 
   globalMenuItems:
     [ { name: 'Mes groupes', route: '/g/', props: { icon: 'nc-multiple-11' } }
-    , { name: 'Mes espaces', route: '/w/', props: { icon: 'nc-grid-45' } }
-    , { name: 'Taxonomie', route: '/taxonomy', props: { icon: 'nc-folder-15' } }
     , { name: 'Paramètres', route: '/settings', props: { icon: 'nc-settings-gear-63' } }
     ],
 

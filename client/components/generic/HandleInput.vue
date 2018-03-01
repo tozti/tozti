@@ -12,7 +12,7 @@
 
 <script>
   export default {
-    props: ['value'],
+    props: ['value', 'root'],
 
     data() {
       return {
@@ -36,7 +36,14 @@
         if (this.handle == '') return
 
         this.checking = true
-        tozti.api.checkHandle(this.handle)
+        let test
+        if (this.root) {
+          test = this.root.body.children.data.hasOwnProperty(this.handle) ? Promise.reject() : Promise.resolve()
+        }
+        else
+          test = tozti.api.checkHandle(this.handle)
+
+        test
           .then(() => { this.available = true })
           .catch(() => { this.available = false })
           .finally(() => {

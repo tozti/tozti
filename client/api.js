@@ -21,7 +21,7 @@ API.handleURL = handle => `${API.endpoints.handle}/${handle}`
 API.typeURL = type => `${API.endpoints.types}/${type}`
 
 const config = {
-  mode: 'same-origin',
+  mode: 'cors',
 
   // allow the request to send & receive cookies
   credentials: 'same-origin',
