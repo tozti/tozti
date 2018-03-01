@@ -75,7 +75,8 @@ const tozti = window.tozti = {
     ],
 
   workspaceMenuItems:
-    [ { name: 'Résumé', route: 'workspace', props: { icon: 'nc-eye-19' } }
+    [ 
+    // { name: 'Résumé', route: '/t/', props: { icon: 'nc-eye-19' } }
     ],
 
 
