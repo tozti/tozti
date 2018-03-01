@@ -1,5 +1,7 @@
 import Vue from 'vue'
 import Buefy from 'buefy'
+import Timeago from 'vue-timeago'
+
 import ToztiLayout from './components/Tozti.vue'
 import promiseFinally from 'promise.prototype.finally'
 
@@ -17,6 +19,14 @@ import TaxonomyItem from './components/generic/TaxonomyItem'
 import NewResourceForm from './components/generic/NewResourceForm'
 
 Vue.use(Buefy)
+Vue.use(Timeago, {
+    name: 'timeago',
+    locale: 'fr-FR',
+    locales: {
+        'fr-FR': require('vue-timeago/locales/fr-FR.json')
+    }
+})
+
 Vue.component('t-handle-field', HandleInput)
 Vue.component('t-taxonomy-item', TaxonomyItem)
 Vue.component('t-new-resource-form', NewResourceForm)
