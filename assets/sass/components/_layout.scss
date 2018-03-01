@@ -188,8 +188,8 @@ span.placeholder {
 
 
 .main-content {
-	display: flex;
-	flex-direction: row;
+	// display: flex;
+	// flex-direction: row;
 
 	padding: $content-padding;
 	margin-top: $header-height + $separator-size;
@@ -199,7 +199,7 @@ span.placeholder {
 
   .section {
     padding: $section-padding;
-    width: 940px;
+    max-width: 940px;
     background: #fff;
     border-radius: 4px;
     box-shadow: 0 3px 2px rgba(#000, .02);
