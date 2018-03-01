@@ -33,6 +33,10 @@ Vue.component('t-new-resource-form', NewResourceForm)
 
 import GroupItem from './components/views/TaxonomyGroupItem'
 import FolderItem from './components/views/TaxonomyFolderItem'
+
+import GroupView from './components/views/Group.vue'
+import FolderView from './components/views/FolderView.vue'
+
 import NewFolderForm from './components/NewFolderForm'
 
 
@@ -103,6 +107,12 @@ const tozti = window.tozti = {
     ]
   ),
 
+  taxonomyViews: new Map(
+    [ ['core/group', GroupView]
+    , ['core/folder', FolderView]
+    ]
+  ),
+
   creationForms: new Map(
     [ ['core/folder', NewFolderForm]
     ]
@@ -133,11 +143,13 @@ const tozti = window.tozti = {
    * @param {string} name         - The lowercase name of the resource (e.g. `discussion`).
    * @param {string} name         - The gender of `name`. Must be either 'm' or 'f'.
    * @param {string} taxonomyItem - The component responsible for listing this resource type.
+   * @param {string} taxonomyView - The component responsible for displaying this resource type.
    * @param {string} creationForm - The component responsible for creating this resource type.
    */
-  addResourceType(type, name, gender, taxonomyItem, creationForm) {
+  addResourceType(type, name, gender, taxonomyItem, taxonomyView, creationForm) {
     tozti.resourceTypes.push({ type, name, gender })
     tozti.taxonomyItems.set(type, taxonomyItem)
+    tozti.taxonomyViews.set(type, taxonomyView)
     tozti.creationForms.set(type, creationForm)
   },
 

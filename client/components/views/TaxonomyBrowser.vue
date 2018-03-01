@@ -6,15 +6,6 @@
 
 <script>
 
-  import GroupView from './Group.vue'
-  import FolderView from './FolderView.vue'
-
-  const taxonomyComponents = new Map(
-    [ ['core/group', GroupView]
-    , ['core/folder', FolderView]
-    ]
-  )
-
   function splitPath(path) {
     if (path.substr(-1) == '/')
       path = path.subtr(0, path.length - 1)
@@ -112,8 +103,8 @@
 
     methods: {
       getRootComponent(type) {
-        if (taxonomyComponents.has(type)) {
-          return taxonomyComponents.get(type)
+        if (tozti.taxonomyViews.has(type)) {
+          return tozti.taxonomyViews.get(type)
         }
       },
 
