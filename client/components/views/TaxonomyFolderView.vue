@@ -2,6 +2,17 @@
   <div v-if="resource" class="taxonomy">
     <p>
       <a class="button" @click="displayCreationModal">Nouveau dossier</a>
+      <b-dropdown style="margin-left: 10px;">
+        <a class="button" slot="trigger">
+          <b-icon pack="mdi" icon="file-plus"></b-icon>
+        </a>
+
+        <b-dropdown-item v-for="{ type, name, gender, creationForm } in resourceTypes">
+          <template v-if="gender == 'm'">Nouveau</template>
+          <template v-else>Nouvelle</template>
+          {{ name }}
+        </b-dropdown-item>
+      </b-dropdown>
     </p>
     <div
       v-if="isEmpty"
@@ -56,6 +67,10 @@
 
       children() {
         return this.resource.body.children.data
+      },
+
+      resourceTypes() {
+        return tozti.resourceTypes
       }
     },
 

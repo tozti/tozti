@@ -74,10 +74,9 @@ const tozti = window.tozti = {
     , { name: 'Paramètres', route: '/settings', props: { icon: 'nc-settings-gear-63' } }
     ],
 
-  workspaceMenuItems:
-    [ 
-    // { name: 'Résumé', route: '/t/', props: { icon: 'nc-eye-19' } }
-    ],
+  workspaceMenuItems: [],
+
+  resourceTypes: [],
 
 
   /**
@@ -101,6 +100,17 @@ const tozti = window.tozti = {
 
 
   /**
+   * @param {string} type         - The type of resource to register (e.g. `discussion/thread`).
+   * @param {string} name         - The lowercase name of the resource (e.g. `discussion`).
+   * @param {string} name         - The gender of `name`. Must be either 'm' or 'f'.
+   * @param {string} creationForm - The component responsible for creating this resource type.
+   */
+  addResourceType(type, name, gender, creationForm) {
+    tozti.resourceTypes.push({ type, name, gender, creationForm })
+  },
+
+
+  /**
    * Start the tozti web app.
    */
   launch() {
@@ -118,6 +128,4 @@ const tozti = window.tozti = {
 
 }
 
-
 export default tozti
-

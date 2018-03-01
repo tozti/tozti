@@ -19,10 +19,9 @@
       <a @click="displayRenameModal" style="margin-left: 10px;">
         <b-icon pack="mdi" icon="pencil" type="is-dark"></b-icon>
       </a>
-      <a @click="displayDeleteModal" style="margin-left: 10px;">
+      <!-- <a @click="displayDeleteModal" style="margin-left: 10px;">
         <b-icon pack="mdi" icon="delete" type="is-dark"></b-icon>
-      </a>
-
+      </a> -->
       <b-dropdown style="margin-left: 10px;">
         <b-icon pack="mdi" icon="dots-horizontal" slot="trigger"></b-icon>
         <b-dropdown-item>Something else</b-dropdown-item>
@@ -87,9 +86,9 @@
         })
       },
 
-      displayDeleteModal() {
+      // displayDeleteModal() {
 
-      }
+      // }
     }
   }
 </script>
