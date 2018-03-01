@@ -16,12 +16,25 @@
       </router-link>
     </div>
     <div class="taxonomy-item-actions">
-      <b-icon pack="mdi" icon="dots-horizontal"></b-icon>
+      <a @click="displayRenameModal" style="margin-left: 10px;">
+        <b-icon pack="mdi" icon="pencil" type="is-dark"></b-icon>
+      </a>
+      <a @click="displayDeleteModal" style="margin-left: 10px;">
+        <b-icon pack="mdi" icon="delete" type="is-dark"></b-icon>
+      </a>
+
+      <b-dropdown style="margin-left: 10px;">
+        <b-icon pack="mdi" icon="dots-horizontal" slot="trigger"></b-icon>
+        <b-dropdown-item>Something else</b-dropdown-item>
+      </b-dropdown>
     </div>
   </div>
 </template>
 
 <script>
+  import { ModalProgrammatic } from 'buefy'
+
+  import RenameItemForm from '../RenameItemForm'
 
   export default {
     props: {
@@ -48,6 +61,34 @@
       loading: {
         type: Boolean,
         default: false,
+      },
+
+      resource: {
+        type: Object,
+        default: null
+      },
+
+      root: {
+        type: Object,
+        default: null
+      }
+    },
+
+    methods: {
+      displayRenameModal() {
+        ModalProgrammatic.open({
+          parent: this,
+          component: RenameItemForm,
+          scroll: 'keep',
+          props: {
+            resource: this.resource,
+            root: this.root
+          }
+        })
+      },
+
+      displayDeleteModal() {
+
       }
     }
   }

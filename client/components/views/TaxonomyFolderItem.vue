@@ -5,6 +5,8 @@
     :title="title"
     :to="handle"
     :subtitle="date"
+    :resource="resource"
+    :root="root"
   />
 </template>
 
@@ -18,6 +20,10 @@
 
     props: {
       handle: String,
+      root: {
+        type: Object,
+        default: null
+      }
     },
 
     data() {

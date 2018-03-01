@@ -1,5 +1,5 @@
 <template>
-  <TaxonomyItem :loading="loading" :title="title" :subtitle="subtitle"/>
+  <TaxonomyItem :loading="loading" :title="title" :subtitle="subtitle" :resource="resource" :root="root"/>
 </template>
 
 <script>
@@ -13,6 +13,11 @@
     props: {
       handle: {
         type: String,
+      },
+
+      root: {
+        type: Object,
+        default: null
       }
     },
 

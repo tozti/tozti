@@ -3,7 +3,9 @@
     :loading="loading"
     :to="handle"
     :title="title"
-    :subtitle="subtitle"/>
+    :subtitle="subtitle"
+    :resource="resource"
+    :root="root" />
 </template>
 <script>
   import TaxonomyResourceItem from './TaxonomyResourceItem'
@@ -13,6 +15,10 @@
 
     props: {
       handle: String,
+      root: {
+        type: Object,
+        default: null
+      }
     },
 
     methods: {

@@ -17,7 +17,8 @@
         :is="getItemComponent(item)"
         :id="item.id"
         :handle="handle"
-        :key="item.id"/>
+        :key="item.id"
+        :root="resource" />
     </div>
   </div>
 </template>
