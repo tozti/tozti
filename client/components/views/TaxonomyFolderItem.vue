@@ -1,5 +1,5 @@
 <template>
-  <TaxonomyItem
+  <t-taxonomy-item
     icon="folder"
     :loading="loading"
     :title="title"
@@ -11,11 +11,9 @@
 </template>
 
 <script>
-  import TaxonomyItem from './TaxonomyItem'
   import { resourceMixin } from '../../mixins'
 
   export default {
-    components: { TaxonomyItem },
     mixins: [ resourceMixin ],
 
     props: {

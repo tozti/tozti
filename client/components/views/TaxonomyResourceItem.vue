@@ -1,13 +1,11 @@
 <template>
-  <TaxonomyItem :loading="loading" :title="title" :subtitle="subtitle" :resource="resource" :root="root"/>
+  <t-taxonomy-item :loading="loading" :title="title" :subtitle="subtitle" :resource="resource" :root="root"/>
 </template>
 
 <script>
   import { resourceMixin } from '../../mixins'
-  import TaxonomyItem from './TaxonomyItem'
 
   export default {
-    components: { TaxonomyItem },
     mixins: [ resourceMixin ],
 
     props: {

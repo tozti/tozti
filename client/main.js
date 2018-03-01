@@ -13,11 +13,17 @@ import api from './api'
 
 import AppView from './components/App'
 import HandleInput from './components/generic/HandleInput'
+import TaxonomyItem from './components/generic/TaxonomyItem'
 import NewResourceForm from './components/generic/NewResourceForm'
 
 Vue.use(Buefy)
 Vue.component('t-handle-field', HandleInput)
+Vue.component('t-taxonomy-item', TaxonomyItem)
 Vue.component('t-new-resource-form', NewResourceForm)
+
+import GroupItem from './components/views/TaxonomyGroupItem'
+import FolderItem from './components/views/TaxonomyFolderItem'
+import NewFolderForm from './components/NewFolderForm'
 
 
 // Create a 'polymorphic' component.
@@ -81,6 +87,16 @@ const tozti = window.tozti = {
 
   resourceTypes: [],
 
+  taxonomyItems: new Map(
+    [ ['core/group', GroupItem]
+    , ['core/folder', FolderItem]
+    ]
+  ),
+
+  creationForms: new Map(
+    [ ['core/folder', NewFolderForm]
+    ]
+  ),
 
   /**
    * Define a global sidebar menu item.
@@ -106,10 +122,13 @@ const tozti = window.tozti = {
    * @param {string} type         - The type of resource to register (e.g. `discussion/thread`).
    * @param {string} name         - The lowercase name of the resource (e.g. `discussion`).
    * @param {string} name         - The gender of `name`. Must be either 'm' or 'f'.
+   * @param {string} taxonomyItem - The component responsible for listing this resource type.
    * @param {string} creationForm - The component responsible for creating this resource type.
    */
-  addResourceType(type, name, gender, creationForm) {
-    tozti.resourceTypes.push({ type, name, gender, creationForm })
+  addResourceType(type, name, gender, taxonomyItem, creationForm) {
+    tozti.resourceTypes.push({ type, name, gender })
+    tozti.taxonomyItems.set(type, taxonomyItem)
+    tozti.creationForms.set(type, creationForm)
   },
 
 

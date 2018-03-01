@@ -41,21 +41,12 @@
   import { ModalProgrammatic } from 'buefy'
   import { resourceMixin } from '../../mixins'
   import DefaultItem from './TaxonomyResourceItem'
-  import GroupItem from './TaxonomyGroupItem'
-  import FolderItem from './TaxonomyFolderItem'
-  import NewFolderForm from '../NewFolderForm'
 
   export { DefaultItem as TaxonomyItemComponent }
 
   export function addTaxonomyItem(type, component) {
     taxonomyItems.add(type, component)
   }
-
-  const taxonomyItems = new Map(
-    [ ['core/group', GroupItem]
-    , ['core/folder', FolderItem]
-    ]
-  )
 
   export default {
     mixins: [ resourceMixin ],
@@ -79,28 +70,25 @@
 
     methods: {
       getItemComponent({ type }) {
-        if (taxonomyItems.has(type)) {
-          return taxonomyItems.get(type)
+        if (tozti.taxonomyItems.has(type)) {
+          return tozti.taxonomyItems.get(type)
         }
+
         return DefaultItem
       },
 
-      getFormForType(type) {
-        if (type == 'core/folder') {
-          return NewFolderForm
+      getCreationFormComponent({ type }) {
+        if (tozti.creationForms.has(type)) {
+          return tozti.creationForms.get(type)
         }
 
-        for (let res of this.resourceTypes) {
-          if (type == res.type) {
-            return res.creationForm
-          }
-        }
+        return null
       },
 
       displayCreationModal(type) {
         ModalProgrammatic.open({
           parent: this,
-          component: this.getFormForType(type),
+          component: this.getCreationFormComponent({ type }),
           scroll: 'keep',
           props: {
             root: this.resource
