@@ -13,8 +13,8 @@
 
         <router-link
           v-for="{ name, route, props } in workspaceItems"
-          :to="{ name: route, params: { id } }"
-          :key="name"
+          :to="route"
+          :key="route"
           active-class="active">
           <i v-if="props.icon" :class="'nc-icon ' + props.icon"></i>
           {{ name }}
