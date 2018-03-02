@@ -16,6 +16,8 @@
                         :root="root"
                         :available.sync="available">
         </t-handle-field>
+
+        <slot></slot>
       </section>
       <footer class="modal-card-foot">
         <input
