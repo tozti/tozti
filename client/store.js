@@ -232,6 +232,14 @@ const store = {
       // TODO(flupe)
     },
 
+    upload(rel, blob) {
+        let config = Object.assign({}, api.config, {
+            'method': 'PUT',
+            'Content-type': blob.type,
+            'body': blob})
+        return api.request(rel.self, config)
+    },
+
 
     /** 
      * Deletes linkages of a to-many relationship.
