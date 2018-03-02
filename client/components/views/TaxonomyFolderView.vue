@@ -2,10 +2,11 @@
   <div v-if="resource" class="taxonomy">
     <p>
       <a class="button" @click="displayCreationModal('core/folder')">Nouveau dossier</a>
-      <a class="button" style="margin-right: 5px;"
+      <a class="button"
           v-for="{ type, icon, name, gender } in resourceTypes"
           @click="displayCreationModal(type)">
         <b-icon pack="mdi" :icon="icon" style="margin-left: 0; margin-right: 8px;"></b-icon>
+
         <template v-if="gender == 'm'">Nouveau</template>
         <template v-else>Nouvelle</template>
         {{ name }}
