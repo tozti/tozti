@@ -143,17 +143,20 @@ def by_handle_delete(handle, session=None):
 ## Authentication endpoint
 # uses session
 
-def create_user(login, name, passwd, email, session=None):
+def signup(login, name, passwd, email, session=None):
     """Create an user."""
 
-    return check_call('POST', '/auth/create_user',
-                      json={'name':name, 'login':login,
-                            'passwd':passwd, 'email':email},
+    return check_call('POST', '/auth/signup',
+                      json={'name': name, 'handle': handle,
+                            'passwd': passwd, 'email': email},
                       session=session)
 
-def login(login, passwd, session):
+def login(handle, passwd, session=None):
     """Log in."""
 
-    return check_call('POST', '/auth/login',
-                      json={'passwd':passwd, 'login':login},
-                      session=session)
+    if session is None:
+        session = Session()
+
+    check_call('POST', '/auth/login', json={'passwd': passwd, 'handle': handle},
+               session=session)
+    return session
