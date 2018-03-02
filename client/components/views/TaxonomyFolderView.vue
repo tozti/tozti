@@ -2,20 +2,15 @@
   <div v-if="resource" class="taxonomy">
     <p>
       <a class="button" @click="displayCreationModal('core/folder')">Nouveau dossier</a>
-      <b-dropdown style="margin-left: 10px;">
-        <a class="button" slot="trigger">
-          <b-icon pack="mdi" icon="file-plus"></b-icon>
-        </a>
+      <a class="button"
+          v-for="{ type, icon, name, gender } in resourceTypes"
+          @click="displayCreationModal(type)">
+        <b-icon pack="mdi" :icon="icon" style="margin-left: 0; margin-right: 8px;"></b-icon>
 
-        <b-dropdown-item 
-          v-for="{ type, name, gender } in resourceTypes"
-          @click="displayCreationModal(type)"
-          :key="type">
-          <template v-if="gender == 'm'">Nouveau</template>
-          <template v-else>Nouvelle</template>
-          {{ name }}
-        </b-dropdown-item>
-      </b-dropdown>
+        <template v-if="gender == 'm'">Nouveau</template>
+        <template v-else>Nouvelle</template>
+        {{ name }}
+      </a>
     </p>
     <div
       v-if="isEmpty"

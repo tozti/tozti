@@ -140,14 +140,15 @@ const tozti = window.tozti = {
 
   /**
    * @param {string} type         - The type of resource to register (e.g. `discussion/thread`).
+   * @param {string} icon         - The name of an icon representing the resource (e.g. `message`).
    * @param {string} name         - The lowercase name of the resource (e.g. `discussion`).
    * @param {string} name         - The gender of `name`. Must be either 'm' or 'f'.
    * @param {string} taxonomyItem - The component responsible for listing this resource type.
    * @param {string} taxonomyView - The component responsible for displaying this resource type.
    * @param {string} creationForm - The component responsible for creating this resource type.
    */
-  addResourceType(type, name, gender, taxonomyItem, taxonomyView, creationForm) {
-    tozti.resourceTypes.push({ type, name, gender })
+  addResourceType(type, icon, name, gender, taxonomyItem, taxonomyView, creationForm) {
+    tozti.resourceTypes.push({ type, icon, name, gender })
     tozti.taxonomyItems.set(type, taxonomyItem)
     tozti.taxonomyViews.set(type, taxonomyView)
     tozti.creationForms.set(type, creationForm)
